@@ -8,13 +8,22 @@ assignees: ''
 ---
 
 ## 🧩 Epic
+<!-- Example: Auth & Users, Communities, Items, Messaging, Map, Notifications, UI/UX, DevOps -->
+**Epic**: 
 
-**Epic**: Auth, Communities, Items, Messaging, Map, Notifications, UI/UX, DevOps
+## 📋 Description
+<!-- Describe what needs to be done. Add screenshots or Figma links if relevant -->
+**Feature**:
 
-## 👤 Scope
-
-**Stack**: frontend / backend
+## 👤 Owner
+<!-- frontend / backend / fullstack -->
+**Stack**: 
 
 ## 🚦 Priority
+<!-- must / should / could / won’t -->
+**MoSCoW**: 
 
-**MoSCoW**: must / should / could / won’t
+## ✅ Acceptance Criteria
+<!-- What defines this task as done? -->
+- [ ] 
+- [ ] 
