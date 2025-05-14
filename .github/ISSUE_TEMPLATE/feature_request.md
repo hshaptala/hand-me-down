@@ -1,29 +1,16 @@
 ---
 name: Feature Request
 about: Suggest a new feature or task
-title: "[<PRIORITY>][<SCOPE>] Feature Title"
+title: "Feature Title"
 labels: ''
 assignees: ''
 
 ---
+📋 **Description**
 
-## 🧩 Epic
-<!-- Example: Auth & Users, Communities, Items, Messaging, Map, Notifications, UI/UX, DevOps -->
-**Epic**: 
+A description of what you want to happen.
 
-## 📋 Description
-<!-- Describe what needs to be done. Add screenshots or Figma links if relevant -->
-**Feature**:
+✅ **Acceptance Criteria**
 
-## 👤 Owner
-<!-- frontend / backend / fullstack -->
-**Stack**: 
-
-## 🚦 Priority
-<!-- must / should / could / won’t -->
-**MoSCoW**: 
-
-## ✅ Acceptance Criteria
-<!-- What defines this task as done? -->
-- [ ] 
-- [ ] 
+- [ ] Criteria 1
+- [ ] Criteria 2
