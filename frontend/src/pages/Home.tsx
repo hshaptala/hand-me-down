@@ -9,13 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { MapPin, Users, Gift, ArrowRight } from "lucide-react";
+import Container from "@/components/layout/Container";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
       <section className="dark:from-background dark:to-background w-full bg-gradient-to-b from-[#F5F5F5] to-white py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
+        <Container>
           <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="flex flex-col justify-center space-y-4">
               <div className="space-y-2">
@@ -47,17 +48,16 @@ export default function Home() {
                 alt="Hand Me Down Community"
                 className="aspect-video overflow-hidden rounded-xl object-cover object-center"
                 height="550"
-                src="/placeholder.svg?height=550&width=700"
+                src="/hero.png?height=550&width=700"
                 width="700"
               />
             </div>
           </div>
-        </div>
+        </Container>
       </section>
-
       {/* How It Works Section */}
       <section className="dark:bg-background w-full bg-white py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
+        <Container>
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -107,12 +107,11 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
+        </Container>
+      </section>{" "}
       {/* Featured Communities Section */}
       <section className="dark:bg-muted w-full bg-[#F5F5F5] py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
+        <Container>
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -150,7 +149,6 @@ export default function Home() {
                 </Button>
               </CardFooter>
             </Card>
-
             {/* Community Card 2 */}
             <Card>
               <CardHeader>
@@ -176,7 +174,6 @@ export default function Home() {
                 </Button>
               </CardFooter>
             </Card>
-
             {/* Community Card 3 */}
             <Card>
               <CardHeader>
@@ -210,12 +207,11 @@ export default function Home() {
               </Link>
             </Button>
           </div>
-        </div>
+        </Container>
       </section>
-
       {/* CTA Section */}
       <section className="w-full bg-[#2E7D32] py-12 text-white md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
+        <Container>
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
@@ -240,7 +236,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
-        </div>
+        </Container>
       </section>
     </div>
   );
