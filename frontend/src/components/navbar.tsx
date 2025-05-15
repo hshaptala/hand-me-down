@@ -9,6 +9,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from "lucide-react";
+import Container from "./layout/Container";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,9 +18,9 @@ export default function Navbar() {
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-[#2E7D32]">
+      <Container className="flex h-16 items-center justify-between">        <Link to="/" className="flex items-center gap-2">
+          <img src="/simple.svg" alt="Logo" className="h-12 w-12" />
+          <span className="font-logo text-2xl font-normal text-[#2E7D32]">
             Hand Me Down
           </span>
         </Link>
@@ -117,7 +118,7 @@ export default function Navbar() {
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-      </div>
+      </Container>
 
       {/* Mobile Menu */}
       {isMenuOpen && (
