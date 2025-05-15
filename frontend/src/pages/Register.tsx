@@ -166,11 +166,11 @@ export default function RegisterPage() {
                 className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I agree to the{" "}
-                <Link to="/terms" className="text-[#FFC107] hover:underline">
+                <Link to="/terms" className="text-[#8D6E63] hover:underline">
                   terms of service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="text-[#FFC107] hover:underline">
+                <Link to="/privacy" className="text-[#8D6E63] hover:underline">
                   privacy policy
                 </Link>
               </Label>
@@ -179,13 +179,13 @@ export default function RegisterPage() {
           <CardFooter className="flex flex-col">
             <Button
               type="submit"
-              className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+              className="mt-4 w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
             >
               Create Account
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#FFC107] hover:underline">
+              <Link to="/login" className="text-[#8D6E63] hover:underline">
                 Log in
               </Link>
             </p>
