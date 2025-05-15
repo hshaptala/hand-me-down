@@ -135,7 +135,7 @@ export default function Home() {
                   alt="Thomas More University Community"
                   className="aspect-video w-full rounded-lg object-cover"
                   height="200"
-                  src="/placeholder.svg?height=200&width=400"
+                  src="/thomas-more.png?height=200&width=400"
                   width="400"
                 />
                 <p className="text-muted-foreground mt-4 line-clamp-3 h-[4.5rem] text-sm">
@@ -160,7 +160,7 @@ export default function Home() {
                   alt="City of Geel Community"
                   className="aspect-video w-full rounded-lg object-cover"
                   height="200"
-                  src="/placeholder.svg?height=200&width=400"
+                  src="/geel.jpg?height=200&width=400"
                   width="400"
                 />
                 <p className="text-muted-foreground mt-4 line-clamp-3 h-[4.5rem] text-sm">
