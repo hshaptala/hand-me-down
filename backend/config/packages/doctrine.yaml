@@ -4,10 +4,33 @@ doctrine:
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
-        #server_version: '16'
+        server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
+        mapping_types:
+            regclass: string
+            _user_defined_filter: string
+            regrole: string
+            one_time_token_type: string
+            _text: string
+            factor_type: string
+            factor_status: string
+            code_challenge_method: string
+            aal_level: string
+            auth_role: string
+            tsvector: string
+            tsquery: string
+            jsonb: json
+            uuid: guid
+            inet: string
+            citext: string
+            timestamptz: datetime
+            hstore: array
+            interval: string
+            _int4: array
+            _numeric: array
+            _varchar: array
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
