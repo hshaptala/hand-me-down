@@ -6,9 +6,12 @@ export default function Footer() {
     <footer className="bg-background w-full border-t py-6">
       <Container className="flex flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex flex-col items-center md:items-start">
-          <Link to="/" className="text-xl font-bold text-[#2E7D32]">
-            Hand Me Down
-          </Link>
+          <div className="flex items-center gap-2">
+            <img src="/simple.svg" alt="Logo" className="h-8 w-8" />
+            <Link to="/" className="text-xl font-bold text-[#2E7D32]">
+              Hand Me Down
+            </Link>
+          </div>
           <p className="text-muted-foreground mt-1 text-sm">
             Connecting communities through sustainable giving
           </p>
