@@ -197,18 +197,16 @@ export default function Communities() {
                     </CardHeader>
                     <CardContent className="p-6">
                       <CardTitle>{community.name}</CardTitle>
-                      <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
+                      <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
                       </CardDescription>
-                      <div className="mt-4 flex gap-4 text-sm">
+                      <div className="flex gap-4 mt-4 text-sm">
                         <div>
-                          <span className="font-medium">
-                            {community.members}
-                          </span>
+                          <span className="font-medium">{community.members}</span>
                           <span className="text-muted-foreground ml-1">
                             members
                           </span>
@@ -227,7 +225,7 @@ export default function Communities() {
                           joinedCommunities.some((c) => c.id === community.id)
                             ? "bg-muted hover:bg-muted/80"
                             : community.type === "private"
-                              ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
+                              ? "bg-[#FFC107] hover:bg-[#FFA000] text-[#242424]"
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                         }`}
                         asChild
@@ -286,18 +284,16 @@ export default function Communities() {
                     </CardHeader>
                     <CardContent className="p-6">
                       <CardTitle>{community.name}</CardTitle>
-                      <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
+                      <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
                       </CardDescription>
-                      <div className="mt-4 flex gap-4 text-sm">
+                      <div className="flex gap-4 mt-4 text-sm">
                         <div>
-                          <span className="font-medium">
-                            {community.members}
-                          </span>
+                          <span className="font-medium">{community.members}</span>
                           <span className="text-muted-foreground ml-1">
                             members
                           </span>
@@ -311,7 +307,10 @@ export default function Communities() {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button className="w-full" asChild>
+                      <Button
+                        className="w-full bg-muted hover:bg-muted/80"
+                        asChild
+                      >
                         <Link to={`/communities/${community.id}`}>
                           View Community
                         </Link>
