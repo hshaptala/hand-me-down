@@ -8,7 +8,6 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import Layout from "./Layout.tsx";
 import CommunitiesPage from "./pages/Communities.tsx";
 import { AuthProvider } from "./context/auth-context";
-import { ProtectedRoute, PublicRoute } from "./components/protected-route";
 import { ToastProvider } from "./components/ui/toast-provider";
 
 function App() {
@@ -18,19 +17,13 @@ function App() {
         <ToastProvider />
         <Routes>
           <Route path="/" element={<Layout />}>
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route index element={<Home />} />
-              <Route path="communities" element={<CommunitiesPage />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
-            {/* Public Routes */}
-            <Route element={<PublicRoute />}>
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-            </Route>
+            <Route index element={<Home />} />
+            <Route path="communities" element={<CommunitiesPage />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
+            <Route path="reset-password" element={<ResetPassword />} />
           </Route>
         </Routes>
       </AuthProvider>

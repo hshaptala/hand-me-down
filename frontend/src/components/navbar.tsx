@@ -14,18 +14,19 @@ import { useAuth } from "@/context/auth-context";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut } = useAuth();
   const isLoggedIn = !!user;
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
-      <Container className="flex h-16 items-center justify-between">        <Link to="/" className="flex items-center gap-2">
+      <Container className="flex h-16 items-center justify-between">
+        {" "}
+        <Link to="/" className="flex items-center gap-2">
           <img src="/simple.svg" alt="Logo" className="h-12 w-12" />
           <span className="font-logo text-2xl font-normal text-[#2E7D32]">
             Hand Me Down
           </span>
         </Link>
-
         {/* Desktop Navigation */}
         <nav className="hidden gap-6 md:flex">
           <Link
@@ -53,7 +54,6 @@ export default function Navbar() {
             About
           </Link>
         </nav>
-
         {/* Auth Buttons - Desktop */}
         <div className="hidden gap-4 md:flex">
           {isLoggedIn ? (
@@ -86,7 +86,8 @@ export default function Navbar() {
                         className="hover:bg-muted block rounded-md p-2"
                       >
                         My Items
-                      </Link>                      <hr />
+                      </Link>{" "}
+                      <hr />
                       <Button
                         variant="ghost"
                         className="h-auto justify-start p-2 font-normal"
@@ -110,7 +111,6 @@ export default function Navbar() {
             </>
           )}
         </div>
-
         {/* Mobile Menu Button */}
         <button
           className="md:hidden"
@@ -183,7 +183,8 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Items
-                </Link>                <Button
+                </Link>{" "}
+                <Button
                   variant="ghost"
                   className="h-auto justify-start p-2 font-normal"
                   onClick={() => {
