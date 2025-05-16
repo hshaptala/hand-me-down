@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
       });
 
       if (error) throw error;
-      
+
       setIsSubmitted(true);
       toast.success("Password reset link sent to your email");
     } catch (error) {

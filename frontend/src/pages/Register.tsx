@@ -64,10 +64,10 @@ export default function RegisterPage() {
         formData.email,
         formData.password,
         formData.firstName,
-        formData.lastName
+        formData.lastName,
       );
       toast.success(
-        "Registration successful! Please check your email to confirm your account."
+        "Registration successful! Please check your email to confirm your account.",
       );
       // Auth context will handle redirect
     } catch (error) {
