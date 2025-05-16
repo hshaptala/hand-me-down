@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import Container from "@/components/layout/Container";
 
-export default function CommunitiesPage() {
+export default function Communities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
