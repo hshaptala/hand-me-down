@@ -17,10 +17,13 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -29,6 +32,7 @@ export default function RegisterPage() {
     confirmPassword: "",
     agreeTerms: false,
   });
+  const { signUp } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,10 +43,39 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, agreeTerms: checked }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log(formData);
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (!formData.agreeTerms) {
+      toast.error("You must agree to the terms of service and privacy policy");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await signUp(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName,
+      );
+      toast.success(
+        "Registration successful! Please check your email to confirm your account.",
+      );
+      // Auth context will handle redirect
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Failed to create account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -68,6 +101,7 @@ export default function RegisterPage() {
                   value={formData.firstName}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -79,6 +113,7 @@ export default function RegisterPage() {
                   value={formData.lastName}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -92,6 +127,7 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -105,6 +141,7 @@ export default function RegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -112,6 +149,7 @@ export default function RegisterPage() {
                   size="icon"
                   className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="text-muted-foreground h-4 w-4" />
@@ -135,6 +173,7 @@ export default function RegisterPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -142,6 +181,7 @@ export default function RegisterPage() {
                   size="icon"
                   className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isLoading}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="text-muted-foreground h-4 w-4" />
@@ -160,6 +200,7 @@ export default function RegisterPage() {
                 checked={formData.agreeTerms}
                 onCheckedChange={handleCheckboxChange}
                 required
+                disabled={isLoading}
               />
               <Label
                 htmlFor="terms"
@@ -180,8 +221,9 @@ export default function RegisterPage() {
             <Button
               type="submit"
               className="mt-4 w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+              disabled={isLoading}
             >
-              Create Account
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
               Already have an account?{" "}

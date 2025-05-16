@@ -10,21 +10,23 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from "lucide-react";
 import Container from "./layout/Container";
+import { useAuth } from "@/context/auth-context";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // This would be replaced with actual auth state
-  const isLoggedIn = false;
+  const { user, signOut } = useAuth();
+  const isLoggedIn = !!user;
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
-      <Container className="flex h-16 items-center justify-between">        <Link to="/" className="flex items-center gap-2">
+      <Container className="flex h-16 items-center justify-between">
+        {" "}
+        <Link to="/" className="flex items-center gap-2">
           <img src="/simple.svg" alt="Logo" className="h-12 w-12" />
           <span className="font-logo text-2xl font-normal text-[#2E7D32]">
             Hand Me Down
           </span>
         </Link>
-
         {/* Desktop Navigation */}
         <nav className="hidden gap-6 md:flex">
           <Link
@@ -52,7 +54,6 @@ export default function Navbar() {
             About
           </Link>
         </nav>
-
         {/* Auth Buttons - Desktop */}
         <div className="hidden gap-4 md:flex">
           {isLoggedIn ? (
@@ -85,11 +86,12 @@ export default function Navbar() {
                         className="hover:bg-muted block rounded-md p-2"
                       >
                         My Items
-                      </Link>
+                      </Link>{" "}
                       <hr />
                       <Button
                         variant="ghost"
                         className="h-auto justify-start p-2 font-normal"
+                        onClick={() => signOut()}
                       >
                         Sign Out
                       </Button>
@@ -109,7 +111,6 @@ export default function Navbar() {
             </>
           )}
         </div>
-
         {/* Mobile Menu Button */}
         <button
           className="md:hidden"
@@ -182,10 +183,14 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Items
-                </Link>
+                </Link>{" "}
                 <Button
                   variant="ghost"
                   className="h-auto justify-start p-2 font-normal"
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   Sign Out
                 </Button>
