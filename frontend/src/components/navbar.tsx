@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from "lucide-react";
 import Container from "./layout/Container";
+import { useAuth } from "@/context/auth-context";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // This would be replaced with actual auth state
-  const isLoggedIn = false;
+  const { user, signOut, loading } = useAuth();
+  const isLoggedIn = !!user;
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
@@ -85,11 +86,11 @@ export default function Navbar() {
                         className="hover:bg-muted block rounded-md p-2"
                       >
                         My Items
-                      </Link>
-                      <hr />
+                      </Link>                      <hr />
                       <Button
                         variant="ghost"
                         className="h-auto justify-start p-2 font-normal"
+                        onClick={() => signOut()}
                       >
                         Sign Out
                       </Button>
@@ -182,10 +183,13 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Items
-                </Link>
-                <Button
+                </Link>                <Button
                   variant="ghost"
                   className="h-auto justify-start p-2 font-normal"
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   Sign Out
                 </Button>

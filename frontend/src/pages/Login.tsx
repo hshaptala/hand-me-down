@@ -15,17 +15,32 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log({ email, password, rememberMe });
+    setIsLoading(true);
+
+    try {
+      await signIn(email, password);
+      // Auth context will handle redirect to home
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(
+        "Failed to log in. Please check your credentials and try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,6 +65,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -70,6 +86,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -77,6 +94,7 @@ export default function LoginPage() {
                   size="icon"
                   className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <EyeOff className="text-muted-foreground h-4 w-4" />
@@ -94,6 +112,7 @@ export default function LoginPage() {
                 id="remember"
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                disabled={isLoading}
               />
               <Label
                 htmlFor="remember"
@@ -107,8 +126,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+              disabled={isLoading}
             >
-              Log In
+              {isLoading ? "Logging in..." : "Log In"}
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
               Don't have an account?{" "}
