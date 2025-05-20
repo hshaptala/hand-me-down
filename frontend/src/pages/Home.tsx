@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="dark:from-background dark:to-background w-full bg-gradient-to-b from-[#F5F5F5] to-white py-12 md:py-24 lg:py-32">
+      <section className="dark:from-background dark:to-background w-full bg-white py-12 md:py-24 lg:py-32">
         <Container>
           <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="flex flex-col justify-center space-y-4">

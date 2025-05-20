@@ -7,7 +7,7 @@ export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="dark:from-background dark:to-background w-full bg-gradient-to-b from-[#F5F5F5] to-white py-12 md:py-24 lg:py-32">
+      <section className="dark:from-background dark:to-background w-full bg-white py-12 md:py-24 lg:py-32">
         <Container className="px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">

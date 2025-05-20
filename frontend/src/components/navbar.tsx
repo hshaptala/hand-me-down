@@ -42,12 +42,6 @@ export default function Navbar() {
             Communities
           </Link>
           <Link
-            to="/map"
-            className="text-sm font-medium transition-colors hover:text-[#2E7D32]"
-          >
-            Map
-          </Link>
-          <Link
             to="/about"
             className="text-sm font-medium transition-colors hover:text-[#2E7D32]"
           >
