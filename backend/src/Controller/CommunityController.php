@@ -90,7 +90,7 @@ final class CommunityController extends AbstractController
             ),
             new OA\Response(
                 response: 422,
-                description: 'Not a valid password',
+                description: 'Invalid password or name',
             ),
             new OA\Response(
                 response: 401,
@@ -107,9 +107,21 @@ final class CommunityController extends AbstractController
         #[CurrentUser()] User $user 
     )
     {
+        // Check User
         if ($user === null){ 
            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-       }
+        }
+
+        // Check name uniqness
+        $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
+        if ($existing) {
+            return $this->json([
+                'errors' => [
+                    'name' => 'A community with this name already exists.',
+                ]
+            ], 422);
+        }
+
         // Get password hasher
         $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
 

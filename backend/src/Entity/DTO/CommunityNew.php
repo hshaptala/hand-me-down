@@ -5,6 +5,7 @@ namespace App\Entity\DTO;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class CommunityNew
 {
@@ -19,13 +20,7 @@ class CommunityNew
     #[Groups(["community_new"])]
     public ?string $description = null;
 
-    #[Groups(["community_new"])]/*
-    #[Assert\Length(
-        min: 8,
-        max: 64,
-        minMessage: 'Password must be at least {{ limit }} characters long.',
-        maxMessage: 'Password cannot be longer than {{ limit }} characters.'
-    )]*/    
+    #[Groups(["community_new"])]
     public ?string $password = null;
 
     #[Groups(["community_new"])]
@@ -34,4 +29,21 @@ class CommunityNew
 
     #[Groups(["community_new"])]
     public string $image;
+
+
+    #[Assert\Callback]
+    public function validatePasswordRequirement(ExecutionContextInterface $context): void
+    {
+        if (strtolower($this->visibility) === 'private') {
+            if (empty($this->password)) {
+                $context->buildViolation('Password is required when community is private.')
+                    ->atPath('password')
+                    ->addViolation();
+            } elseif (strlen($this->password) < 8) {
+                $context->buildViolation('Password must be at least 8 characters.')
+                    ->atPath('password')
+                    ->addViolation();
+            }
+        }
+    }
 }

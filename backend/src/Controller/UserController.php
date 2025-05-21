@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
+use Nelmio\ApiDocBundle\Attribute\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -21,6 +22,10 @@ final class UserController extends AbstractController
         summary: "Create a new account",
         tags: ["Users"],
     )]
+    #[OA\RequestBody(content: 
+       new OA\JsonContent( 
+           example: '{"email": "user@user.com", "password": "password"}' 
+    ))] 
     public function register(
         EntityManagerInterface $em,
         UserPasswordHasherInterface $userPasswordHasher,
@@ -45,7 +50,17 @@ final class UserController extends AbstractController
     #[Route('/login', methods: ['POST'], name: 'api_login')] 
     #[OA\Post( 
        summary: "Login", 
-       tags: ["Users"] 
+       tags: ["Users"],
+       responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Login successful'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Invalid credentials.'
+            )
+        ],
     )] 
     #[OA\RequestBody(content: 
        new OA\JsonContent( 

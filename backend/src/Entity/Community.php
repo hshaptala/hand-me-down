@@ -12,6 +12,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use OpenApi\Attributes as OA;
 
 #[ORM\Entity(repositoryClass: CommunityRepository::class)]
+#[ORM\Table(name: "community", uniqueConstraints: [
+    new ORM\UniqueConstraint(name: "uniq_community_name", columns: ["name"])
+])]
 class Community
 {
     #[ORM\Id]
