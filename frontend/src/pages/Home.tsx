@@ -165,11 +165,10 @@ export default function Home() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
+              <CardFooter>                <Button
                   className={`w-full ${
                     joinedCommunities.includes(1)
-                      ? "bg-muted hover:bg-muted/80"
+                      ? "bg-muted hover:bg-muted/80 text-[#424242]"
                       : "bg-[#FFC107] hover:bg-[#FFA000] text-[#242424]"
                   }`}
                   asChild
@@ -221,11 +220,10 @@ export default function Home() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
+              <CardFooter>                <Button
                   className={`w-full ${
                     joinedCommunities.includes(2)
-                      ? "bg-muted hover:bg-muted/80"
+                      ? "bg-muted hover:bg-muted/80 text-[#424242]"
                       : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                   }`}
                   asChild
@@ -277,11 +275,10 @@ export default function Home() {
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button
+              <CardFooter>                <Button
                   className={`w-full ${
                     joinedCommunities.includes(3)
-                      ? "bg-muted hover:bg-muted/80"
+                      ? "bg-muted hover:bg-muted/80 text-[#424242]"
                       : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                   }`}
                   asChild
@@ -318,14 +315,13 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:gap-4 sm:flex-row">
-              <Button asChild size="lg" variant="secondary">
+              <Button asChild size="lg" variant="secondary" className="bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]">
                 <Link to="/register">Create an Account</Link>
-              </Button>
-              <Button
+              </Button>              <Button
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white/10"
+                className="text-[#424242]"
               >
                 <Link to="/communities">Explore Communities</Link>
               </Button>

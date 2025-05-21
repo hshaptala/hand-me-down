@@ -223,11 +223,10 @@ export default function Communities() {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button
+                    <CardFooter>                      <Button
                         className={`w-full ${
                           joinedCommunities.some((c) => c.id === community.id)
-                            ? "bg-muted hover:bg-muted/80"
+                            ? "bg-muted hover:bg-muted/80 text-[#424242]"
                             : community.type === "private"
                               ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
@@ -312,9 +311,8 @@ export default function Communities() {
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter>
-                      <Button
-                        className="bg-muted hover:bg-muted/80 w-full"
+                    <CardFooter>                      <Button
+                        className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
                         asChild
                       >
                         <Link to={`/communities/${community.id}`}>
