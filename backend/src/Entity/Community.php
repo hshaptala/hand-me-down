@@ -56,6 +56,9 @@ class Community
     #[Groups(['community_basic'])]
     private $imageUrl = null;
 
+    #[ORM\ManyToOne(inversedBy: 'communities')]
+    private ?User $creator = null;
+
     public function __construct()
     {
         $this->items = new ArrayCollection();
@@ -189,5 +192,17 @@ class Community
     public function getImageUrl(): ?string
     {
         return $this->imageUrl;
+    }
+
+    public function getCreator(): ?User
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?User $creator): static
+    {
+        $this->creator = $creator;
+
+        return $this;
     }
 }

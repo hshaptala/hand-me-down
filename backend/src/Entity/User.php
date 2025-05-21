@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -34,6 +36,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user_login'])]
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $token = null;
+
+    /**
+     * @var Collection<int, Community>
+     */
+    #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
+    private Collection $communities;
+
+    public function __construct()
+    {
+        $this->communities = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -106,5 +122,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
+    }
+
+    public function setToken(string $token): static
+    {
+        $this->token = $token;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Community>
+     */
+    public function getCommunities(): Collection
+    {
+        return $this->communities;
+    }
+
+    public function addCommunity(Community $community): static
+    {
+        if (!$this->communities->contains($community)) {
+            $this->communities->add($community);
+            $community->setCreator($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommunity(Community $community): static
+    {
+        if ($this->communities->removeElement($community)) {
+            // set the owning side to null (unless already changed)
+            if ($community->getCreator() === $this) {
+                $community->setCreator(null);
+            }
+        }
+
+        return $this;
     }
 }

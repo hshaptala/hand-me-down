@@ -5,10 +5,12 @@ namespace App\Controller;
 use App\Entity\Community;
 use App\Entity\DTO\CommunityNew;
 use App\Entity\Enum\VisibilityEnum;
+use App\Entity\User;
 use App\Repository\CommunityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Model;
+use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,11 +18,14 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class CommunityController extends AbstractController
@@ -50,6 +55,8 @@ final class CommunityController extends AbstractController
 
     #[View(serializerGroups: ["community_basic"])]
     #[Route(path:"/api/communities", methods: ["POST"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Community'],
         summary: 'Create a new community',
@@ -84,6 +91,10 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 422,
                 description: 'Not a valid password',
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
             )
         ]
     )]
@@ -92,9 +103,13 @@ final class CommunityController extends AbstractController
         #[MapRequestPayload(serializationContext: ["groups" => ["community_new"]])] CommunityNew $dto,
         EntityManagerInterface $em,
         UrlGeneratorInterface $urlGen,
-        PasswordHasherFactoryInterface $hasherFactory
+        PasswordHasherFactoryInterface $hasherFactory,
+        #[CurrentUser()] User $user 
     )
     {
+        if ($user === null){ 
+           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
+       }
         // Get password hasher
         $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
 
@@ -109,6 +124,7 @@ final class CommunityController extends AbstractController
         // Create new entity
         $community = new Community();
         $community
+            ->setCreator($user)
             ->setCreatedAt(new \DateTimeImmutable())
             ->setName($dto->name)
             ->setDescription($dto->description)

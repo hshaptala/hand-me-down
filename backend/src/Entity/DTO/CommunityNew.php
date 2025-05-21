@@ -19,13 +19,13 @@ class CommunityNew
     #[Groups(["community_new"])]
     public ?string $description = null;
 
-    #[Groups(["community_new"])]
+    #[Groups(["community_new"])]/*
     #[Assert\Length(
         min: 8,
         max: 64,
         minMessage: 'Password must be at least {{ limit }} characters long.',
         maxMessage: 'Password cannot be longer than {{ limit }} characters.'
-    )]
+    )]*/    
     public ?string $password = null;
 
     #[Groups(["community_new"])]
