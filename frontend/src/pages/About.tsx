@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Container from "@/components/layout/Container";
 import { Button } from "@/components/ui/button";
 
-export default function AboutPage() {
+export default function About() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
