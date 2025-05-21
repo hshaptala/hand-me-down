@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { useChat } from "@/contexts/ChatContext";
+
+import { Send } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { useChat } from "@/context/ChatContext";
 
 export function MessageInput() {
   const [message, setMessage] = useState("");
@@ -61,4 +63,3 @@ export function MessageInput() {
     </form>
   );
 }
-s;

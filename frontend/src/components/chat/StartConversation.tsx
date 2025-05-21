@@ -1,8 +1,8 @@
 import type React from "react";
-
 import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
-import { useChat } from "@/context/ChatContext";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useChat } from "@/context/ChatContext";
 
 interface StartConversationProps {
   itemId?: string;

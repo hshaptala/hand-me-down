@@ -1,4 +1,8 @@
+import { MapPin, Users, Gift, ArrowRight, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import Container from "@/components/layout/Container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,9 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MapPin, Users, Gift, ArrowRight, Lock } from "lucide-react";
-import Container from "@/components/layout/Container";
-import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   // Mock data for joined communities to determine button styling

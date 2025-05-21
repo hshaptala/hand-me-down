@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
-import { useChat } from "@/context/ChatContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { useChat } from "@/context/ChatContext";
 
 export function ConversationList() {
   const {
@@ -35,11 +36,7 @@ export function ConversationList() {
         const otherIsTyping = isTyping[otherParticipant.id] || false;
 
         return (
-          <Link
-            href={`/conversations/${conversation.id}`}
-            key={conversation.id}
-            passHref
-          >
+          <Link to={`/conversations/${conversation.id}`} key={conversation.id}>
             <Card
               className={`hover:bg-muted/50 cursor-pointer transition-colors ${
                 conversation.unreadCount > 0

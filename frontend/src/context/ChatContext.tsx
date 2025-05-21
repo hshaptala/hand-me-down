@@ -5,12 +5,14 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { getSupabase, getCurrentUser } from "@/lib/supabase";
+
+import type { User } from "@supabase/supabase-js";
+
 import type {
   ConversationWithDetails,
   MessageWithUser,
 } from "@/lib/database.types";
-import type { User } from "@supabase/supabase-js";
+import { getSupabase, getCurrentUser } from "@/lib/supabase";
 
 interface ChatContextType {
   conversations: ConversationWithDetails[];

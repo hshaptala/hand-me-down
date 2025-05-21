@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
+
+import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import Container from "./layout/Container";
+
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -8,8 +13,6 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Menu, X } from "lucide-react";
-import Container from "./layout/Container";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {

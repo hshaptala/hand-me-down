@@ -1,10 +1,11 @@
 import type React from "react";
-
 import { useState } from "react";
+
+import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -14,9 +15,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
+
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

@@ -1,7 +1,11 @@
 import { useState } from "react";
+
+import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import Container from "@/components/layout/Container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,9 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -20,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Container from "@/components/layout/Container";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Communities() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,16 +199,18 @@ export default function Communities() {
                     </CardHeader>
                     <CardContent className="p-6">
                       <CardTitle>{community.name}</CardTitle>
-                      <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                      <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
                       </CardDescription>
-                      <div className="flex gap-4 mt-4 text-sm">
+                      <div className="mt-4 flex gap-4 text-sm">
                         <div>
-                          <span className="font-medium">{community.members}</span>
+                          <span className="font-medium">
+                            {community.members}
+                          </span>
                           <span className="text-muted-foreground ml-1">
                             members
                           </span>
@@ -225,7 +229,7 @@ export default function Communities() {
                           joinedCommunities.some((c) => c.id === community.id)
                             ? "bg-muted hover:bg-muted/80"
                             : community.type === "private"
-                              ? "bg-[#FFC107] hover:bg-[#FFA000] text-[#242424]"
+                              ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                         }`}
                         asChild
@@ -284,16 +288,18 @@ export default function Communities() {
                     </CardHeader>
                     <CardContent className="p-6">
                       <CardTitle>{community.name}</CardTitle>
-                      <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                      <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
                       </CardDescription>
-                      <div className="flex gap-4 mt-4 text-sm">
+                      <div className="mt-4 flex gap-4 text-sm">
                         <div>
-                          <span className="font-medium">{community.members}</span>
+                          <span className="font-medium">
+                            {community.members}
+                          </span>
                           <span className="text-muted-foreground ml-1">
                             members
                           </span>
@@ -308,7 +314,7 @@ export default function Communities() {
                     </CardContent>
                     <CardFooter>
                       <Button
-                        className="w-full bg-muted hover:bg-muted/80"
+                        className="bg-muted hover:bg-muted/80 w-full"
                         asChild
                       >
                         <Link to={`/communities/${community.id}`}>

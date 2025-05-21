@@ -1,5 +1,13 @@
 import { useEffect } from "react";
+
+import { ArrowLeft, MapPin, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import { MessageInput } from "@/components/chat/MessageInput";
+import { MessageList } from "@/components/chat/MessageList";
+import Container from "@/components/layout/Container";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,13 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Check } from "lucide-react";
 import { ChatProvider, useChat } from "@/context/ChatContext";
-import { MessageList } from "@/components/chat/MessageList";
-import { MessageInput } from "@/components/chat/MessageInput";
-import Container from "@/components/layout/Container";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function ConversationContent({ id }: { id: string }) {
   const { setCurrentConversation, conversations, loading } = useChat();

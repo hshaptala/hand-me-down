@@ -1,19 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Container from "@/components/layout/Container";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import {
   Search,
   Plus,
@@ -23,6 +9,21 @@ import {
   Settings,
   Filter,
 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+
+import Container from "@/components/layout/Container";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 //import { Breadcrumb } from "@/components/ui/breadcrumb"
 
 export default function Community() {
@@ -173,7 +175,7 @@ export default function Community() {
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="mx-auto px-4 md:px-16 absolute bottom-0 left-0 p-6 text-white">
+        <div className="absolute bottom-0 left-0 mx-auto p-6 px-4 text-white md:px-16">
           <h1 className="text-3xl font-bold">{community.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <Badge
@@ -386,9 +388,7 @@ export default function Community() {
                     </CardFooter>
                   </Card>
                 ))}
-                
               </div>
-              
             </TabsContent>
 
             {/* About Tab */}
@@ -399,22 +399,20 @@ export default function Community() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    
                     <h3 className="text-lg font-medium">Description</h3>
                     <p className="text-muted-foreground mt-2">
                       {community.description}
                     </p>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium">Location</h3>
                     <p className="text-muted-foreground mt-2">
                       {community.location}
                     </p>
                   </div>
-                  
+
                   <div>
-                    
                     <h3 className="text-lg font-medium">Community Type</h3>
                     <p className="text-muted-foreground mt-2">
                       {community.type === "private" ? (
@@ -429,9 +427,8 @@ export default function Community() {
                         </>
                       )}
                     </p>
-                    
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium">Categories</h3>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -440,21 +437,14 @@ export default function Community() {
                           {category}
                         </Badge>
                       ))}
-                      
                     </div>
-                    
                   </div>
-                  
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
-
         </div>
-        
       </Container>
-      
     </div>
-    
   );
 }

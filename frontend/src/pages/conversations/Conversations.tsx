@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+
 import { Search } from "lucide-react";
-import { ChatProvider } from "@/context/ChatContext";
+
 import { ConversationList } from "@/components/chat/ConversationList";
 import Container from "@/components/layout/Container";
+import { Input } from "@/components/ui/input";
+import { ChatProvider } from "@/context/ChatContext";
 
 export default function ConversationsPage() {
   const [searchQuery, setSearchQuery] = useState("");

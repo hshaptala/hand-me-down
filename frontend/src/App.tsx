@@ -1,15 +1,19 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.tsx";
-import Register from "./pages/auth/Register.tsx";
-import Login from "./pages/auth/Login.tsx";
-import Profile from "./pages/user/UserProfile.tsx";
-import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
-import ResetPassword from "./pages/auth/ResetPassword.tsx";
-import Layout from "./layout.tsx";
-import CommunitiesPage from "./pages/community/Communities.tsx";
-import ConversationsPage from "./pages/conversations/Conversations.tsx";
-import { AuthProvider } from "./context/AuthContext.tsx";
+
 import { ToastProvider } from "./components/ui/toast-provider";
+import { AuthProvider } from "./context/AuthContext.tsx";
+import Layout from "./layout.tsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
+import Login from "./pages/auth/Login.tsx";
+import Register from "./pages/auth/Register.tsx";
+import ResetPassword from "./pages/auth/ResetPassword.tsx";
+import Communities from "./pages/community/Communities.tsx";
+import Community from "./pages/community/Community.tsx";
+import CreateItem from "./pages/community/item/CreateItem.tsx";
+import Item from "./pages/community/item/Item.tsx";
+import ConversationsPage from "./pages/conversations/Conversations.tsx";
+import Home from "./pages/Home.tsx";
+import Profile from "./pages/user/UserProfile.tsx";
 
 function App() {
   return (
@@ -19,9 +23,12 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
-            <Route path="communities" element={<CommunitiesPage />} />
-            <Route path="communities/:id" element={<CommunitiesPage />} />
-            <Route path="conversations" element={<ConversationsPage />} />
+            <Route path="communities" element={<Communities />} />
+            <Route path="communities/:id" element={<Community />} />{" "}            <Route path="conversations" element={<ConversationsPage />} />            <Route path="communities/:id/items/:itemId" element={<Item />} />
+            <Route
+              path="communities/:id/items/create"
+              element={<CreateItem />}
+            />
             <Route path="profile" element={<Profile />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
