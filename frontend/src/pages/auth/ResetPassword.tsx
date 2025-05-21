@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import supabase from "@/lib/supabase";
 import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
