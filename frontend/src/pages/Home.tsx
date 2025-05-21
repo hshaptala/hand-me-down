@@ -1,4 +1,8 @@
+import { MapPin, Users, Gift, ArrowRight, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import Container from "@/components/layout/Container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,14 +12,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { MapPin, Users, Gift, ArrowRight } from "lucide-react";
-import Container from "@/components/layout/Container";
 
 export default function Home() {
+  // Mock data for joined communities to determine button styling
+  const joinedCommunities = [1]; // Thomas More University is joined
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Hero Section */}
-      <section className="dark:from-background dark:to-background w-full bg-gradient-to-b from-[#F5F5F5] to-white py-12 md:py-24 lg:py-32">
+      <section className="dark:from-background dark:to-background w-full bg-white py-12 md:py-24 lg:py-32">
         <Container>
           <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="flex flex-col justify-center space-y-4">
@@ -125,77 +130,167 @@ export default function Home() {
           </div>
           <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Community Card 1 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Thomas More University</CardTitle>
-                <CardDescription>Private Community</CardDescription>
+            <Card key={1}>
+              <CardHeader className="p-0">
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src="/thomas-more.png?height=200&width=400"
+                    alt="Thomas More University"
+                    className="h-full w-full object-cover"
+                  />                  <Badge
+                    className="absolute top-4 right-4 bg-[#424242]"
+                  >
+                    <Lock className="mr-1 h-3 w-3" /> Private
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent>
-                <img
-                  alt="Thomas More University Community"
-                  className="aspect-video w-full rounded-lg object-cover"
-                  height="200"
-                  src="/thomas-more.png?height=200&width=400"
-                  width="400"
-                />
-                <p className="text-muted-foreground mt-4 line-clamp-3 h-[4.5rem] text-sm">
+              <CardContent className="p-6">
+                <CardTitle>Thomas More University</CardTitle>
+                <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>Geel, Belgium</span>
+                </div>
+                <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                   A private community for students and teachers to donate and
                   exchange items within the university.
-                </p>
+                </CardDescription>
+                <div className="flex gap-4 mt-4 text-sm">
+                  <div>
+                    <span className="font-medium">245</span>
+                    <span className="text-muted-foreground ml-1">members</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">56</span>
+                    <span className="text-muted-foreground ml-1">items</span>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="w-full">
-                  Request to Join
+                <Button
+                  className={`w-full ${
+                    joinedCommunities.includes(1)
+                      ? "bg-muted hover:bg-muted/80"
+                      : "bg-[#FFC107] hover:bg-[#FFA000] text-[#242424]"
+                  }`}
+                  asChild
+                >
+                  <Link to="/communities/1">
+                    {joinedCommunities.includes(1)
+                      ? "View Community"
+                      : "Request to Join"}
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
             {/* Community Card 2 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>City of Geel</CardTitle>
-                <CardDescription>Public Community</CardDescription>
+            <Card key={2}>
+              <CardHeader className="p-0">
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src="/geel.jpg?height=200&width=400"
+                    alt="City of Geel"
+                    className="h-full w-full object-cover"
+                  />
+                  <Badge
+                    className={`absolute top-4 right-4 ${"bg-[#2E7D32]"}`}
+                  >
+                    <>
+                      <Users className="mr-1 h-3 w-3" /> Public
+                    </>
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent>
-                <img
-                  alt="City of Geel Community"
-                  className="aspect-video w-full rounded-lg object-cover"
-                  height="200"
-                  src="/geel.jpg?height=200&width=400"
-                  width="400"
-                />
-                <p className="text-muted-foreground mt-4 line-clamp-3 h-[4.5rem] text-sm">
+              <CardContent className="p-6">
+                <CardTitle>City of Geel</CardTitle>
+                <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>Geel, Belgium</span>
+                </div>
+                <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                   A public community for residents of Geel to share and exchange
                   items locally.
-                </p>
+                </CardDescription>
+                <div className="flex gap-4 mt-4 text-sm">
+                  <div>
+                    <span className="font-medium">1203</span>
+                    <span className="text-muted-foreground ml-1">members</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">187</span>
+                    <span className="text-muted-foreground ml-1">items</span>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]">
-                  Join Community
+                <Button
+                  className={`w-full ${
+                    joinedCommunities.includes(2)
+                      ? "bg-muted hover:bg-muted/80"
+                      : "bg-[#2E7D32] hover:bg-[#1B5E20]"
+                  }`}
+                  asChild
+                >
+                  <Link to="/communities/2">
+                    {joinedCommunities.includes(2)
+                      ? "View Community"
+                      : "Join Community"}
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
             {/* Community Card 3 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Sustainable Living</CardTitle>
-                <CardDescription>Public Community</CardDescription>
+            <Card key={3}>
+              <CardHeader className="p-0">
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img
+                    src="/sustainable.jpg?height=200&width=400"
+                    alt="Sustainable Living"
+                    className="h-full w-full object-cover"
+                  />
+                  <Badge
+                    className={`absolute top-4 right-4 ${"bg-[#2E7D32]"}`}
+                  >
+                    <>
+                      <Users className="mr-1 h-3 w-3" /> Public
+                    </>
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent>
-                <img
-                  alt="Sustainable Living Community"
-                  className="aspect-video w-full rounded-lg object-cover"
-                  height="200"
-                  src="/placeholder.svg?height=200&width=400"
-                  width="400"
-                />
-                <p className="text-muted-foreground mt-4 line-clamp-3 h-[4.5rem] text-sm">
+              <CardContent className="p-6">
+                <CardTitle>Sustainable Living</CardTitle>
+                <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3" />
+                  <span>Antwerp, Belgium</span>
+                </div>
+                <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                   A community focused on sustainable living practices and
                   reducing waste through item sharing.
-                </p>
+                </CardDescription>
+                <div className="flex gap-4 mt-4 text-sm">
+                  <div>
+                    <span className="font-medium">876</span>
+                    <span className="text-muted-foreground ml-1">members</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">134</span>
+                    <span className="text-muted-foreground ml-1">items</span>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]">
-                  Join Community
+                <Button
+                  className={`w-full ${
+                    joinedCommunities.includes(3)
+                      ? "bg-muted hover:bg-muted/80"
+                      : "bg-[#2E7D32] hover:bg-[#1B5E20]"
+                  }`}
+                  asChild
+                >
+                  <Link to="/communities/3">
+                    {joinedCommunities.includes(3)
+                      ? "View Community"
+                      : "Join Community"}
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>

@@ -1,5 +1,10 @@
-import { Link } from "react-router-dom";
 import { useState } from "react";
+
+import { Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import Container from "./layout/Container";
+
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -8,9 +13,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Menu, X } from "lucide-react";
-import Container from "./layout/Container";
-import { useAuth } from "@/context/auth-context";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,12 +43,6 @@ export default function Navbar() {
             className="text-sm font-medium transition-colors hover:text-[#2E7D32]"
           >
             Communities
-          </Link>
-          <Link
-            to="/map"
-            className="text-sm font-medium transition-colors hover:text-[#2E7D32]"
-          >
-            Map
           </Link>
           <Link
             to="/about"

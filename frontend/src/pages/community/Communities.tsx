@@ -1,7 +1,11 @@
 import { useState } from "react";
+
+import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import Container from "@/components/layout/Container";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,9 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -20,9 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Container from "@/components/layout/Container";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function CommunitiesPage() {
+export default function Communities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
@@ -311,7 +313,10 @@ export default function CommunitiesPage() {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button className="w-full" asChild>
+                      <Button
+                        className="bg-muted hover:bg-muted/80 w-full"
+                        asChild
+                      >
                         <Link to={`/communities/${community.id}`}>
                           View Community
                         </Link>
