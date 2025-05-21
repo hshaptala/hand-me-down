@@ -46,6 +46,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
     private Collection $communities;
 
+    #[ORM\Column(length: 255)]
+    #[Groups(['user_register'])]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255)]
+    #[Groups(['user_register'])]
+    private ?string $lastName = null;
+
     public function __construct()
     {
         $this->communities = new ArrayCollection();
@@ -162,6 +170,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $community->setCreator(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(string $firstName): static
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(string $lastName): static
+    {
+        $this->lastName = $lastName;
 
         return $this;
     }

@@ -89,12 +89,12 @@ final class CommunityController extends AbstractController
                 description: 'No file provided or no password provided',
             ),
             new OA\Response(
-                response: 422,
-                description: 'Invalid password or name',
-            ),
-            new OA\Response(
                 response: 401,
                 description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Invalid password or name',
             )
         ]
     )]
