@@ -44,7 +44,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Community>
      */
     #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
-    private Collection $communities;
+    private Collection $communitiesCreated;
 
     #[ORM\Column(length: 255)]
     #[Groups(['user_register'])]
@@ -54,9 +54,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user_register'])]
     private ?string $lastName = null;
 
+    /**
+     * @var Collection<int, Member>
+     */
+    #[ORM\OneToMany(targetEntity: Member::class, mappedBy: 'user')]
+    private Collection $memberships;
+
     public function __construct()
     {
-        $this->communities = new ArrayCollection();
+        $this->communitiesCreated = new ArrayCollection();
+        $this->memberships = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -147,24 +154,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Community>
      */
-    public function getCommunities(): Collection
+    public function getCommunitiesCreated(): Collection
     {
-        return $this->communities;
+        return $this->communitiesCreated;
     }
 
-    public function addCommunity(Community $community): static
+    public function addCommunityCreated(Community $community): static
     {
-        if (!$this->communities->contains($community)) {
-            $this->communities->add($community);
+        if (!$this->communitiesCreated->contains($community)) {
+            $this->communitiesCreated->add($community);
             $community->setCreator($this);
         }
 
         return $this;
     }
 
-    public function removeCommunity(Community $community): static
+    public function removeCommunityCreated(Community $community): static
     {
-        if ($this->communities->removeElement($community)) {
+        if ($this->communitiesCreated->removeElement($community)) {
             // set the owning side to null (unless already changed)
             if ($community->getCreator() === $this) {
                 $community->setCreator(null);
@@ -194,6 +201,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLastName(string $lastName): static
     {
         $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Member>
+     */
+    public function getMemberships(): Collection
+    {
+        return $this->memberships;
+    }
+
+    public function addMembership(Member $membership): static
+    {
+        if (!$this->memberships->contains($membership)) {
+            $this->memberships->add($membership);
+            $membership->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMembership(Member $membership): static
+    {
+        if ($this->memberships->removeElement($membership)) {
+            // set the owning side to null (unless already changed)
+            if ($membership->getUser() === $this) {
+                $membership->setUser(null);
+            }
+        }
 
         return $this;
     }

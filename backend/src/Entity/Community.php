@@ -20,6 +20,7 @@ class Community
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['community_basic'])]
     private ?int $id = null;
 
     #[Groups(['community_basic','community_new'])]
@@ -59,12 +60,22 @@ class Community
     #[Groups(['community_basic'])]
     private $imageUrl = null;
 
-    #[ORM\ManyToOne(inversedBy: 'communities')]
+    #[Groups(['community_basic'])]
+    private int $memberCount = 0;
+
+    #[ORM\ManyToOne(inversedBy: 'communitiesCreated')]
     private ?User $creator = null;
+
+    /**
+     * @var Collection<int, Member>
+     */
+    #[ORM\OneToMany(targetEntity: Member::class, mappedBy: 'community')]
+    private Collection $members;
 
     public function __construct()
     {
         $this->items = new ArrayCollection();
+        $this->members = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -187,14 +198,26 @@ class Community
     }
 
 
-    public function setImageUrl(string $url): void
+    public function setImageUrl(string $url): static
     {
         $this->imageUrl = $url;
+        return $this;
     }
 
     public function getImageUrl(): ?string
     {
         return $this->imageUrl;
+    }
+
+    public function setMemberCount(int $count): static
+    {
+        $this->memberCount = $count;
+        return $this;
+    }
+
+    public function getMemberCount(): int
+    {
+        return $this->memberCount;
     }
 
     public function getCreator(): ?User
@@ -208,4 +231,35 @@ class Community
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, Member>
+     */
+    public function getMembers(): Collection
+    {
+        return $this->members;
+    }
+
+    public function addMember(Member $member): static
+    {
+        if (!$this->members->contains($member)) {
+            $this->members->add($member);
+            $member->setCommunity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMember(Member $member): static
+    {
+        if ($this->members->removeElement($member)) {
+            // set the owning side to null (unless already changed)
+            if ($member->getCommunity() === $this) {
+                $member->setCommunity(null);
+            }
+        }
+
+        return $this;
+    }
+    
 }

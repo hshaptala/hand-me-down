@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Enum\CommunityRoleEnum;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
@@ -104,5 +105,23 @@ final class UserController extends AbstractController
     public function login(#[CurrentUser()] User $user)
     {
         return $user->getToken();
+    }
+
+
+    #[View()]
+    #[Route(path:"/users/roles", methods: ["GET"], name:"api_user_roles")]
+    #[OA\Get(
+        summary: "Get the list of all the roles users can have in communities.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of roles',
+            )
+        ]
+    )] 
+    public function getRoles()
+    {
+        return CommunityRoleEnum::cases();
     }
 }
