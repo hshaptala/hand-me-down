@@ -69,7 +69,12 @@ class Community
     /**
      * @var Collection<int, Member>
      */
-    #[ORM\OneToMany(targetEntity: Member::class, mappedBy: 'community')]
+    #[ORM\OneToMany(
+        targetEntity: Member::class, 
+        mappedBy: 'community',
+        cascade: ['remove'],
+        orphanRemoval: true
+    )]
     private Collection $members;
 
     public function __construct()
