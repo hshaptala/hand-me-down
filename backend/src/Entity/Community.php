@@ -2,13 +2,19 @@
 
 namespace App\Entity;
 
+use App\Entity\Enum\VisibilityEnum;
 use App\Repository\CommunityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use OpenApi\Attributes as OA;
 
 #[ORM\Entity(repositoryClass: CommunityRepository::class)]
+#[ORM\Table(name: "community", uniqueConstraints: [
+    new ORM\UniqueConstraint(name: "uniq_community_name", columns: ["name"])
+])]
 class Community
 {
     #[ORM\Id]
@@ -16,21 +22,19 @@ class Community
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['community_basic','community_new'])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $type = null;
-
+    #[Groups(['community_basic','community_new'])]
     #[ORM\Column(length: 255)]
     private ?string $location = null;
 
+    #[Groups(['community_basic','community_new'])]
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $image_url = null;
-
+    #[Groups(['community_new'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $password = null;
 
@@ -42,6 +46,21 @@ class Community
      */
     #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'community')]
     private Collection $items;
+
+    #[Groups(['community_basic','community_new'])]
+    #[ORM\Column(enumType: VisibilityEnum::class)]
+    private ?VisibilityEnum $visibility = null;
+
+    #[Groups(['community_new'])]
+    #[OA\Property(property:'image', type:'string', format:'binary')]
+    #[ORM\Column(type: Types::BLOB)]
+    private $image = null;
+
+    #[Groups(['community_basic'])]
+    private $imageUrl = null;
+
+    #[ORM\ManyToOne(inversedBy: 'communities')]
+    private ?User $creator = null;
 
     public function __construct()
     {
@@ -61,18 +80,6 @@ class Community
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->type;
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = $type;
 
         return $this;
     }
@@ -97,18 +104,6 @@ class Community
     public function setDescription(?string $description): static
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getImageUrl(): ?string
-    {
-        return $this->image_url;
-    }
-
-    public function setImageUrl(?string $image_url): static
-    {
-        $this->image_url = $image_url;
 
         return $this;
     }
@@ -163,6 +158,53 @@ class Community
                 $item->setCommunity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getVisibility(): ?VisibilityEnum
+    {
+        return $this->visibility;
+    }
+
+    public function setVisibility(VisibilityEnum $visibility): static
+    {
+        $this->visibility = $visibility;
+
+        return $this;
+    }
+
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    public function setImage($image): static
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+
+    public function setImageUrl(string $url): void
+    {
+        $this->imageUrl = $url;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return $this->imageUrl;
+    }
+
+    public function getCreator(): ?User
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?User $creator): static
+    {
+        $this->creator = $creator;
 
         return $this;
     }
