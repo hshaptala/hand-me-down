@@ -9,7 +9,7 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: email
+                property: supabaseId
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -17,17 +17,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            stateless: true 
-            access_token: 
-               token_handler: App\Security\AccessTokenHandler
-            json_login:
-                check_path: api_login
-
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            stateless: true
+            custom_authenticators:
+                - App\Security\SupabaseJwtAuthenticator
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used

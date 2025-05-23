@@ -54,6 +54,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user_register'])]
     private ?string $lastName = null;
 
+    #[ORM\Column(length: 255, nullable: true, unique: true)]
+    private ?string $supabaseId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar = null;
+
     public function __construct()
     {
         $this->communities = new ArrayCollection();
@@ -195,6 +201,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->lastName = $lastName;
 
+        return $this;
+    }
+
+    public function getSupabaseId(): ?string
+    {
+        return $this->supabaseId;
+    }
+
+    public function setSupabaseId(string $supabaseId): static
+    {
+        $this->supabaseId = $supabaseId;
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): static
+    {
+        $this->avatar = $avatar;
         return $this;
     }
 }
