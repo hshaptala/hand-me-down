@@ -12,11 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { createCommunity } from "@/service/community.service";
 
 export default function CreateCommunity() {
   const [formData, setFormData] = useState({
@@ -25,15 +25,11 @@ export default function CreateCommunity() {
     location: "",
     type: "public",
     password: "",
-    categories: {
-      books: true,
-      furniture: true,
-      electronics: true,
-      clothing: true,
-      kitchen: false,
-      other: false,
-    },
+    image: null as File | null,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -46,20 +42,47 @@ export default function CreateCommunity() {
     setFormData((prev) => ({ ...prev, type: value }));
   };
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      categories: {
-        ...prev.categories,
-        [category]: checked,
-      },
-    }));
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData((prev) => ({ ...prev, image: e.target.files![0] }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle community creation logic here
-    console.log(formData);
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      await createCommunity({
+        name: formData.name,
+        location: formData.location,
+        description: formData.description,
+        password: formData.type === "private" ? formData.password : undefined,
+        visibility: formData.type === "private" ? "Private" : "Public",
+        image: formData.image,
+      });
+      setSuccess(true);
+    } catch (err: unknown) {
+      let message = "Failed to create community";
+      if (
+        err &&
+        typeof err === "object" &&
+        "response" in err &&
+        err.response &&
+        typeof err.response === "object" &&
+        "data" in err.response &&
+        err.response.data &&
+        typeof err.response.data === "object" &&
+        "message" in err.response.data &&
+        typeof err.response.data.message === "string"
+      ) {
+        message = (err.response.data as { message: string }).message;
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,9 +152,18 @@ export default function CreateCommunity() {
                   <p className="text-muted-foreground text-center text-sm">
                     Drag and drop an image here, or click to browse
                   </p>
-                  <Button variant="outline" className="mt-4">
-                    Upload Image
-                  </Button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Button variant="outline" className="mt-4">
+                      Upload Image
+                    </Button>
+                  </label>
                 </div>
               </div>
 
@@ -175,99 +207,32 @@ export default function CreateCommunity() {
                   </p>
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label>Item Categories</Label>
-                <p className="text-muted-foreground mb-2 text-sm">
-                  Select the categories of items that can be shared in your
-                  community
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="books"
-                      checked={formData.categories.books}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("books", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="books" className="font-normal">
-                      Books
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="furniture"
-                      checked={formData.categories.furniture}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("furniture", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="furniture" className="font-normal">
-                      Furniture
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="electronics"
-                      checked={formData.categories.electronics}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("electronics", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="electronics" className="font-normal">
-                      Electronics
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="clothing"
-                      checked={formData.categories.clothing}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("clothing", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="clothing" className="font-normal">
-                      Clothing
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="kitchen"
-                      checked={formData.categories.kitchen}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("kitchen", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="kitchen" className="font-normal">
-                      Kitchen
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="other"
-                      checked={formData.categories.other}
-                      onCheckedChange={(checked) =>
-                        handleCategoryChange("other", checked as boolean)
-                      }
-                    />
-                    <Label htmlFor="other" className="font-normal">
-                      Other
-                    </Label>
-                  </div>
-                </div>
-              </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" type="button">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#2E7D32] hover:bg-[#1B5E20]">
-                Create Community
+              <Button
+                type="submit"
+                className="bg-[#2E7D32] hover:bg-[#1B5E20]"
+                disabled={loading}
+              >
+                {loading ? "Creating..." : "Create Community"}
               </Button>
             </CardFooter>
           </Card>
         </form>
+
+        {error && (
+          <div className="mt-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mt-4 rounded-md bg-green-50 p-4 text-sm text-green-800">
+            Community created successfully!
+          </div>
+        )}
       </div>
     </div>
   );

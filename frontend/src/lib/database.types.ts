@@ -103,13 +103,11 @@ export interface Database {
   };
 }
 
-// Types for the chat system
+// Only keep types for chat/auth
 export type Message = Database["public"]["Tables"]["messages"]["Row"];
 export type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
 export type ConversationParticipant =
   Database["public"]["Tables"]["conversation_participants"]["Row"];
-
-// Extended types with additional data needed for UI
 export interface ConversationWithDetails extends Conversation {
   participants: {
     id: string;
@@ -128,7 +126,6 @@ export interface ConversationWithDetails extends Conversation {
     image?: string;
   };
 }
-
 export interface MessageWithUser extends Message {
   user: {
     id: string;

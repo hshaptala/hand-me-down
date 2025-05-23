@@ -1,25 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-import {
-  Search,
-  Plus,
-  Users,
-  Lock,
-  MapPin,
-  Settings,
-  Filter,
-} from "lucide-react";
+import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -32,145 +21,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-//import { Breadcrumb } from "@/components/ui/breadcrumb"
+import type { Community } from "@/models/community";
+import { fetchCommunity } from "@/service/community.service";
 
 export default function Community() {
   const { id } = useParams<{ id: string }>();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [community, setCommunity] = useState<Community | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock community data
-  const community = {
-    id: Number.parseInt(id || "1"),
-    name: "Thomas More University",
-    description:
-      "A private community for students and teachers to donate and exchange items within the university. Share books, furniture, electronics, and more with fellow students and staff.",
-    image: "/placeholder.svg?height=300&width=1200",
-    type: "private",
-    location: "Geel, Belgium",
-    members: 245,
-    items: 56,
-    isAdmin: true,
-    categories: [
-      "Books",
-      "Furniture",
-      "Electronics",
-      "Clothing",
-      "Kitchen",
-      "Other",
-    ],
-    itemList: [
-      {
-        id: 1,
-        title: "Desk Lamp",
-        description:
-          "White desk lamp in good condition. Works perfectly, I just got a new one.",
-        image: "/placeholder.svg?height=200&width=200",
-        category: "Electronics",
-        donor: {
-          name: "Michael Johnson",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        postedDate: "2 days ago",
-        status: "Available",
-      },
-      {
-        id: 2,
-        title: "Computer Science Textbook",
-        description:
-          "Introduction to Algorithms textbook, 3rd edition. Some highlighting but otherwise in good condition.",
-        image: "/placeholder.svg?height=200&width=200",
-        category: "Books",
-        donor: {
-          name: "Sarah Williams",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        postedDate: "1 week ago",
-        status: "Available",
-      },
-      {
-        id: 3,
-        title: "Office Chair",
-        description:
-          "Black office chair with adjustable height. Very comfortable, I'm just moving and can't take it with me.",
-        image: "/placeholder.svg?height=200&width=200",
-        category: "Furniture",
-        donor: {
-          name: "David Chen",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        postedDate: "3 days ago",
-        status: "Reserved",
-      },
-      {
-        id: 4,
-        title: "Coffee Maker",
-        description:
-          "Drip coffee maker, makes 12 cups. Works perfectly, I just upgraded to an espresso machine.",
-        image: "/placeholder.svg?height=200&width=200",
-        category: "Kitchen",
-        donor: {
-          name: "Emma Rodriguez",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-        postedDate: "5 days ago",
-        status: "Available",
-      },
-    ],
-    memberList: [
-      {
-        id: 1,
-        name: "Michael Johnson",
-        avatar: "/placeholder.svg?height=40&width=40",
-        role: "Admin",
-      },
-      {
-        id: 2,
-        name: "Sarah Williams",
-        avatar: "/placeholder.svg?height=40&width=40",
-        role: "Moderator",
-      },
-      {
-        id: 3,
-        name: "David Chen",
-        avatar: "/placeholder.svg?height=40&width=40",
-        role: "Member",
-      },
-      {
-        id: 4,
-        name: "Emma Rodriguez",
-        avatar: "/placeholder.svg?height=40&width=40",
-        role: "Member",
-      },
-      {
-        id: 5,
-        name: "John Smith",
-        avatar: "/placeholder.svg?height=40&width=40",
-        role: "Member",
-      },
-    ],
-  };
+  useEffect(() => {
+    if (!id) return;
+    fetchCommunity(Number(id)).then((data) => {
+      setCommunity(data);
+      setLoading(false);
+    });
+  }, [id]);
 
-  // Filter items based on search query and category filter
-  const filteredItems = community.itemList.filter(
-    (item) =>
-      (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (categoryFilter === "all" || item.category === categoryFilter),
-  );
-
-  // Breadcrumb items for this page
-  /* const breadcrumbItems = [
-    { label: "Communities", to: "/communities" },
-    { label: community.name, to: `/communities/${community.id}`, isCurrent: true },
-  ]*/
+  if (loading || !community) return <div>Loading...</div>;
 
   return (
     <div>
       {/* Community Header */}
       <div className="relative h-64 w-full overflow-hidden">
         <img
-          src={community.image || "/placeholder.svg"}
+          src={community.imageUrl || "/placeholder.svg"}
           alt={community.name}
           className="h-full w-full object-cover"
         />
@@ -179,9 +55,9 @@ export default function Community() {
           <h1 className="text-3xl font-bold">{community.name}</h1>
           <div className="mt-2 flex items-center gap-2">
             <Badge
-              className={`${community.type === "private" ? "bg-[#424242]" : "bg-[#2E7D32]"}`}
+              className={`${community.visibility === "Private" ? "bg-[#424242]" : "bg-[#2E7D32]"}`}
             >
-              {community.type === "private" ? (
+              {community.visibility === "Private" ? (
                 <>
                   <Lock className="mr-1 h-3 w-3" /> Private
                 </>
@@ -195,13 +71,9 @@ export default function Community() {
               <MapPin className="h-4 w-4" />
               <span>{community.location}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>{community.memberList.length} members</span>
-            </div>
           </div>
         </div>
-        {community.isAdmin && (
+        {/* {community.isAdmin && (
           <Button
             variant="outline"
             className="absolute top-6 right-6 border-white/20 bg-white/10 text-white hover:bg-white/20"
@@ -212,16 +84,11 @@ export default function Community() {
               Manage Community
             </Link>
           </Button>
-        )}
+        )} */}
       </div>
 
       {/* Community Content */}
       <Container className="py-10">
-        {/* Breadcrumb Navigation 
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>*/}
-
         <div className="flex flex-col space-y-6">
           <div className="flex flex-col gap-6 md:flex-row">
             <div className="md:w-2/3">
@@ -266,17 +133,17 @@ export default function Community() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {community.categories.map((category) => (
+                    {/* {community.categories?.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
-                    ))}
+                    ))} */}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredItems.length > 0 ? (
+                {/* {filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
                     <Card key={item.id}>
                       <CardHeader className="p-0">
@@ -350,14 +217,14 @@ export default function Community() {
                       No items found matching your search criteria
                     </p>
                   </div>
-                )}
+                )} */}
               </div>
             </TabsContent>
 
             {/* Members Tab */}
             <TabsContent value="members" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {community.memberList.map((member) => (
+                {/* {community.memberList?.map((member) => (
                   <Card key={member.id}>
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
@@ -387,7 +254,7 @@ export default function Community() {
                       </Button>
                     </CardFooter>
                   </Card>
-                ))}
+                ))} */}
               </div>
             </TabsContent>
 
@@ -413,9 +280,11 @@ export default function Community() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium">Community Type</h3>
+                    <h3 className="text-lg font-medium">
+                      Community visibility
+                    </h3>
                     <p className="text-muted-foreground mt-2">
-                      {community.type === "private" ? (
+                      {community.visibility === "Private" ? (
                         <>
                           This is a private community. You need an invitation or
                           password to join.
@@ -427,17 +296,6 @@ export default function Community() {
                         </>
                       )}
                     </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-medium">Categories</h3>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {community.categories.map((category) => (
-                        <Badge key={category} variant="outline">
-                          {category}
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
                 </CardContent>
               </Card>

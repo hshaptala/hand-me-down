@@ -1,8 +1,7 @@
-import type React from "react";
 import { useState } from "react";
 
 import { Upload } from "lucide-react";
-import { useParams } from "react-router-dom";
+//import { useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,15 +17,13 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function CreateItem() {
-  const { id } = useParams<{ id: string }>();
-
+  //const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -34,19 +31,7 @@ export default function CreateItem() {
     image: null as File | null,
   });
 
-  // Mock community data
-  const community = {
-    id: id ? Number.parseInt(id) : 0,
-    name: "Thomas More University",
-    categories: [
-      "Books",
-      "Furniture",
-      "Electronics",
-      "Clothing",
-      "Kitchen",
-      "Other",
-    ],
-  };
+  // TODO: Fetch real community categories if needed
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -77,7 +62,7 @@ export default function CreateItem() {
         <div className="mb-6 flex flex-col space-y-2">
           <h1 className="text-3xl font-bold">Post an Item</h1>
           <p className="text-muted-foreground">
-            Share an item with the {community.name} community
+            Share an item with the community
           </p>
         </div>
 
@@ -126,11 +111,11 @@ export default function CreateItem() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {community.categories.map((category) => (
+                    {/* {community.categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
-                    ))}
+                    ))} */}
                   </SelectContent>
                 </Select>
               </div>
