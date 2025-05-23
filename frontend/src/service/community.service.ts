@@ -1,4 +1,4 @@
-import api from "@/config/axios.config";
+import api, { getBearerAuthHeaders } from "@/config/axios.config";
 import type { Community } from "@/models/community";
 
 export async function fetchCommunities(): Promise<Community[]> {
@@ -26,8 +26,11 @@ export async function createCommunity(data: {
   if (data.password) formData.append("password", data.password);
   formData.append("visibility", data.visibility);
   if (data.image) formData.append("image", data.image);
+
+  const headers = await getBearerAuthHeaders("multipart/form-data");
+
   const res = await api.post("/communities", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers,
   });
   return res.data;
 }
