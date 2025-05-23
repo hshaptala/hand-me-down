@@ -47,11 +47,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $communitiesCreated;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register'])]
+    #[Groups(['user_register','member_basic'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register'])]
+    #[Groups(['user_register','member_basic'])]
     private ?string $lastName = null;
 
     /**

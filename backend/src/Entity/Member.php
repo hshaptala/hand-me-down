@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Entity\Enum\CommunityRoleEnum;
 use App\Repository\MemberRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ORM\Table(name: '`member`')]
@@ -13,10 +14,14 @@ class Member
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['member_basic'])]
+
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'memberships')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['member_basic'])]
+
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'members')]
@@ -24,6 +29,7 @@ class Member
     private ?Community $community = null;
 
     #[ORM\Column(enumType: CommunityRoleEnum::class)]
+    #[Groups(['member_basic'])]
     private ?CommunityRoleEnum $role = CommunityRoleEnum::MEMBER;
 
     public function getId(): ?int

@@ -13,6 +13,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 class CommunityVoter extends Voter
 {
     public const DELETE = 'COMMUNITY_DELETE';
+    public const MANAGE_ROLES = 'COMMUNITY_MANAGE_ROLES';
     public const EDIT = 'COMMUNITY_EDIT';
     public const MODERATE = 'COMMUNITY_MODERATE';
     public const VIEW = 'COMMUNITY_VIEW';
@@ -26,7 +27,7 @@ class CommunityVoter extends Voter
 
     protected function supports(string $attribute, $subject): bool
     {
-        return in_array($attribute, [self::DELETE, self::EDIT, self::MODERATE, self::VIEW])
+        return in_array($attribute, [self::DELETE ,self::MANAGE_ROLES , self::EDIT, self::MODERATE, self::VIEW])
             && $subject instanceof Community;
     }
 
@@ -58,6 +59,8 @@ class CommunityVoter extends Voter
             case self::MODERATE:
                 return in_array($member->getRole(), [CommunityRoleEnum::MODERATOR, CommunityRoleEnum::ADMIN]);
             case self::EDIT:
+                return $member->getRole() === CommunityRoleEnum::ADMIN;
+            case self::MANAGE_ROLES:
                 return $member->getRole() === CommunityRoleEnum::ADMIN;
             case self::DELETE:
                 return $member->getRole() === CommunityRoleEnum::ADMIN;

@@ -398,4 +398,36 @@ final class CommunityController extends AbstractController
         return $community;
     }
 
+
+
+    // GET 
+
+    #[View(serializerGroups: ["community_basic"])]
+    #[Route(path:"/api/communities/{id}", methods: ["GET"])]
+    #[OA\Get(
+        summary: "Get the the full information on a community",
+        tags: ["Communities"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of communities',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Community::class, groups: ['community_basic'])))
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community not found',
+            ),
+        ]
+    )]
+    public function community(
+        Community $community, 
+        UrlGeneratorInterface $urlGen
+        )
+    {
+        $community
+            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
+            ->setMemberCount(count($community->getMembers()))
+        ;
+        return $community;
+    }
 }
