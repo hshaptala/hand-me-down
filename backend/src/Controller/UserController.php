@@ -15,16 +15,17 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route(path:"/api")]
+
 final class UserController extends AbstractController
 {
     #[View()]
-    #[Route('/register', methods: ['POST'])]
+    #[Route('/api/register', methods: ['POST'])]
     #[OA\Post(
         summary: "Create a new account",
         tags: ["Users"],
@@ -88,7 +89,7 @@ final class UserController extends AbstractController
 
 
     #[View()] 
-    #[Route('/login', methods: ['POST'], name: 'api_login')] 
+    #[Route('/api/login', methods: ['POST'], name: 'api_login')] 
     #[OA\Post( 
        summary: "Login", 
        tags: ["Users"],
@@ -114,7 +115,7 @@ final class UserController extends AbstractController
     }
 
     #[View(serializerGroups: ["community_basic"])]
-    #[Route(path:"/users/communities", methods: ["GET"])]
+    #[Route(path:"/api/users/communities", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Get(
@@ -153,4 +154,55 @@ final class UserController extends AbstractController
         };
         return $communities;
     }
+
+
+
+
+    // DEFAULT AVATAR
+
+    #[Route(path:'/images/default-avatar.png', methods: ['GET'], name:"api_default_avatar")]
+    public function getDefaultAvatar(ParameterBagInterface $params)
+    {
+
+        // Get path
+        $projectDir = $params->get('kernel.project_dir');
+        $imageName = "default-avatar.png";
+        $imagePath = $projectDir . '/public/' . $imageName;
+
+        // Check file
+        if (!file_exists($imagePath)) {
+            throw $this->createNotFoundException("Image not found");
+        }
+
+        // Get content
+        $imageContent = file_get_contents($imagePath);
+
+        // Return image
+        return new Response($imageContent, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="'.$imageName.'"',
+        ]);
+    }
+
+
+    // AVATAR
+
+    #[Route(path:'/images/users/{id}.png', methods: ['GET'], name:"api_user_avatar")]
+    public function getAvatar(User $user, ParameterBagInterface $params)
+    {
+        // Get user's avatar
+        $imageContent = $user->getAvatar();
+
+        if ($imageContent === null) {
+            // Show default avatar endpoint
+            return $this->getDefaultAvatar($params);
+        }
+
+        // Return image
+        return new Response(stream_get_contents($imageContent), 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="'. $user->getFirstName() . $user->getLastName() .'.png"',
+        ]);
+    }
+
 }
