@@ -19,6 +19,10 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    
+    # Control access to community functionalities
+    App\Security\CommunityVoter:
+        arguments:
+            # $security: '@security.helper'
+            $em: '@doctrine.orm.entity_manager'
+        tags: ['security.voter']

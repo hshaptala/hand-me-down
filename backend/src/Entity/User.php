@@ -44,25 +44,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Community>
      */
     #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
-    private Collection $communities;
+    private Collection $communitiesCreated;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register'])]
+    #[Groups(['user_register','member_basic'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register'])]
+    #[Groups(['user_register','member_basic'])]
     private ?string $lastName = null;
 
-    #[ORM\Column(length: 255, nullable: true, unique: true)]
-    private ?string $supabaseId = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $avatar = null;
+    /**
+     * @var Collection<int, Member>
+     */
+    #[ORM\OneToMany(targetEntity: Member::class, mappedBy: 'user')]
+    private Collection $memberships;
 
     public function __construct()
     {
-        $this->communities = new ArrayCollection();
+        $this->communitiesCreated = new ArrayCollection();
+        $this->memberships = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -153,24 +154,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Community>
      */
-    public function getCommunities(): Collection
+    public function getCommunitiesCreated(): Collection
     {
-        return $this->communities;
+        return $this->communitiesCreated;
     }
 
-    public function addCommunity(Community $community): static
+    public function addCommunityCreated(Community $community): static
     {
-        if (!$this->communities->contains($community)) {
-            $this->communities->add($community);
+        if (!$this->communitiesCreated->contains($community)) {
+            $this->communitiesCreated->add($community);
             $community->setCreator($this);
         }
 
         return $this;
     }
 
-    public function removeCommunity(Community $community): static
+    public function removeCommunityCreated(Community $community): static
     {
-        if ($this->communities->removeElement($community)) {
+        if ($this->communitiesCreated->removeElement($community)) {
             // set the owning side to null (unless already changed)
             if ($community->getCreator() === $this) {
                 $community->setCreator(null);
@@ -204,25 +205,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getSupabaseId(): ?string
+    /**
+     * @return Collection<int, Member>
+     */
+    public function getMemberships(): Collection
     {
-        return $this->supabaseId;
+        return $this->memberships;
     }
 
-    public function setSupabaseId(string $supabaseId): static
+    public function addMembership(Member $membership): static
     {
-        $this->supabaseId = $supabaseId;
+        if (!$this->memberships->contains($membership)) {
+            $this->memberships->add($membership);
+            $membership->setUser($this);
+        }
+
         return $this;
     }
 
-    public function getAvatar(): ?string
+    public function removeMembership(Member $membership): static
     {
-        return $this->avatar;
-    }
+        if ($this->memberships->removeElement($membership)) {
+            // set the owning side to null (unless already changed)
+            if ($membership->getUser() === $this) {
+                $membership->setUser(null);
+            }
+        }
 
-    public function setAvatar(?string $avatar): static
-    {
-        $this->avatar = $avatar;
         return $this;
     }
 }
