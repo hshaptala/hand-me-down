@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Community;
+use App\Entity\Member;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +18,18 @@ class CommunityRepository extends ServiceEntityRepository
         parent::__construct($registry, Community::class);
     }
 
-    //    /**
-    //     * @return Community[] Returns an array of Community objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Community
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+     * @return Community[] Returns an array of Community objects
+     */
+    public function findAllForUser(User $user): array
+    {
+        return $this->createQueryBuilder('c')
+            ->join('c.members','m')
+            ->join('m.user', 'u')
+            ->andWhere('u.id = :id')
+            ->setParameter('id', $user->getId())
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 }
