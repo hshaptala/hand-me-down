@@ -286,7 +286,7 @@ final class CommunityController extends AbstractController
 
 
 
-    // DELETE
+    // EDIT
 
 
 
@@ -294,13 +294,31 @@ final class CommunityController extends AbstractController
 
 
     #[View(serializerGroups: ["community_basic"])]
-    #[Route(path:"/api/communities/{id}", methods: ["PATCH"])]
+    #[Route(path:"/api/communities/{id}", methods: ["PATCH", "POST"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_EDIT', subject: 'community')]
     #[Security(name:"Bearer")]
-    #[OA\Patch(
+    #[OA\Post(
         tags: ['Communities'],
-        summary: 'Edit a community',
+        summary: 'Update a community informations',
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: '_method', type: 'string', example: 'PATCH', description: 'Method override for browsers and file upload compatibility'),
+                        new OA\Property(property: 'name', type: 'string'),
+                        new OA\Property(property: 'location', type: 'string'),
+                        new OA\Property(property: 'description', type: 'string'),
+                        new OA\Property(property: 'password', type: 'string'),
+                        new OA\Property(property: 'visibility', type: 'string', enum: ['Public', 'Private']),
+                        new OA\Property(property: 'image', type: 'string', format: 'binary')
+                    ]
+                )
+            )
+        ),
         responses: [
             new OA\Response(
                 response: 200,
@@ -324,12 +342,14 @@ final class CommunityController extends AbstractController
                 description: 'Invalid password or name',
             )
         ]
-    )]    public function edit(
+    )]    
+    public function edit(
         Community $community,
         Request $request,
-        #[MapRequestPayload(serializationContext: ["groups" => ["community_edit"]])] CommunityEdit $dto,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
+        UrlGeneratorInterface $urlGen,
+        PasswordHasherFactoryInterface $hasherFactory,
     )
     {
         // Check User
@@ -340,10 +360,42 @@ final class CommunityController extends AbstractController
         // Check permission
         $this->denyAccessUnlessGranted(CommunityVoter::EDIT, $community, message:"You do not have permission to edit this community.");
 
-        // Edit
-        
+        // Manually populate DTO 
+        $dto = new CommunityEdit();
+        $dto->name = $request->request->get('name');
+        $dto->location = $request->request->get('location');
+        $dto->description = $request->request->get('description');
+        $dto->password = $request->request->get('password');
+        $dto->visibility = $request->request->get('visibility');
 
-        return new JsonResponse("Successfully changed community",200);
+        // Check name uniqness
+        $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
+        if ($existing) {
+            return $this->json([
+                'errors' => [
+                    'name' => 'A community with this name already exists.',
+                ]
+            ], 422);
+        }
+
+        // Get password hasher
+        $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
+
+        // Edit
+        $dto->update($community, $passwordHasher);
+        $dto->updateImage($request, $community);
+
+        // Save
+        $em->persist($community);
+        $em->flush();
+
+        // Set values for return
+        $community
+            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
+            ->setMemberCount(count($community->getMembers()))
+        ;
+
+        return $community;
     }
 
 }
