@@ -100,7 +100,6 @@ final class MemberController extends AbstractController
                 ;
             }
         };
-
         return $members;
     }
 
@@ -151,9 +150,10 @@ final class MemberController extends AbstractController
                 ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
             ;
         }
-
+      
         return $member;
     }
+
 
 
 
