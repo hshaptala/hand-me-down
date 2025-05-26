@@ -1,11 +1,9 @@
-import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { ArrowLeft, MessageSquare, MapPin } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,31 +15,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import type { Item } from "@/models/item";
+import { fetchItem } from "@/service/item.service";
 
 export default function Item() {
   const params = useParams<{ id: string; itemId: string }>();
+  const [item, setItem] = useState<Item | null>(null);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Mock item data
-  const item = {
-    id: Number.parseInt(params.itemId || "0"),
-    title: "Desk Lamp",
-    description:
-      "White desk lamp in good condition. Works perfectly, I just got a new one. It has an adjustable arm and three brightness settings. The bulb was recently replaced and should last for a long time.",
-    image: "/placeholder.svg?height=400&width=400",
-    category: "Electronics",
-    donor: {
-      id: 1,
-      name: "Michael Johnson",
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    postedDate: "May 2, 2023",
-    status: "Available",
-    community: {
-      id: Number.parseInt(params.id || "0"),
-      name: "Thomas More University",
-    },
-  };
+  useEffect(() => {
+    if (!params.id || !params.itemId) return;
+    fetchItem(Number(params.id), Number(params.itemId)).then((data) => {
+      setItem(data);
+      setLoading(false);
+    });
+  }, [params.id, params.itemId]);
+
+  if (loading || !item) return <div>Loading...</div>;
 
   const handleReserve = () => {
     // Handle item reservation logic here
@@ -77,7 +68,7 @@ export default function Item() {
               <CardContent className="space-y-6 p-6">
                 <div className="mx-auto aspect-square max-w-md overflow-hidden rounded-md">
                   <img
-                    src={item.image || "/placeholder.svg"}
+                    src={item.image_url || "/placeholder.svg"}
                     alt={item.title}
                     className="h-full w-full object-cover"
                   />
@@ -86,7 +77,11 @@ export default function Item() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">{item.title}</h2>
                     <Badge
-                      className={`${item.status === "Available" ? "bg-[#2E7D32]" : "bg-[#1976D2]"}`}
+                      className={`${
+                        item.status === "Available"
+                          ? "bg-[#2E7D32]"
+                          : "bg-[#1976D2]"
+                      }`}
                     >
                       {item.status}
                     </Badge>
@@ -98,7 +93,7 @@ export default function Item() {
                     {item.description}
                   </p>
                 </div>
-                <div className="flex items-center gap-4 border-t pt-4">
+                {/* <div className="flex items-center gap-4 border-t pt-4">
                   <Avatar>
                     <AvatarImage
                       src={item.donor.avatar || "/placeholder.svg"}
@@ -117,7 +112,7 @@ export default function Item() {
                       Posted on {item.postedDate}
                     </p>
                   </div>
-                </div>
+                </div> */}
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
                 <div className="w-full">
@@ -168,7 +163,7 @@ export default function Item() {
               </CardContent>
             </Card>
 
-            <Card className="mt-6">
+            {/* <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Community Information</CardTitle>
               </CardHeader>
@@ -188,7 +183,7 @@ export default function Item() {
                   </Link>
                 </Button>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>

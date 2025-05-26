@@ -1,45 +1,29 @@
 import axios from "axios";
 
+import { getSupabase } from "../lib/supabase";
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    console.error("Request error:", error);
-    return Promise.reject(error);
-  },
-);
+export async function getBearerAuthHeaders(
+  contentType: string = "application/json",
+) {
+  const supabase = getSupabase();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const headers: Record<string, string> = { "Content-Type": contentType };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        try {
-          const { data } = await api.post("/auth/refresh-token", {
-            refreshToken,
-          });
-          localStorage.setItem("authToken", data.token);
-          error.config.headers.Authorization = `Bearer ${data.token}`;
-          return api.request(error.config);
-        } catch (refreshError) {
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
-          return Promise.reject(refreshError);
-        }
-      }
-      window.location.href = "/login";
-    }
     return Promise.reject(error);
   },
 );

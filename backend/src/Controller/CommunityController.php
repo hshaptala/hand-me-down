@@ -212,6 +212,7 @@ final class CommunityController extends AbstractController
 
 
 
+
     #[Route(path:'/images/communities/{id}.png', methods: ['GET'], name:"api_communities_image")]
     public function getImageUrl(int $id, CommunityRepository $communityRepository)
     {
