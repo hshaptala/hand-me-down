@@ -21,6 +21,7 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -82,9 +83,23 @@ final class MemberController extends AbstractController
     public function members(
         Community $community,
         MemberRepository $memberRepository,
+        UrlGeneratorInterface $urlGen
     )
     {
         $members = $memberRepository->findByCommunity($community);
+        
+        // Generate AvatarUrl
+        foreach ($members as $member) {
+            if($member->getUser()->getAvatar() === null){
+                $member->getUser()
+                    ->setAvatarUrl($urlGen->generate('api_default_avatar'))
+                ;
+            }else{
+                $member->getUser()
+                    ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
+                ;
+            }
+        };
         return $members;
     }
 
@@ -122,11 +137,28 @@ final class MemberController extends AbstractController
     public function member(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'memberId')] Member $member,
+        UrlGeneratorInterface $urlGen
     )
     {
+        // Generate AvatarUrl
+        if($member->getUser()->getAvatar() === null){
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
+            ;
+        }else{
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
+            ;
+        }
+      
         return $member;
     }
 
+
+
+
+
+    
 
     // EDIT ROLE
 
