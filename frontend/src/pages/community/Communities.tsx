@@ -117,7 +117,7 @@ export default function Communities() {
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
-                          src={community.imageUrl || "/placeholder.svg"}
+                          src={import.meta.env.VITE_API_BASE_URL + community.imageUrl || "/placeholder.svg"}
                           alt={community.name}
                           className="h-full w-full object-cover"
                         />
@@ -191,7 +191,7 @@ export default function Communities() {
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
-                          src={community.imageUrl || "/placeholder.svg"}
+                          src={"localhost:8000/" + community.imageUrl || "/placeholder.svg"}
                           alt={community.name}
                           className="h-full w-full object-cover"
                         />

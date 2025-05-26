@@ -2,12 +2,12 @@ import api, { getBearerAuthHeaders } from "@/config/axios.config";
 import type { Community } from "@/models/community";
 
 export async function fetchCommunities(): Promise<Community[]> {
-  const res = await api.get("/communities");
+  const res = await api.get("/api/communities");
   return res.data;
 }
 
 export async function fetchCommunity(id: number): Promise<Community> {
-  const res = await api.get(`/communities/${id}`);
+  const res = await api.get(`/api/communities/${id}`);
   return res.data;
 }
 
@@ -29,7 +29,7 @@ export async function createCommunity(data: {
 
   const headers = await getBearerAuthHeaders("multipart/form-data");
 
-  const res = await api.post("/communities", formData, {
+  const res = await api.post("/api/communities", formData, {
     headers,
   });
   return res.data;
