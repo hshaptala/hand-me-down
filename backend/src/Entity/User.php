@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -59,6 +60,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\OneToMany(targetEntity: Member::class, mappedBy: 'user')]
     private Collection $memberships;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true)]
+    private $avatar = null;
+
+    #[Groups(['member_basic'])]
+    private ?string $avatarUrl = null;
 
     public function __construct()
     {
@@ -233,5 +240,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    public function getAvatar()
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar($avatar): static
+    {
+        $this->avatar = $avatar;
+
+        return $this;
+    }
+
+        public function setAvatarUrl(string $url): static
+    {
+        $this->avatarUrl = $url;
+        return $this;
+    }
+
+    public function getAvatarUrl(): ?string
+    {
+        return $this->avatarUrl;
     }
 }
