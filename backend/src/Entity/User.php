@@ -71,10 +71,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['member_basic'])]
     private ?string $avatarUrl = null;
 
+    /**
+     * @var Collection<int, Item>
+     */
+    #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'donor')]
+    private Collection $donations;
+
+    /**
+     * @var Collection<int, Item>
+     */
+    #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'receiver')]
+    private Collection $receipts;
+
     public function __construct()
     {
         $this->communitiesCreated = new ArrayCollection();
         $this->memberships = new ArrayCollection();
+        $this->donations = new ArrayCollection();
+        $this->receipts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -279,5 +293,65 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getAvatarUrl(): ?string
     {
         return $this->avatarUrl;
+    }
+
+    /**
+     * @return Collection<int, Item>
+     */
+    public function getDonations(): Collection
+    {
+        return $this->donations;
+    }
+
+    public function addDonation(Item $donation): static
+    {
+        if (!$this->donations->contains($donation)) {
+            $this->donations->add($donation);
+            $donation->setDonor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDonation(Item $donation): static
+    {
+        if ($this->donations->removeElement($donation)) {
+            // set the owning side to null (unless already changed)
+            if ($donation->getDonor() === $this) {
+                $donation->setDonor(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Item>
+     */
+    public function getReceipts(): Collection
+    {
+        return $this->receipts;
+    }
+
+    public function addReceipt(Item $receipt): static
+    {
+        if (!$this->receipts->contains($receipt)) {
+            $this->receipts->add($receipt);
+            $receipt->setReceiver($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReceipt(Item $receipt): static
+    {
+        if ($this->receipts->removeElement($receipt)) {
+            // set the owning side to null (unless already changed)
+            if ($receipt->getReceiver() === $this) {
+                $receipt->setReceiver(null);
+            }
+        }
+
+        return $this;
     }
 }

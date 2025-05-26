@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Enum\ItemStatusEnum;
 use App\Repository\ItemRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,23 +21,21 @@ class Item
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $image_url = null;
-
-    #[ORM\Column(length: 100)]
-    private ?string $category = null;
-
-    #[ORM\Column(length: 50)]
-    private ?string $status = null;
-
-    #[ORM\Column]
-    private ?int $community_id = null;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $created_at = null;
-
     #[ORM\ManyToOne(inversedBy: 'items')]
     private ?Community $community = null;
+
+    #[ORM\ManyToOne(inversedBy: 'donations')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $donor = null;
+
+    #[ORM\ManyToOne(inversedBy: 'receipts')]
+    private ?User $receiver = null;
+
+    #[ORM\Column(enumType: ItemStatusEnum::class)]
+    private ?ItemStatusEnum $status = null;
+
+    #[ORM\Column(type: Types::SIMPLE_ARRAY)]
+    private array $keywords = [];
 
     public function getId(): ?int
     {
@@ -67,66 +66,6 @@ class Item
         return $this;
     }
 
-    public function getImageUrl(): ?string
-    {
-        return $this->image_url;
-    }
-
-    public function setImageUrl(?string $image_url): static
-    {
-        $this->image_url = $image_url;
-
-        return $this;
-    }
-
-    public function getCategory(): ?string
-    {
-        return $this->category;
-    }
-
-    public function setCategory(string $category): static
-    {
-        $this->category = $category;
-
-        return $this;
-    }
-
-    public function getStatus(): ?string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(string $status): static
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    public function getCommunityId(): ?int
-    {
-        return $this->community_id;
-    }
-
-    public function setCommunityId(int $community_id): static
-    {
-        $this->community_id = $community_id;
-
-        return $this;
-    }
-
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->created_at;
-    }
-
-    public function setCreatedAt(\DateTimeImmutable $created_at): static
-    {
-        $this->created_at = $created_at;
-
-        return $this;
-    }
-
     public function getCommunity(): ?Community
     {
         return $this->community;
@@ -135,6 +74,54 @@ class Item
     public function setCommunity(?Community $community): static
     {
         $this->community = $community;
+
+        return $this;
+    }
+
+    public function getDonor(): ?User
+    {
+        return $this->donor;
+    }
+
+    public function setDonor(?User $donor): static
+    {
+        $this->donor = $donor;
+
+        return $this;
+    }
+
+    public function getReceiver(): ?User
+    {
+        return $this->receiver;
+    }
+
+    public function setReceiver(?User $receiver): static
+    {
+        $this->receiver = $receiver;
+
+        return $this;
+    }
+
+    public function getStatus(): ?ItemStatusEnum
+    {
+        return $this->status;
+    }
+
+    public function setStatus(ItemStatusEnum $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getKeywords(): array
+    {
+        return $this->keywords;
+    }
+
+    public function setKeywords(array $keywords): static
+    {
+        $this->keywords = $keywords;
 
         return $this;
     }
