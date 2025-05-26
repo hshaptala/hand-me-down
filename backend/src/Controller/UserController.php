@@ -120,9 +120,9 @@ final class UserController extends AbstractController
     #[View(serializerGroups: ["community_basic"])]
     #[Route(path:"/api/users/communities", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
+    #[Security(name: "Bearer")]
     #[OA\Get(
-        summary:"Get the list of comunities joined by the user.",
+        summary: "Get the list of comunities joined by the user.",
         tags: ["Users"],
         responses: [
             new OA\Response(
@@ -141,11 +141,10 @@ final class UserController extends AbstractController
         CommunityRepository $communityRepository,
         UrlGeneratorInterface $urlGen,
         #[CurrentUser()] User $user
-    )
-    {
+    ) {
         // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
+        if ($user === null) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
         }
         // Get its communities
         $communities = $communityRepository->findAllForUser($user);

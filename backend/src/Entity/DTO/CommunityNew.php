@@ -28,7 +28,7 @@ class CommunityNew
     public string $visibility = "Public";
 
     #[Groups(["community_new"])]
-    public string $image;
+    public ?string $image = null;
 
 
     #[Assert\Callback]
