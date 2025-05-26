@@ -1,4 +1,4 @@
-
+![Hand me Down logo](readme.png)
 # Hand me Down
 A website to exchange items and help the ones in need!
 
@@ -7,6 +7,9 @@ A website to exchange items and help the ones in need!
 - [ ] Symfony 7.1+
 - [ ] Mysql or Postgresql database
 - [ ] **?Frontend?**
+
+## Architechture
+![Project architecture](Architechture.png)
 
 ## Install
 
