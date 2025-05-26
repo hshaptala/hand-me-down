@@ -3,8 +3,8 @@
 A website to exchange items and help the ones in need!
 
 ## Prerequisites
-- [ ] php 8.1+
-- [ ] Symfony 7.1+
+- [ ] php 8.2+
+- [ ] Symfony 7.2
 - [ ] Mysql or Postgresql database
 - [ ] **?Frontend?**
 
@@ -36,7 +36,7 @@ composer install
 ```
 ### Database
 #### Using Mysql
-- Add the link to your database in the `.env` file. Example:
+- Add the link to your database in the `.env.local` file. Example:
 ```
 DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0.32&charset=utf8mb4"
 ```
