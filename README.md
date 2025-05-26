@@ -105,6 +105,13 @@ http://127.0.0.1:8000/api/doc
 symfony console doctrine:fixtures:load
 ```
 
+#### Basic information:
+
+- All passwords are set to `password`
+- There are **3** communities
+- `testmain@mail.com` is the owner of `City of Geel`
+- `testsecond@mail.com` is the owner of `Thomas More` and moderator in `IUT de Bordeaux`
+
 ## Frontend
 
 Go to `frontend` folder:
