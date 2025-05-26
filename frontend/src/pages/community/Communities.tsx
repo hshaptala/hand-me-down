@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 import Container from "@/components/layout/Container";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -23,19 +32,97 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/AuthContext";
 import type { Community } from "@/models/community";
-import { fetchCommunities } from "@/service/community.service";
+import { fetchCommunities, joinCommunity, userCommunities } from "@/service/community.service";
 
 export default function Communities() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [visibilityFilter, setvisibilityFilter] = useState("all");
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     fetchCommunities().then((data) => {
       setCommunities(data);
     });
-  }, []);
+    
+    // Fetch user's joined communities if authenticated
+    if (user) {
+      userCommunities().then((data) => {
+        setJoinedCommunities(data);
+      });
+    }
+  }, [user]);
+  const handleJoinCommunity = async (community: Community) => {
+    if (!user) {
+      toast.error("Please log in to join communities");
+      return;
+    }
+
+    if (!community.id) {
+      toast.error("Invalid community");
+      return;
+    }
+
+    if (community.visibility === "Private") {
+      setSelectedCommunity(community);
+      setShowPasswordDialog(true);
+      return;
+    }
+
+    // Public community - join directly
+    setLoading(true);
+    try {
+      await joinCommunity(community.id);
+      // Update joined communities list
+      const updatedJoinedCommunities = await userCommunities();
+      setJoinedCommunities(updatedJoinedCommunities);
+      toast.success(`Successfully joined ${community.name}!`);
+    } catch (error) {
+      console.error("Error joining community:", error);
+      toast.error("Failed to join community. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleJoinPrivateCommunity = async () => {
+    if (!selectedCommunity || !password.trim()) {
+      toast.error("Please enter a password");
+      return;
+    }
+
+    if (!selectedCommunity.id) {
+      toast.error("Invalid community");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await joinCommunity(selectedCommunity.id, password);
+      // Update joined communities list
+      const updatedJoinedCommunities = await userCommunities();
+      setJoinedCommunities(updatedJoinedCommunities);
+      toast.success(`Successfully joined ${selectedCommunity.name}!`);
+      setShowPasswordDialog(false);
+      setPassword("");
+      setSelectedCommunity(null);
+    } catch (error) {
+      console.error("Error joining private community:", error);
+      toast.error("Failed to join community. Please check your password and try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const isJoined = (communityId: number | undefined) => {
+    if (!communityId) return false;
+    return joinedCommunities.some((c) => c.id === communityId);
+  };
 
   // Filter communities based on search query and visibility filter
   const filteredCommunities = communities.filter(
@@ -46,11 +133,9 @@ export default function Communities() {
           .includes(searchQuery.toLowerCase()) ??
           false) ||
         community.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (visibilityFilter === "all" || community.visibility === visibilityFilter),
-  );
+      (visibilityFilter === "all" || community.visibility === visibilityFilter),  );
 
   // TODO: Replace with real joined communities logic
-  const joinedCommunities: Community[] = [];
 
   return (
     <Container className="py-10">
@@ -102,9 +187,9 @@ export default function Communities() {
                 <SelectValue placeholder="Filter by visibility" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All types</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value="All">All types</SelectItem>
+                <SelectItem value="Public">Public</SelectItem>
+                <SelectItem value="Private">Private</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -117,7 +202,10 @@ export default function Communities() {
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
-                          src={import.meta.env.VITE_API_BASE_URL + community.imageUrl || "/placeholder.svg"}
+                          src={
+                            import.meta.env.VITE_API_BASE_URL +
+                              community.imageUrl || "/placeholder.svg"
+                          }
                           alt={community.name}
                           className="h-full w-full object-cover"
                         />
@@ -148,36 +236,40 @@ export default function Communities() {
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
-                      </CardDescription>
-                    </CardContent>
+                      </CardDescription>                    </CardContent>
                     <CardFooter>
-                      {" "}
-                      <Button
-                        className={`w-full ${
-                          joinedCommunities.some((c) => c.id === community.id)
-                            ? "bg-muted hover:bg-muted/80 text-[#424242]"
-                            : community.visibility === "Private"
+                      {isJoined(community.id) ? (
+                        <Button
+                          className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
+                          asChild
+                        >
+                          <Link to={`/communities/${community.id}`}>
+                            View Community
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button
+                          className={`w-full ${
+                            community.visibility === "Private"
                               ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
-                        }`}
-                        asChild
-                      >
-                        <Link to={`/communities/${community.id}`}>
-                          {joinedCommunities.some((c) => c.id === community.id)
-                            ? "View Community"
+                          }`}
+                          onClick={() => handleJoinCommunity(community)}
+                          disabled={loading}
+                        >
+                          {loading
+                            ? "Joining..."
                             : community.visibility === "Private"
                               ? "Request to Join"
                               : "Join Community"}
-                        </Link>
-                      </Button>
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 ))
               ) : (
                 <div className="col-span-full py-12 text-center">
-                  <p className="text-muted-foreground">
-                    No communities found
-                  </p>
+                  <p className="text-muted-foreground">No communities found</p>
                 </div>
               )}
             </div>
@@ -191,7 +283,10 @@ export default function Communities() {
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
-                          src={"localhost:8000/" + community.imageUrl || "/placeholder.svg"}
+                          src={
+                            "localhost:8000/" + community.imageUrl ||
+                            "/placeholder.svg"
+                          }
                           alt={community.name}
                           className="h-full w-full object-cover"
                         />
@@ -245,9 +340,60 @@ export default function Communities() {
                 </div>
               )}
             </div>
-          </TabsContent>
-        </Tabs>
+          </TabsContent>        </Tabs>
       </div>
+
+      {/* Password Dialog for Private Communities */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Join Private Community</DialogTitle>
+            <DialogDescription>
+              {selectedCommunity?.name} is a private community. Please enter the password to join.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="password" className="text-right">
+                Password
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter community password"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleJoinPrivateCommunity();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowPasswordDialog(false);
+                setPassword("");
+                setSelectedCommunity(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleJoinPrivateCommunity}
+              disabled={loading || !password.trim()}
+            >
+              {loading ? "Joining..." : "Join Community"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }

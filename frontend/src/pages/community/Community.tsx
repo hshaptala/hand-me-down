@@ -6,12 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import Container from "@/components/layout/Container";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -46,7 +41,10 @@ export default function Community() {
       {/* Community Header */}
       <div className="relative h-64 w-full overflow-hidden">
         <img
-          src={community.imageUrl || "/placeholder.svg"}
+          src={
+            import.meta.env.VITE_API_BASE_URL + community.imageUrl ||
+            "/placeholder.svg"
+          }
           alt={community.name}
           className="h-full w-full object-cover"
         />
