@@ -6,6 +6,7 @@ use App\Entity\Enum\ItemStatusEnum;
 use App\Repository\ItemRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ItemRepository::class)]
 class Item
@@ -13,12 +14,15 @@ class Item
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['item_basic'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['item_basic'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['item_basic'])]
     private ?string $description = null;
 
     #[ORM\ManyToOne(inversedBy: 'items')]
@@ -26,15 +30,19 @@ class Item
 
     #[ORM\ManyToOne(inversedBy: 'donations')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['item_basic'])]
     private ?User $donor = null;
 
     #[ORM\ManyToOne(inversedBy: 'receipts')]
+    #[Groups(['item_basic'])]
     private ?User $receiver = null;
 
     #[ORM\Column(enumType: ItemStatusEnum::class)]
+    #[Groups(['item_basic'])]
     private ?ItemStatusEnum $status = null;
 
     #[ORM\Column(type: Types::SIMPLE_ARRAY)]
+    #[Groups(['item_basic'])]
     private array $keywords = [];
 
     public function getId(): ?int
