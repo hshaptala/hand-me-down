@@ -11,13 +11,37 @@ export async function fetchCommunity(id: number): Promise<Community> {
   return res.data;
 }
 
+export async function joinCommunity(
+  id: number,
+  password?: string,
+): Promise<Community> {
+  const headers = await getBearerAuthHeaders("application/json");
+  const res = await api.post(
+    `/api/communities/${id}/join`,
+    { password },
+    { headers },
+  );
+  return res.data;
+}
+
+export async function leaveCommunity(id: number): Promise<void> {
+  const headers = await getBearerAuthHeaders("application/json");
+  await api.post(`/api/communities/${id}/leave`, {}, { headers });
+}
+
+export async function userCommunities(): Promise<Community[]> {
+  const headers = await getBearerAuthHeaders("application/json");
+  const res = await api.get("/api/users/communities", { headers });
+  return res.data;
+}
+
 export async function createCommunity(data: {
   name: string;
   location: string;
   description?: string;
   password?: string;
   visibility: "Public" | "Private";
-  image?: File | null;
+  image: File;
 }): Promise<Community> {
   const formData = new FormData();
   formData.append("name", data.name);
