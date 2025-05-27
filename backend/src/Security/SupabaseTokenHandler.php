@@ -23,15 +23,16 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
     }
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
-    {
-        try {
+    {        try {
             // Decode and validate the JWT using Supabase secret
             $decoded = JWT::decode($accessToken, new Key($this->supabaseSecret, 'HS256'));
               // Extract user information from JWT claims
             $supabaseId = $decoded->sub ?? null;
             $email = $decoded->email ?? null;
-            $firstName = $decoded->given_name ?? $decoded->first_name ?? 'User';
-            $lastName = $decoded->family_name ?? $decoded->last_name ?? 'User';
+            
+            // Extract first name and last name from user_metadata
+            $firstName = $decoded->user_metadata->first_name ?? 'User';
+            $lastName = $decoded->user_metadata->last_name ?? 'User';
             
             if (!$supabaseId) {
                 throw new BadCredentialsException('Invalid JWT: missing sub claim');
@@ -43,14 +44,21 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
             // If not found, try to find by email (for existing users)
             if (!$user && $email) {
                 $user = $this->repository->findOneBy(['email' => $email]);
-                
-                // If found by email, link the Supabase ID
+                  // If found by email, link the Supabase ID and update names if needed
                 if ($user) {
                     $user->setSupabaseUserId($supabaseId);
+                    
+                    // Update names if they are currently the default "User" values
+                    if ($user->getFirstName() === 'User' || $user->getLastName() === 'User') {
+                        $user->setFirstName($firstName);
+                        $user->setLastName($lastName);
+                    }
+                    
                     $this->entityManager->persist($user);
                     $this->entityManager->flush();
                 }
-            }            // If still not found, create a new user
+            } 
+            // If still not found, create a new user          
             if (!$user) {
                 if (!$email) {
                     throw new BadCredentialsException('Invalid JWT: missing email claim');
@@ -60,7 +68,6 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
                 $user->setEmail($email);
                 $user->setSupabaseUserId($supabaseId);
                 $user->setRoles(['ROLE_USER']);
-                // Set a placeholder password since the field is required but not used for JWT auth
                 $user->setPassword(''); 
                   // Set required fields with values from JWT or defaults
                 $user->setFirstName($firstName);
