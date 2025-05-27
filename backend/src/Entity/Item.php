@@ -30,9 +30,6 @@ class Item
     private ?string $status = null;
 
     #[ORM\Column]
-    private ?int $community_id = null;
-
-    #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'items')]
@@ -99,18 +96,6 @@ class Item
     public function setStatus(string $status): static
     {
         $this->status = $status;
-
-        return $this;
-    }
-
-    public function getCommunityId(): ?int
-    {
-        return $this->community_id;
-    }
-
-    public function setCommunityId(int $community_id): static
-    {
-        $this->community_id = $community_id;
 
         return $this;
     }
