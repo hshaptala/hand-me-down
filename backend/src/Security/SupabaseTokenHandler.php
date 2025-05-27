@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Http\AccessToken\AccessTokenHandlerInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 
-class AccessTokenHandler implements AccessTokenHandlerInterface
+class SupabaseTokenHandler implements AccessTokenHandlerInterface
 {
     private string $supabaseSecret;
 
