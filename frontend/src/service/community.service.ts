@@ -41,7 +41,7 @@ export async function createCommunity(data: {
   description?: string;
   password?: string;
   visibility: "Public" | "Private";
-  image?: File | null;
+  image: File;
 }): Promise<Community> {
   const formData = new FormData();
   formData.append("name", data.name);

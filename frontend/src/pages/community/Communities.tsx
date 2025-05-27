@@ -34,7 +34,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import type { Community } from "@/models/community";
-import { fetchCommunities, joinCommunity, userCommunities } from "@/service/community.service";
+import {
+  fetchCommunities,
+  joinCommunity,
+  userCommunities,
+} from "@/service/community.service";
 
 export default function Communities() {
   const { user } = useAuth();
@@ -44,14 +48,16 @@ export default function Communities() {
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+  const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(
+    null,
+  );
   const [password, setPassword] = useState("");
 
   useEffect(() => {
     fetchCommunities().then((data) => {
       setCommunities(data);
     });
-    
+
     // Fetch user's joined communities if authenticated
     if (user) {
       userCommunities().then((data) => {
@@ -76,7 +82,6 @@ export default function Communities() {
       return;
     }
 
-    // Public community - join directly
     setLoading(true);
     try {
       await joinCommunity(community.id);
@@ -114,7 +119,9 @@ export default function Communities() {
       setSelectedCommunity(null);
     } catch (error) {
       console.error("Error joining private community:", error);
-      toast.error("Failed to join community. Please check your password and try again.");
+      toast.error(
+        "Failed to join community. Please check your password and try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -133,9 +140,8 @@ export default function Communities() {
           .includes(searchQuery.toLowerCase()) ??
           false) ||
         community.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (visibilityFilter === "all" || community.visibility === visibilityFilter),  );
-
-  // TODO: Replace with real joined communities logic
+      (visibilityFilter === "all" || community.visibility === visibilityFilter),
+  );
 
   return (
     <Container className="py-10">
@@ -154,12 +160,12 @@ export default function Communities() {
               Create Community
             </Link>
           </Button>
-          <Link to="/map">
+          {/*<Link to="/map">
             <Button variant="outline">
               <MapPin className="mr-2 h-4 w-4" />
               View Map
             </Button>
-          </Link>
+          </Link>*/}
         </div>
 
         <Tabs defaultValue="all">
@@ -167,7 +173,6 @@ export default function Communities() {
             <TabsTrigger value="all">All Communities</TabsTrigger>
             <TabsTrigger value="joined">My Communities</TabsTrigger>
           </TabsList>
-
           <div className="mt-4 flex flex-col gap-4 sm:flex-row">
             <div className="relative flex-1">
               <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -193,7 +198,6 @@ export default function Communities() {
               </SelectContent>
             </Select>
           </div>
-
           <TabsContent value="all" className="mt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredCommunities.length > 0 ? (
@@ -203,8 +207,7 @@ export default function Communities() {
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
                           src={
-                            import.meta.env.VITE_API_BASE_URL +
-                              community.imageUrl || "/placeholder.svg"
+                            import.meta.env.VITE_API_BASE_URL + community.imageUrl
                           }
                           alt={community.name}
                           className="h-full w-full object-cover"
@@ -236,7 +239,8 @@ export default function Communities() {
                       </div>
                       <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
                         {community.description}
-                      </CardDescription>                    </CardContent>
+                      </CardDescription>{" "}
+                    </CardContent>
                     <CardFooter>
                       {isJoined(community.id) ? (
                         <Button
@@ -274,7 +278,6 @@ export default function Communities() {
               )}
             </div>
           </TabsContent>
-
           <TabsContent value="joined" className="mt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {joinedCommunities.length > 0 ? (
@@ -284,8 +287,7 @@ export default function Communities() {
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
                           src={
-                            "localhost:8000/" + community.imageUrl ||
-                            "/placeholder.svg"
+                            import.meta.env.VITE_API_BASE_URL + community.imageUrl
                           }
                           alt={community.name}
                           className="h-full w-full object-cover"
@@ -340,7 +342,8 @@ export default function Communities() {
                 </div>
               )}
             </div>
-          </TabsContent>        </Tabs>
+          </TabsContent>{" "}
+        </Tabs>
       </div>
 
       {/* Password Dialog for Private Communities */}
@@ -349,7 +352,8 @@ export default function Communities() {
           <DialogHeader>
             <DialogTitle>Join Private Community</DialogTitle>
             <DialogDescription>
-              {selectedCommunity?.name} is a private community. Please enter the password to join.
+              {selectedCommunity?.name} is a private community. Please enter the
+              password to join.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
