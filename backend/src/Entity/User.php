@@ -42,10 +42,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $token = null;
 
-    #[Groups(['user_register'])]
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $supabaseUserId = null;
-
     /**
      * @var Collection<int, Community>
      */
@@ -173,18 +169,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setToken(string $token): static
     {
         $this->token = $token;
-
-        return $this;
-    }
-
-    public function getSupabaseUserId(): ?string
-    {
-        return $this->supabaseUserId;
-    }
-
-    public function setSupabaseUserId(?string $supabaseUserId): static
-    {
-        $this->supabaseUserId = $supabaseUserId;
 
         return $this;
     }
