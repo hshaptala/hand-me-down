@@ -2,6 +2,8 @@ import type React from "react";
 import { useState } from "react";
 
 import { MapPin, Upload } from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +20,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { createCommunity } from "@/service/community.service";
 
-export default function CreateCommunity() {  const [formData, setFormData] = useState({
+export default function CreateCommunity() {
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
     location: "",
@@ -63,17 +66,22 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith("image/")) {
         setFormData((prev) => ({ ...prev, image: file }));
       }
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.image) {
+      toast.error("Please select a community image.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -87,23 +95,8 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
         image: formData.image,
       });
       setSuccess(true);
-    } catch (err: unknown) {
-      let message = "Failed to create community";
-      if (
-        err &&
-        typeof err === "object" &&
-        "response" in err &&
-        err.response &&
-        typeof err.response === "object" &&
-        "data" in err.response &&
-        err.response.data &&
-        typeof err.response.data === "object" &&
-        "message" in err.response.data &&
-        typeof err.response.data.message === "string"
-      ) {
-        message = (err.response.data as { message: string }).message;
-      }
-      setError(message);
+    } catch (error) {
+      toast.error(error + "");
     } finally {
       setLoading(false);
     }
@@ -139,7 +132,6 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -148,11 +140,9 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                   placeholder="Describe your community and its purpose"
                   value={formData.description}
                   onChange={handleChange}
-                  required
                   rows={4}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <div className="relative">
@@ -167,13 +157,14 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                     required
                   />
                 </div>
-              </div>              <div className="space-y-2">
-                <Label>Community Image</Label>
-                <div 
+              </div>{" "}
+              <div className="space-y-2">
+                <Label>Community Image *</Label>
+                <div
                   className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors ${
-                    dragActive 
-                      ? 'border-[#2E7D32] bg-green-50' 
-                      : 'border-gray-300 hover:border-gray-400'
+                    dragActive
+                      ? "border-[#2E7D32] bg-green-50"
+                      : "border-gray-300 hover:border-gray-400"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -186,11 +177,15 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                         alt="Preview"
                         className="h-32 w-32 rounded-lg object-cover"
                       />
-                      <p className="text-sm text-gray-600">{formData.image.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {formData.image.name}
+                      </p>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData((prev) => ({ ...prev, image: null }))}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, image: null }))
+                        }
                         type="button"
                       >
                         Remove Image
@@ -203,7 +198,7 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                         Drag and drop an image here, or click to browse
                       </p>
                     </>
-                  )}
+                  )}{" "}
                   <input
                     type="file"
                     accept="image/*"
@@ -212,7 +207,12 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                     id="image-upload"
                   />
                   <label htmlFor="image-upload" className="cursor-pointer">
-                    <Button variant="outline" className="mt-4" type="button" asChild>
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      type="button"
+                      asChild
+                    >
                       <span>
                         {formData.image ? "Change Image" : "Upload Image"}
                       </span>
@@ -220,7 +220,6 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                   </label>
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Community Type</Label>
                 <RadioGroup
@@ -242,7 +241,6 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
                   </div>
                 </RadioGroup>
               </div>
-
               {formData.type === "private" && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Community Password</Label>
@@ -263,9 +261,11 @@ export default function CreateCommunity() {  const [formData, setFormData] = use
               )}
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" type="button">
-                Cancel
-              </Button>
+              <Link to="/communities">
+                <Button variant="outline" type="button">
+                  Cancel
+                </Button>
+              </Link>
               <Button
                 type="submit"
                 className="bg-[#2E7D32] hover:bg-[#1B5E20]"
