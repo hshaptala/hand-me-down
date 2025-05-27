@@ -41,9 +41,12 @@ class Item
     #[Groups(['item_basic'])]
     private ?ItemStatusEnum $status = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY)]
+    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true)]
     #[Groups(['item_basic'])]
     private array $keywords = [];
+
+    #[ORM\Column]
+    private ?\DateTimeImmutable $postedAt = null;
 
     public function getId(): ?int
     {
@@ -130,6 +133,18 @@ class Item
     public function setKeywords(array $keywords): static
     {
         $this->keywords = $keywords;
+
+        return $this;
+    }
+
+    public function getPostedAt(): ?\DateTimeImmutable
+    {
+        return $this->postedAt;
+    }
+
+    public function setPostedAt(\DateTimeImmutable $postedAt): static
+    {
+        $this->postedAt = $postedAt;
 
         return $this;
     }
