@@ -160,10 +160,8 @@ final class ItemController extends AbstractController
 
 
         // Keywords
-        $keywords = $request->request->all('keywords');
-
-        var_dump($keywords);
-        die();
+        $keywords = $request->request->get('keywords');
+        $keywords = explode(',', $keywords);
 
         // Create new entity
         $item = new Item();
