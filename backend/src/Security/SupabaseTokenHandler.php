@@ -1,5 +1,4 @@
 <?php
-// src/Security/AccessTokenHandler.php
 namespace App\Security;
 
 use App\Entity\User;
@@ -23,10 +22,10 @@ class SupabaseTokenHandler implements AccessTokenHandlerInterface
     }
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
-    {        try {
+    {       try {
             // Decode and validate the JWT using Supabase secret
             $decoded = JWT::decode($accessToken, new Key($this->supabaseSecret, 'HS256'));
-              // Extract user information from JWT claims
+            // Extract user information from JWT
             $supabaseId = $decoded->sub ?? null;
             $email = $decoded->email ?? null;
             
@@ -44,15 +43,9 @@ class SupabaseTokenHandler implements AccessTokenHandlerInterface
             // If not found, try to find by email (for existing users)
             if (!$user && $email) {
                 $user = $this->repository->findOneBy(['email' => $email]);
-                  // If found by email, link the Supabase ID and update names if needed
+                // If found by email, link the Supabase ID and update names if needed
                 if ($user) {
                     $user->setSupabaseUserId($supabaseId);
-                    
-                    // Update names if they are currently the default "User" values
-                    if ($user->getFirstName() === 'User' || $user->getLastName() === 'User') {
-                        $user->setFirstName($firstName);
-                        $user->setLastName($lastName);
-                    }
                     
                     $this->entityManager->persist($user);
                     $this->entityManager->flush();
@@ -69,7 +62,6 @@ class SupabaseTokenHandler implements AccessTokenHandlerInterface
                 $user->setSupabaseUserId($supabaseId);
                 $user->setRoles(['ROLE_USER']);
                 $user->setPassword(''); 
-                  // Set required fields with values from JWT or defaults
                 $user->setFirstName($firstName);
                 $user->setLastName($lastName);
                 
