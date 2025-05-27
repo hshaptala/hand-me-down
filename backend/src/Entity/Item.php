@@ -48,6 +48,12 @@ class Item
     #[ORM\Column]
     private ?\DateTimeImmutable $postedAt = null;
 
+    #[ORM\Column(type: Types::BLOB)]
+    private $image = null;
+    
+    #[Groups(['item_basic'])]
+    private $imageUrl = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -147,5 +153,27 @@ class Item
         $this->postedAt = $postedAt;
 
         return $this;
+    }
+
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    public function setImage($image): static
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+    public function setImageUrl(string $url): static
+    {
+        $this->imageUrl = $url;
+        return $this;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return $this->imageUrl;
     }
 }

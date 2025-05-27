@@ -8,6 +8,7 @@ use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
 use App\Entity\User;
 use App\Repository\ItemRepository;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Model;
@@ -16,6 +17,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -23,14 +26,14 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api')]
+
 final class ItemController extends AbstractController
 {
    
-    // List
+    // LIST
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/communities/{id}/items", methods: ["GET"])]
+    #[Route(path:"/api/communities/{id}/items", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
@@ -57,7 +60,7 @@ final class ItemController extends AbstractController
             ),
         ]
     )] 
-    public function members(
+    public function items(
         Community $community,
         ItemRepository $itemRepository,
         UrlGeneratorInterface $urlGen
@@ -65,20 +68,60 @@ final class ItemController extends AbstractController
     {
         $items = $itemRepository->findByCommunity($community);
         
-        /* Generate image urls
-        foreach ($members as $member) {
-            if($member->getUser()->getAvatar() === null){
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-                ;
-            }else{
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-                ;
-            }
-        };*/
+        // Generate image urls
+        foreach ($items as $item) {
+            $item
+                ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
+            ;
+        };
 
         return $items;
+    }
+
+
+
+    // GET 
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Get(
+        summary: "Get the information about an item.",
+        tags: ["Items"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Item object',
+                content: new OA\JsonContent( type: 'object', ref: new Model(type: Item::class, groups: ['item_basic']))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community not found',
+            ),
+        ]
+    )] 
+    public function item(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
+        UrlGeneratorInterface $urlGen
+    )
+    {
+        // Generate imageUrl
+        $item
+            ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
+        ;
+        return $item;
     }
 
 
@@ -90,7 +133,7 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/communities/{id}/items", methods: ["POST"], name:"api_items_new")]
+    #[Route(path:"/api/communities/{id}/items", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
@@ -103,12 +146,12 @@ final class ItemController extends AbstractController
                 mediaType: 'multipart/form-data',
                 schema: new OA\Schema(
                     type: 'object',
-                    required: ['title', 'description'],
+                    required: ['title', 'description', 'image'],
                     properties: [
                         new OA\Property(property: 'title', type: 'string', description: 'Post title'),
                         new OA\Property(property: 'description', type: 'string', description: 'A brief description of your item', example: 'An amazing item'),
                         new OA\Property(property: 'keywords', type: 'array', description: 'List of keywords matching your item', items: new OA\Items(type:'string')),
-                        //new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Image upload')
+                        new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Image upload')
                     ]
                 )
             )
@@ -151,12 +194,12 @@ final class ItemController extends AbstractController
            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
         }
 
-        /* Read image content
+        // Read image content
         $file = $request->files->get('image');
         if ($file === null) { // Make sure an image was sent
             return new JsonResponse(['error' => 'No file provided'], 400);
         }
-        $stream = fopen($file->getPathname(), 'rb');*/
+        $stream = fopen($file->getPathname(), 'rb');
 
 
         // Keywords
@@ -173,20 +216,86 @@ final class ItemController extends AbstractController
             ->setDescription($dto->description)
             ->setStatus(ItemStatusEnum::OPEN)
             ->setKeywords($keywords)
-            //->setImage(stream_get_contents($stream))
+            ->setImage(stream_get_contents($stream))
         ;
 
         // Close image and saves entities
-        //fclose($stream);
+        fclose($stream);
         $em->persist($item);
         $em ->flush();
 
-        /* Set values for return
+        //Set values for return
         $item
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $item->getId()]))
-        ;*/
+            ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
+        ;
 
         // Return new community
         return $item;
+    }
+
+
+
+    // IMAGE
+
+
+    #[Route(path:'/images/items/{id}.png', methods: ['GET'], name:"api_items_image")]
+    public function getImageUrl(int $id, ItemRepository $itemRepository)
+    {
+        // Get item's image
+        $item = $itemRepository->find($id);
+        $imageContent = $item->getImage();
+
+        // Return image
+        return new Response(stream_get_contents($imageContent), 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'inline; filename="'. $item->getTitle() .'.png"',
+        ]);
+    }
+
+
+
+    // DELETE 
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["DELETE"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Delete(
+        summary: "Delete an item.",
+        tags: ["Items"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Item successfully deleted',
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community not found',
+            ),
+        ]
+    )] 
+    public function delete(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
+        #[CurrentUser()] User $user,
+        EntityManagerInterface $em
+    )
+    {
+        if($item->getDonor() !== $user){
+            return new JsonResponse("You do not have permission to delete this item.",403);
+        }
+        $em->remove($item);
+        $em->flush();
+        return new JsonResponse("Successfully deleted item",200);
     }
 }
