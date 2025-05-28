@@ -490,4 +490,51 @@ final class ItemController extends AbstractController
         return new JsonResponse("Reservation canceled successfuly",200);
     }
 
+
+
+    // CONFIRM
+
+
+    #[View()]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}/confirm", methods: ["POST"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        tags: ['Items'],
+        summary: 'Confirm you have received an item',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Confimation sent successfuly'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Item not found',
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Item is not reserved',
+            ),
+        ]
+    )]    
+    public function confirm(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
+        #[CurrentUser()] User $user,
+        ItemService $itemService
+    )
+    {
+        $itemService->confirm($user, $item);
+        return new JsonResponse("Reservation ended successfuly",200);
+    }
+
 }

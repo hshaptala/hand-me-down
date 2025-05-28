@@ -90,7 +90,7 @@ class ItemService
         $item->setReceiver($user);
 
         // Create a new chat  (TODO, return the chat id!!)
-        // ...
+        // ... TODO ...
 
         // Save and return
         $this->em->persist($item);
@@ -119,13 +119,40 @@ class ItemService
         $item->setStatus(ItemStatusEnum::OPEN);
         $item->setReceiver(null);
 
+        // Close Chat
+        // ... TODO ...
+
         // Save
         $this->em->persist($item);
         $this->em->flush();
     }
 
-    
+
     public function confirm (User $user, Item $item): void
     {
+        // Check User
+        if ($user === null){ 
+           throw new UnauthorizedHttpException( "Full authentication is required to access this resource."); 
+        }
+
+        // Check User == Receiver
+        if($item->getReceiver() !== $user){
+            throw new AccessDeniedException("You are not the receiver of this item.");
+        }
+
+        // Check Item status
+        if($item->getStatus() !== ItemStatusEnum::RESERVED){
+            throw new ConflictHttpException("Item is not reserved.");
+        }
+
+        // Set status
+        $item->setStatus(ItemStatusEnum::OVER);
+
+        // Close Chat
+        // ... TODO ...
+
+        // Save
+        $this->em->persist($item);
+        $this->em->flush();
     }
 }
