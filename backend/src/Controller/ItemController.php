@@ -10,10 +10,8 @@ use App\Entity\Item;
 use App\Entity\User;
 use App\Repository\ItemRepository;
 use App\Service\ItemService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -189,6 +187,7 @@ final class ItemController extends AbstractController
         #[MapRequestPayload(serializationContext: ["groups" => ["item_new"]])] ItemNew $dto,
         EntityManagerInterface $em,
         UrlGeneratorInterface $urlGen,
+        ItemService $itemService,
         #[CurrentUser()] User $user
     )
     {
@@ -196,6 +195,9 @@ final class ItemController extends AbstractController
         if ($user === null){ 
            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
         }
+
+        // Check Post Limit
+        $itemService->checkPostLimit($user);
 
         // Read image content
         $file = $request->files->get('image');

@@ -7,28 +7,32 @@ use App\Entity\Item;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ItemService
 {
     private const MAX_RESERVATIONS_PER_USER = 5;
+    private const MAX_POSTS_PER_USER_PER_DAY = 10;
 
     private EntityManagerInterface $em;
     private UrlGeneratorInterface $urlGen;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        UrlGeneratorInterface $urlGenerator,
+        UrlGeneratorInterface $urlGenerator
         )
     {
         $this->em = $entityManager;
         $this->urlGen = $urlGenerator;
     }
+
+
+
+    // Reservation limit
+
 
     /**
      * The maximum amount of items a user can reserve at the same time.
@@ -50,7 +54,7 @@ class ItemService
             'receiver' => $user,
             'status' => ItemStatusEnum::RESERVED
         ]);
-        return $count >= self::MAX_RESERVATIONS_PER_USER;
+        return $count >= self::getMaxReservationsPerUser();
     }
 
     /**
@@ -68,6 +72,61 @@ class ItemService
     }
 
 
+
+    // Post limit
+
+
+    /**
+     * The maximum amount of items a user can create during the same day.
+     * @return int
+     */
+    public function getMaxPostsPerUserPerDay(): int
+    {
+        return self::MAX_POSTS_PER_USER_PER_DAY;
+    }
+
+    /**
+     * Indicates if the user has reached the maxium number of items they can create today.
+     * @param \App\Entity\User $user
+     * @return bool 
+     */
+    public function isPostLimitExceededToday(User $user): bool
+    {
+        $count = $this->em
+            ->getRepository(Item::class)
+            ->countItemsCreatedTodayForUser($user)
+        ;
+        return $count >= self::getMaxPostsPerUserPerDay();
+    }
+
+    /**
+     * Throws an error if the user has created too many items today.
+     * 
+     * @param \App\Entity\User $user
+     * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+     * @return void
+     */
+    public function checkPostLimit(User $user): void
+    {
+        if($this->isPostLimitExceededToday($user)){
+            throw new AccessDeniedHttpException("You have already posted " . $this->getMaxPostsPerUserPerDay() . " items today. Wait for tomorrow to post more items!");
+        }
+    }
+    
+
+
+
+    // Reserve, cancel, confirm
+
+
+    /**
+     * Set the item as reserved for the user.
+     * @param \App\Entity\User $user
+     * @param \App\Entity\Item $item
+     * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException User needs to be authentified
+     * @throws \Symfony\Component\HttpKernel\Exception\ConflictHttpException The item has to be available and not donated by the user
+     * @return void
+     */
     public function reserve (User $user, Item $item): void
     {
         // Check User
@@ -77,7 +136,7 @@ class ItemService
 
         // Check User != Donor
         if($item->getDonor() === $user){
-            throw new UnauthorizedHttpException("You cannot reserve your own item");
+            throw new ConflictHttpException("You cannot reserve your own item");
         }
 
         // Check Item status
@@ -104,6 +163,15 @@ class ItemService
     }
 
 
+    /**
+     * Cancel the reservation of the item
+     * @param \App\Entity\User $user
+     * @param \App\Entity\Item $item
+     * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException User needs to be authentified
+     * @throws \Symfony\Component\Finder\Exception\AccessDeniedException User needs to be the receiver or donor of the item
+     * @throws \Symfony\Component\HttpKernel\Exception\ConflictHttpException The item has to be reserved
+     * @return void
+     */
     public function cancel (User $user, Item $item): void
     {
         // Check User
@@ -134,6 +202,16 @@ class ItemService
     }
 
 
+    /**
+     * Confirm that the user has received the item.
+     * 
+     * @param \App\Entity\User $user
+     * @param \App\Entity\Item $item
+     * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException User needs to be authentified
+     * @throws \Symfony\Component\Finder\Exception\AccessDeniedException User needs to be the receiver of the item
+     * @throws \Symfony\Component\HttpKernel\Exception\ConflictHttpException The item has to be reserved
+     * @return void
+     */
     public function confirm (User $user, Item $item): void
     {
         // Check User

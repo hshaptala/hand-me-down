@@ -7,7 +7,6 @@ use App\Entity\DTO\UserEdit;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
-use App\Repository\ItemRepository;
 use App\Service\ItemService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
