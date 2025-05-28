@@ -83,6 +83,7 @@ class CommunityEdit
             $stream = fopen($file->getPathname(), 'rb');
             // Set image
             $community->setImage(stream_get_contents($stream));
+            fclose($stream);
         }
     }
 }
