@@ -14,12 +14,10 @@ use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -289,11 +287,6 @@ final class MemberController extends AbstractController
         CommunityService $communityService
     )
     {
-        // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Get community
         if (!$community){
             return throw new UnprocessableEntityHttpException('Invalid community id');
@@ -348,11 +341,6 @@ final class MemberController extends AbstractController
         CommunityService $communityService
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Leave
         $communityService->leave($user, $community);
 

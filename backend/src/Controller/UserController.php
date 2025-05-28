@@ -21,7 +21,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -144,10 +143,6 @@ final class UserController extends AbstractController
         UrlGeneratorInterface $urlGen,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Get its communities
         $communities = $communityRepository->findAllForUser($user);
         foreach ($communities as $community) {
@@ -186,10 +181,6 @@ final class UserController extends AbstractController
         #[CurrentUser()] User $user
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
         // Edit
         $user->setAvatar(null);
         // Save
@@ -240,11 +231,6 @@ final class UserController extends AbstractController
         #[CurrentUser()] User $user
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Manually populate DTO 
         $dto = new UserEdit();
         
@@ -346,10 +332,6 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return its reserved items
         return $itemService->getItemsOnCriteria([
             "receiver" => $user,
@@ -386,10 +368,6 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return user donation items
         return $itemService->getItemsOnCriteria(["donor"=>$user]);
     }
@@ -423,17 +401,11 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return user received items
         return $itemService->getItemsOnCriteria([
             "receiver"=>$user,
             "status"=>ItemStatusEnum::OVER
         ]);
     }
-
-
 
 }
