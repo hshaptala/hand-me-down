@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { ToastProvider } from "./components/ui/toast-provider";
 import { AuthProvider } from "./context/AuthContext.tsx";
-import Layout from "./layout.tsx";
+import Layout from "./Layout.tsx";
 import About from "./pages/About.tsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
 import Login from "./pages/auth/Login.tsx";
@@ -21,7 +21,6 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ToastProvider />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -39,9 +38,10 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="reset-password" element={<ResetPassword />} />
+            <Route path="reset-password" element={<ResetPassword />} />{" "}
           </Route>
         </Routes>
+        <ToastProvider />
       </AuthProvider>
     </BrowserRouter>
   );

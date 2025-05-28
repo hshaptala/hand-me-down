@@ -15,6 +15,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MemberCardSkeleton } from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -37,19 +38,63 @@ export default function Community() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!id) return;
 
-    Promise.all([fetchCommunity(Number(id)), fetchMembers(Number(id))]).then(
-      ([communityData, membersData]) => {
+    const loadCommunityData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Load community data first
+        const communityData = await fetchCommunity(Number(id));
         setCommunity(communityData);
-        setMembers(membersData);
         setLoading(false);
-      },
-    );
+
+        // Then load members with separate loading state
+        setMembersLoading(true);
+        const membersData = await fetchMembers(Number(id));
+        setMembers(membersData);
+      } catch (err) {
+        console.error("Error loading community data:", err);
+        setError("Failed to load community data");
+        setLoading(false);
+      } finally {
+        setMembersLoading(false);
+      }
+    };
+
+    loadCommunityData();
   }, [id]);
 
-  if (loading || !community) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-[#2E7D32]"></div>
+          <p className="text-muted-foreground">Loading community...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !community) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p className="mb-4 text-red-500">{error || "Community not found"}</p>
+          <button
+            onClick={() => window.history.back()}
+            className="rounded bg-[#2E7D32] px-4 py-2 text-white hover:bg-[#1B5E20]"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -120,7 +165,6 @@ export default function Community() {
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
             </TabsList>
-
             {/* Items Tab */}
             <TabsContent value="items" className="mt-6">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row">
@@ -229,46 +273,57 @@ export default function Community() {
                   </div>
                 )} */}
               </div>
-            </TabsContent>
-
+            </TabsContent>{" "}
             {/* Members Tab */}
             <TabsContent value="members" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {members.map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={member.user.avatarUrl || "/placeholder.svg"}
-                            alt={
-                              member.user.firstName + " " + member.user.lastName
-                            }
-                          />
-                          <AvatarFallback>
-                            {`${member.user.firstName[0] ?? ""}${member.user.lastName ? member.user.lastName[0] : ""}`}
-                          </AvatarFallback>
-                        </Avatar>{" "}
-                        <div>
-                          <h3 className="font-medium">
-                            {member.user.firstName + " " + member.user.lastName}
-                          </h3>
-                          <Badge variant="outline" className="mt-1">
-                            {member.role}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" asChild>
-                        <Link to={`/profile/${member.id}`}>View Profile</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                {membersLoading
+                  ? // Show loading skeletons
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <MemberCardSkeleton key={index} />
+                    ))
+                  : members.map((member) => (
+                      <Card key={member.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-4">
+                            <Avatar>
+                              <AvatarImage
+                                src={
+                                  member.user.avatarUrl || "/placeholder.svg"
+                                }
+                                alt={
+                                  member.user.firstName +
+                                  " " +
+                                  member.user.lastName
+                                }
+                              />
+                              <AvatarFallback>
+                                {`${member.user.firstName[0] ?? ""}${member.user.lastName ? member.user.lastName[0] : ""}`}
+                              </AvatarFallback>
+                            </Avatar>{" "}
+                            <div>
+                              <h3 className="font-medium">
+                                {member.user.firstName +
+                                  " " +
+                                  member.user.lastName}
+                              </h3>
+                              <Badge variant="outline" className="mt-1">
+                                {member.role}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button variant="outline" className="w-full" asChild>
+                            <Link to={`/profile/${member.id}`}>
+                              View Profile
+                            </Link>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
               </div>
             </TabsContent>
-
             {/* About Tab */}
             <TabsContent value="about" className="mt-6">
               <Card>
