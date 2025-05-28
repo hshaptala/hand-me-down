@@ -29,11 +29,15 @@ export async function createItem(
   formData.append("keywords", data.keywords.join(","));
   formData.append("image", data.image);
 
-  const res = await api.post(`/api/communities/${communityId}/items`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
+  const res = await api.post(
+    `/api/communities/${communityId}/items`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
-  });
-  
+  );
+
   return res.data;
 }

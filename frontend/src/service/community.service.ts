@@ -9,7 +9,7 @@ export async function fetchCommunities(): Promise<Community[]> {
       const res = await api.get("/api/communities");
       return res.data;
     },
-    30000, // Cache for 30 seconds
+    30000,
   );
 }
 
@@ -20,7 +20,7 @@ export async function fetchCommunity(id: number): Promise<Community> {
       const res = await api.get(`/api/communities/${id}`);
       return res.data;
     },
-    60000, // Cache for 1 minute
+    60000,
   );
 }
 
@@ -29,7 +29,6 @@ export async function joinCommunity(
   password?: string,
 ): Promise<Community> {
   const res = await api.post(`/api/communities/${id}/join`, { password });
-  // Clear relevant caches after joining
   requestCache.clearRequest("user-communities");
   requestCache.clearRequest("fetch-communities");
   requestCache.clearRequest(`fetch-community-${id}`);
@@ -38,7 +37,6 @@ export async function joinCommunity(
 
 export async function leaveCommunity(id: number): Promise<void> {
   await api.post(`/api/communities/${id}/leave`);
-  // Clear relevant caches after leaving
   requestCache.clearRequest("user-communities");
   requestCache.clearRequest("fetch-communities");
   requestCache.clearRequest(`fetch-community-${id}`);
@@ -51,7 +49,7 @@ export async function userCommunities(): Promise<Community[]> {
       const res = await api.get("/api/users/communities");
       return res.data;
     },
-    15000, // Cache for 15 seconds
+    15000,
   );
 }
 
@@ -77,7 +75,6 @@ export async function createCommunity(data: {
     },
   });
 
-  // Clear relevant caches after creating a community
   requestCache.clearRequest("fetch-communities");
   requestCache.clearRequest("user-communities");
 
