@@ -104,7 +104,7 @@ final class MemberController extends AbstractController
 
 
     #[View(serializerGroups: ["member_basic"])]
-    #[Route(path:"/communities/{communityId}/members/{memberId}", methods: ["GET"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
@@ -133,10 +133,17 @@ final class MemberController extends AbstractController
     )] 
     public function member(
         #[MapEntity(id: 'communityId')] Community $community,
-        #[MapEntity(id: 'memberId')] Member $member,
-        UrlGeneratorInterface $urlGen
+        #[MapEntity(id: 'userId')] User $user,
+        UrlGeneratorInterface $urlGen,
+        MemberRepository $memberRepository
     )
     {
+        // Get the member
+        $member = $memberRepository->findOneBy([
+            "user" => $user,
+            "community" => $community,
+        ]);
+
         // Generate AvatarUrl
         if($member->getUser()->getAvatar() === null){
             $member->getUser()
@@ -160,7 +167,7 @@ final class MemberController extends AbstractController
     // EDIT ROLE
 
     #[View(serializerGroups: ["member_basic"])]
-    #[Route(path:"/communities/{communityId}/members/{memberId}", methods: ["PATCH"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}", methods: ["PATCH"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_MANAGE_ROLES', subject: 'community')]
     #[Security(name:"Bearer")]
@@ -193,7 +200,7 @@ final class MemberController extends AbstractController
     )] 
     public function edit(
         #[MapEntity(id: 'communityId')] Community $community,
-        #[MapEntity(id: 'memberId')] Member $member,
+        #[MapEntity(id: 'userId')] User $user,
         #[OA\Parameter( 
            description: "New role", 
            in: "query", 
@@ -202,8 +209,15 @@ final class MemberController extends AbstractController
        )] 
         #[MapQueryParameter()] ?string $role,
         EntityManagerInterface $em,
+        UrlGeneratorInterface $urlGen,
     )
     {
+        // Get the member
+        $member = $em->getRepository(Member::class)->findOneBy([
+            "user" => $user,
+            "community" => $community,
+        ]);
+        // Change role
         if($role !== null){
             // Get Role
             $role = CommunityRoleEnum::tryFrom($role);
@@ -223,7 +237,17 @@ final class MemberController extends AbstractController
             $em->persist($member);
             $em->flush();
         }
-
+        // Generate AvatarUrl
+        if($member->getUser()->getAvatar() === null){
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
+            ;
+        }else{
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
+            ;
+        }
+        // Return updated member
         return $member;
     }
 

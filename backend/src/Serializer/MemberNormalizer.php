@@ -19,6 +19,7 @@ class MemberNormalizer implements NormalizerInterface
         $data = $this->normalizer->normalize($data, $format, $context);
 
         // Move information to the root
+        $data['id'] = $data['user']['id'];
         $data['firstName'] = $data['user']['firstName'];
         $data['lastName'] = $data['user']['lastName'];
         $data['avatarUrl'] = $data['user']['avatarUrl'];

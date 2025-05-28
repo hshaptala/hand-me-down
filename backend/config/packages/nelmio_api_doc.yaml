@@ -40,7 +40,7 @@ nelmio_api_doc:
                     properties:
                         id: 
                             type: integer
-                            description: member id
+                            description: user id
                         firstName: 
                             type: string
                             description: user's first name

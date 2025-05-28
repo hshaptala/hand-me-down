@@ -14,7 +14,6 @@ class Member
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['member_basic'])]
 
     private ?int $id = null;
 
