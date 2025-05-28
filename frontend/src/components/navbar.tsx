@@ -72,18 +72,6 @@ export default function Navbar() {
                       >
                         Conversations
                       </Link>
-                      <Link
-                        to="/my-communities"
-                        className="hover:bg-muted block rounded-md p-2"
-                      >
-                        My Communities
-                      </Link>
-                      <Link
-                        to="/my-items"
-                        className="hover:bg-muted block rounded-md p-2"
-                      >
-                        My Items
-                      </Link>{" "}
                       <hr />
                       <Button
                         variant="ghost"

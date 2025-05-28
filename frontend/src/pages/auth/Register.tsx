@@ -207,11 +207,11 @@ export default function RegisterPage() {
                 className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I agree to the{" "}
-                <Link to="/terms" className="text-[#8D6E63] hover:underline">
+                <Link to="/terms" className="text-[#2E7D32] hover:underline">
                   terms of service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="text-[#8D6E63] hover:underline">
+                <Link to="/privacy" className="text-[#2E7D32] hover:underline">
                   privacy policy
                 </Link>
               </Label>
@@ -227,7 +227,7 @@ export default function RegisterPage() {
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#8D6E63] hover:underline">
+              <Link to="/login" className="text-[#2E7D32] hover:underline">
                 Log in
               </Link>
             </p>
