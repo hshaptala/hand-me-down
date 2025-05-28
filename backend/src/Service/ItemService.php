@@ -6,6 +6,7 @@ use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -70,7 +71,7 @@ class ItemService
 
         // Check User != Donor
         if($item->getDonor() === $user){
-            throw new ConflictHttpException("You cannot reserve your own item");
+            throw new UnauthorizedHttpException("You cannot reserve your own item");
         }
 
         // Check Item status
@@ -99,6 +100,28 @@ class ItemService
 
     public function cancel (User $user, Item $item): void
     {
+        // Check User
+        if ($user === null){ 
+           throw new UnauthorizedHttpException( "Full authentication is required to access this resource."); 
+        }
+
+        // Check User == Donor | Receiver
+        if($item->getDonor() !== $user && $item->getReceiver() !== $user){
+            throw new AccessDeniedException("You do not own this item.");
+        }
+
+        // Check Item status
+        if($item->getStatus() !== ItemStatusEnum::RESERVED){
+            throw new ConflictHttpException("Item is not reserved.");
+        }
+
+        // Set status
+        $item->setStatus(ItemStatusEnum::OPEN);
+        $item->setReceiver(null);
+
+        // Save
+        $this->em->persist($item);
+        $this->em->flush();
     }
 
     

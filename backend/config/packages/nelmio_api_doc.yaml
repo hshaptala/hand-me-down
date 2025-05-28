@@ -26,7 +26,8 @@ nelmio_api_doc:
                             type: integer
                             description: user id
                         status:
-                            ref: ItemStatusEnum
+                            type: string
+                            description: "[Open, Reserved, Over]"
                         keywords:
                             type: array
                             items:

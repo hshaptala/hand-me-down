@@ -394,8 +394,12 @@ final class ItemController extends AbstractController
     }
 
 
-    // Reservations
 
+
+    // RESERVATIONS
+
+
+    // RESERVE
 
     #[View()]
     #[Route(path:"/api/communities/{communityId}/items/{itemId}/reserve", methods: ["POST"])]
@@ -438,4 +442,52 @@ final class ItemController extends AbstractController
         $itemService->reserve($user, $item);
         return new JsonResponse("Item reserved successfuly",200);
     }
+
+
+
+    // CANCEL
+
+
+    #[View()]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}/cancel", methods: ["POST"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        tags: ['Items'],
+        summary: 'Cancel a reservation',
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Reservation canceled successfuly'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Item not found',
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Item is not reserved',
+            ),
+        ]
+    )]    
+    public function cancel(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
+        #[CurrentUser()] User $user,
+        ItemService $itemService
+    )
+    {
+        $itemService->cancel($user, $item);
+        return new JsonResponse("Reservation canceled successfuly",200);
+    }
+
 }
