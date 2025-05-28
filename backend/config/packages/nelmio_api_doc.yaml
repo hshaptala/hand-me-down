@@ -35,6 +35,24 @@ nelmio_api_doc:
                         imageUrl: 
                             type: string
                             description: /images/items/1.png
+                Member:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                            description: member id
+                        firstName: 
+                            type: string
+                            description: user's first name
+                        lastName: 
+                            type: string
+                            description: user's last name
+                        role: 
+                            type: string
+                            description: member's role in the community
+                        imageUrl: 
+                            type: string
+                            description: /images/users/1.png
 
     areas: # to filter documented areas
         path_patterns:

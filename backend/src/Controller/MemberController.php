@@ -10,7 +10,6 @@ use App\Repository\MemberRepository;
 use App\Service\CommunityService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -62,7 +61,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of members',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Member::class, groups: ['member_basic'])))
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Member"))
             ),
             new OA\Response(
                 response: 401,
@@ -116,7 +115,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: new Model(type: Member::class, groups: ['member_basic']))
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -172,7 +171,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: new Model(type: Member::class, groups: ['member_basic']))
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
