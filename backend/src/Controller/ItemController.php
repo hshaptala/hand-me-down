@@ -23,6 +23,7 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -284,6 +285,10 @@ final class ItemController extends AbstractController
                 response: 404,
                 description: 'Community not found',
             ),
+            new OA\Response(
+                response: 409,
+                description: "You can't delete an item after it is reserved.",
+            ),
         ]
     )] 
     public function delete(
@@ -293,9 +298,17 @@ final class ItemController extends AbstractController
         EntityManagerInterface $em
     )
     {
+        // Check User
         if($item->getDonor() !== $user){
             return new JsonResponse("You do not have permission to delete this item.",403);
         }
+
+        // Check Item status
+        if($item->getStatus() !== ItemStatusEnum::OPEN){
+            return throw new ConflictHttpException("You can't delete an item after it is reserved.");
+        }
+
+        // Save and return
         $em->remove($item);
         $em->flush();
         return new JsonResponse("Successfully deleted item",200);
@@ -350,6 +363,10 @@ final class ItemController extends AbstractController
                 response: 404,
                 description: 'Item not found',
             ),
+            new OA\Response(
+                response: 409,
+                description: "You can't delete an item after it is reserved.",
+            ),
         ]
     )]    
     public function edit(
@@ -369,6 +386,11 @@ final class ItemController extends AbstractController
         // Check permission
         if($item->getDonor() !== $user){
             return new JsonResponse("You do not have permission to edit this item.",403);
+        }
+
+        // Check Item status
+        if($item->getStatus() !== ItemStatusEnum::OPEN){
+            return throw new ConflictHttpException("You can't edit an item after it is reserved.");
         }
 
         // Manually populate DTO 
