@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 
+import { clearSessionCache } from "@/config/axios.config";
 import supabase from "@/lib/supabase";
 
 interface AuthContextProps {
@@ -33,15 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-    });
-
-    // Listen for auth changes
+    });    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      clearSessionCache();
     });
 
     return () => subscription.unsubscribe();
