@@ -44,7 +44,7 @@ final class ItemController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of items',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Item::class, groups: ['item_basic'])))
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
             ),
             new OA\Response(
                 response: 401,
@@ -95,7 +95,7 @@ final class ItemController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Item object',
-                content: new OA\JsonContent( type: 'object', ref: new Model(type: Item::class, groups: ['item_basic']))
+                content: new OA\JsonContent(ref: "#/components/schemas/Item")
             ),
             new OA\Response(
                 response: 401,
@@ -160,7 +160,7 @@ final class ItemController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Item created successfully',
-                content: new OA\JsonContent(ref: new Model(type: Item::class, groups: ['item_basic']))
+                content: new OA\JsonContent(ref: "#/components/schemas/Item")
             ),
             new OA\Response(
                 response: 400,

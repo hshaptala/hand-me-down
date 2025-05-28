@@ -26,3 +26,9 @@ services:
             # $security: '@security.helper'
             $em: '@doctrine.orm.entity_manager'
         tags: ['security.voter']
+    
+    # Serializers
+
+    App\Serializer\ItemUsersNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 500 }

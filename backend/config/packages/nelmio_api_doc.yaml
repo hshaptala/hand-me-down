@@ -9,6 +9,32 @@ nelmio_api_doc:
                 Bearer: 
                     type: http 
                     scheme: bearer
+            schemas:
+                Item:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                        title: 
+                            type: string
+                        description:
+                            type: string
+                        donor:
+                            type: integer
+                            description: user id
+                        receiver:
+                            type: integer
+                            description: user id
+                        status:
+                            ref: ItemStatusEnum
+                        keywords:
+                            type: array
+                            items:
+                                type: string
+                        imageUrl: 
+                            type: string
+                            description: /images/items/1.png
+
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
