@@ -4,8 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Community;
 use App\Entity\DTO\UserEdit;
+use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
+use App\Repository\ItemRepository;
+use App\Service\ItemService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Model;
@@ -314,5 +317,124 @@ final class UserController extends AbstractController
             'Content-Disposition' => 'inline; filename="'. $user->getFirstName() . $user->getLastName() .'.png"',
         ]);
     }
+
+
+
+    // User RESERVATIONS
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/items/reservations", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items you are reserving at the moment.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+        ]
+
+    )]
+    public function getReservations(
+        ItemService $itemService,
+        #[CurrentUser()] User $user
+    ) {
+        // Check User
+        if ($user === null) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
+        }
+        // Return its reserved items
+        return $itemService->getItemsOnCriteria([
+            "receiver" => $user,
+            "status" => ItemStatusEnum::RESERVED
+        ]);
+    }
+
+
+
+    // User DONATIONS
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/items/donations", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items you are donating and have donated in the past.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+        ]
+
+    )]
+    public function getDonations(
+        ItemService $itemService,
+        #[CurrentUser()] User $user
+    ) {
+        // Check User
+        if ($user === null) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
+        }
+        // Return user donation items
+        return $itemService->getItemsOnCriteria(["donor"=>$user]);
+    }
+
+
+
+    // User RECEIPTS
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/items/receipts", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items you received.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+        ]
+
+    )]
+    public function getReceipts(
+        ItemService $itemService,
+        #[CurrentUser()] User $user
+    ) {
+        // Check User
+        if ($user === null) {
+            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
+        }
+        // Return user received items
+        return $itemService->getItemsOnCriteria([
+            "receiver"=>$user,
+            "status"=>ItemStatusEnum::OVER
+        ]);
+    }
+
+
 
 }

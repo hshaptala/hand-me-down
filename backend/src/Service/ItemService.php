@@ -12,16 +12,22 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ItemService
 {
     private const MAX_RESERVATIONS_PER_USER = 5;
 
     private EntityManagerInterface $em;
+    private UrlGeneratorInterface $urlGen;
 
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        UrlGeneratorInterface $urlGenerator,
+        )
     {
         $this->em = $entityManager;
+        $this->urlGen = $urlGenerator;
     }
 
     /**
@@ -154,5 +160,20 @@ class ItemService
         // Save
         $this->em->persist($item);
         $this->em->flush();
+    }
+
+
+    public function getItemsOnCriteria(array $criteria): array
+    {
+        // Get items
+        $items = $this->em->getRepository(Item::class)->findBy($criteria);
+        // Images
+        foreach ($items as $item) {
+            $item
+                ->setImageUrl($this->urlGen->generate('api_items_image', ['id' => $item->getId()]))
+            ;
+        };
+        // Return
+        return $items;
     }
 }
