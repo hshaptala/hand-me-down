@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Community;
+use App\Entity\DTO\ItemEdit;
 use App\Entity\DTO\ItemNew;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
@@ -297,5 +298,97 @@ final class ItemController extends AbstractController
         $em->remove($item);
         $em->flush();
         return new JsonResponse("Successfully deleted item",200);
+    }
+
+
+    // EDIT
+
+
+
+
+
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["PATCH", "POST"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        tags: ['Items'],
+        summary: 'Update an item informations',
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    type: 'object',
+                    properties: [
+                        new OA\Property(property: 'title', type: 'string', description: 'Post title'),
+                        new OA\Property(property: 'description', type: 'string', description: 'A brief description of your item'),
+                        new OA\Property(property: 'keywords', type: 'array', description: 'List of keywords matching your item', items: new OA\Items(type:'string')),
+                        new OA\Property(property: 'image', type: 'string', format: 'binary', description: 'Image upload')
+                    ]
+                )
+            )
+        ),
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Item updated successfully',
+                content: new OA\JsonContent(ref: "#/components/schemas/Item")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Item not found',
+            ),
+        ]
+    )]    
+    public function edit(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
+        Request $request,
+        EntityManagerInterface $em,
+        #[CurrentUser()] User $user,
+        UrlGeneratorInterface $urlGen,
+    )
+    {
+        // Check User
+        if ($user === null){ 
+           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
+        }
+
+        // Check permission
+        if($item->getDonor() !== $user){
+            return new JsonResponse("You do not have permission to edit this item.",403);
+        }
+
+        // Manually populate DTO 
+        $dto = new ItemEdit();
+        $dto->title = $request->request->get('title');
+        $dto->description = $request->request->get('description');
+        $dto->keywords = $request->request->get('keywords');
+
+        // Edit
+        $dto->update($item);
+        $dto->updateImage($request, $item);
+
+        // Save
+        $em->persist($item);
+        $em->flush();
+
+        // Set values for return
+        $item
+            ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
+        ;
+
+        return $item;
     }
 }
