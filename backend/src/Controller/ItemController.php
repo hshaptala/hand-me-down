@@ -22,7 +22,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -191,11 +190,6 @@ final class ItemController extends AbstractController
         #[CurrentUser()] User $user
     )
     {
-        // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Check Post Limit
         $itemService->checkPostLimit($user);
 
@@ -300,11 +294,6 @@ final class ItemController extends AbstractController
         EntityManagerInterface $em
     )
     {
-        // Check User
-        if($item->getDonor() !== $user){
-            return new JsonResponse("You do not have permission to delete this item.",403);
-        }
-
         // Check Item status
         if($item->getStatus() !== ItemStatusEnum::OPEN){
             return throw new ConflictHttpException("You can't delete an item after it is reserved.");
@@ -380,11 +369,6 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen,
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Check permission
         if($item->getDonor() !== $user){
             return new JsonResponse("You do not have permission to edit this item.",403);

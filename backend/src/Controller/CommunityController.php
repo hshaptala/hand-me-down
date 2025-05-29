@@ -10,7 +10,6 @@ use App\Entity\Enum\VisibilityEnum;
 use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
-use App\Security\CommunityVoter;
 use App\Service\CommunityService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
@@ -23,7 +22,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -128,11 +126,6 @@ final class CommunityController extends AbstractController
         CommunityService $communityService
     )
     {
-        // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Check community join limit
         $communityService->checkJoinLimit($user);
 
@@ -269,18 +262,10 @@ final class CommunityController extends AbstractController
         #[CurrentUser()] User $user,
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
-        // Check permission
-        $this->denyAccessUnlessGranted(CommunityVoter::DELETE, $community, message:"You do not have permission to delete this community.");
-
         // Delete
         $em->remove($community);
         $em->flush();
-
+        // Return
         return new JsonResponse("Successfully deleted community",200);
     }
 
@@ -353,14 +338,6 @@ final class CommunityController extends AbstractController
         PasswordHasherFactoryInterface $hasherFactory,
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
-        // Check permission
-        $this->denyAccessUnlessGranted(CommunityVoter::EDIT, $community, message:"You do not have permission to edit this community.");
-
         // Manually populate DTO 
         $dto = new CommunityEdit();
         $dto->name = $request->request->get('name');
