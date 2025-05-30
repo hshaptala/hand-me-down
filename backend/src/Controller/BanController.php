@@ -8,8 +8,6 @@ use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\MemberRepository;
 use App\Security\CommunityVoter;
-use App\Service\UserService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
@@ -60,7 +58,6 @@ final class BanController extends AbstractController
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         MemberRepository $memberRepository,
-        UserService $userService
     )
     {
         // Get the member
@@ -73,9 +70,6 @@ final class BanController extends AbstractController
         if ($member === null) {
             return throw new NotFoundHttpException("User not found in this community.");
         }
-
-        // Generate AvatarUrl
-        $userService->generateAvatarUrl($member->getUser());
       
         return $member;
     }
@@ -115,18 +109,12 @@ final class BanController extends AbstractController
     public function exiles(
         Community $community,
         MemberRepository $memberRepository,
-        UserService $userService
     )
     {
         $members = $memberRepository->findBy([
             'community' => $community,
             'isBanned' => true
         ]);
-        
-        // Generate AvatarUrl
-        foreach ($members as $member) {
-            $userService->generateAvatarUrl($member->getUser());
-        };
 
         return $members;
     }
@@ -163,13 +151,16 @@ final class BanController extends AbstractController
                 response: 404,
                 description: 'Community or User not found',
             ),
+            new OA\Response(
+                response: 409,
+                description: 'Cant ban yourself',
+            ),
         ]
     )] 
     public function ban(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         #[CurrentUser()] User $moderator,
-        UserService $userService,
         EntityManagerInterface $em
         ) 
     {
@@ -224,17 +215,74 @@ final class BanController extends AbstractController
         // Save
         $em->persist($member);
         $em->flush();
-
-        // Generate AvatarUrl
-        $userService->generateAvatarUrl($member->getUser());
       
         // Return
         return $member;
     }
 
-    /*
-    #[Route('/communities/{communityId}/members/{userId}/unban')]
-    public function unban()
+
+    // UNBAN
+
+
+    #[View(serializerGroups: ["member_ban"])]
+    #[Route('/communities/{communityId}/members/{userId}/unban', methods: ["POST"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_MODERATE', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        summary: "Unban a user from a community",
+        tags: ["Bans"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Member',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/MemberBan")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community or User not found',
+            ),
+        ]
+    )] 
+    public function unban(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'userId')] User $user,
+        #[CurrentUser()] User $moderator,
+        EntityManagerInterface $em
+        ) 
     {
-    }*/
+        // Get the member
+        $member = $em->getRepository(Member::class)->findOneBy([
+            "user" => $user,
+            "community" => $community,
+            "isBanned" => true,
+        ]);
+        
+        // Make sure the banned member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("Banned user not found in this community.");
+        }
+
+        // Unban
+        $member
+            ->setIsBanned(false)
+            ->setLastUnbannedAt(new \DateTimeImmutable())
+            ->setLastUnbannedBy($moderator)
+        ;
+
+        // Save
+        $em->persist($member);
+        $em->flush();
+      
+        // Return
+        return $member;
+    }
 }
