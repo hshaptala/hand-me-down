@@ -13,7 +13,6 @@ use App\Repository\CommunityRepository;
 use App\Service\CommunityService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,7 +23,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class CommunityController extends AbstractController
@@ -47,14 +45,15 @@ final class CommunityController extends AbstractController
             )
         ]
     )]
-    public function communities(CommunityRepository $communityRepository, UrlGeneratorInterface $urlGen)
+    public function communities(
+        CommunityRepository $communityRepository, 
+        CommunityService $communityService
+        )
     {
         $communities = $communityRepository->findAll();
         foreach ($communities as $community) {
-            $community
-                ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-                ->setMemberCount(count($community->getMembers()))
-            ;
+            $communityService->setMemberCount($community);
+            $communityService->generateImageUrl($community);
         };
         return $communities;
     }
@@ -120,7 +119,6 @@ final class CommunityController extends AbstractController
         Request $request,
         #[MapRequestPayload(serializationContext: ["groups" => ["community_new"]])] CommunityNew $dto,
         EntityManagerInterface $em,
-        UrlGeneratorInterface $urlGen,
         PasswordHasherFactoryInterface $hasherFactory,
         #[CurrentUser()] User $user,
         CommunityService $communityService
@@ -187,10 +185,8 @@ final class CommunityController extends AbstractController
         $em ->flush();
 
         // Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(1)
-        ;
+        $communityService->generateImageUrl($community);
+        $community->setMemberCount(1);
 
         // Return new community
         return $community;
@@ -334,7 +330,7 @@ final class CommunityController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
-        UrlGeneratorInterface $urlGen,
+        CommunityService $communityService,
         PasswordHasherFactoryInterface $hasherFactory,
     )
     {
@@ -368,10 +364,8 @@ final class CommunityController extends AbstractController
         $em->flush();
 
         // Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(count($community->getMembers()))
-        ;
+        $communityService->setMemberCount($community);
+        $communityService->generateImageUrl($community);
 
         return $community;
     }
@@ -399,13 +393,11 @@ final class CommunityController extends AbstractController
     )]
     public function community(
         Community $community, 
-        UrlGeneratorInterface $urlGen
+        CommunityService $communityService
         )
     {
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(count($community->getMembers()))
-        ;
+        $communityService->setMemberCount($community);
+        $communityService->generateImageUrl($community);
         return $community;
     }
 }
