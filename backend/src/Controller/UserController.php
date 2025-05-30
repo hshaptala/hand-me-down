@@ -129,7 +129,7 @@ final class UserController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of communities',
-                content: new OA\JsonContent(ref: new Model(type: Community::class, groups: ['community_basic']))
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Community"))
             ),
             new OA\Response(
                 response: 401,
