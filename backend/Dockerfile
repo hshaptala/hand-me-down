@@ -18,4 +18,4 @@ ENV FRANKENPHP_CONFIG="worker ./public/index.php"
 
 COPY . /app/
 COPY --from=composer /app/vendor /app/vendor
-COPY .env.local /app/.env.local
+COPY .env /app/.env
