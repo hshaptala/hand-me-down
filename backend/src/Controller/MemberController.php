@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Repository\MemberRepository;
 use App\Security\CommunityVoter;
 use App\Service\CommunityService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
@@ -21,7 +22,6 @@ use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -83,23 +83,16 @@ final class MemberController extends AbstractController
     public function members(
         Community $community,
         MemberRepository $memberRepository,
-        UrlGeneratorInterface $urlGen
+        UserService $userService
     )
     {
         $members = $memberRepository->findByCommunity($community);
         
         // Generate AvatarUrl
         foreach ($members as $member) {
-            if($member->getUser()->getAvatar() === null){
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-                ;
-            }else{
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-                ;
-            }
+            $userService->generateAvatarUrl($member->getUser());
         };
+
         return $members;
     }
 
@@ -137,7 +130,7 @@ final class MemberController extends AbstractController
     public function member(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
-        UrlGeneratorInterface $urlGen,
+        UserService $userService,
         MemberRepository $memberRepository
     )
     {
@@ -153,15 +146,7 @@ final class MemberController extends AbstractController
         }
 
         // Generate AvatarUrl
-        if($member->getUser()->getAvatar() === null){
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-            ;
-        }else{
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-            ;
-        }
+        $userService->generateAvatarUrl($member->getUser());
       
         return $member;
     }
@@ -222,7 +207,7 @@ final class MemberController extends AbstractController
        )] 
         #[MapQueryParameter()] ?string $role,
         EntityManagerInterface $em,
-        UrlGeneratorInterface $urlGen,
+        UserService $userService,
     )
     {
         // Get the member
@@ -270,16 +255,10 @@ final class MemberController extends AbstractController
             $em->persist($member);
             $em->flush();
         }
+
         // Generate AvatarUrl
-        if($member->getUser()->getAvatar() === null){
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-            ;
-        }else{
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-            ;
-        }
+        $userService->generateAvatarUrl($member->getUser());
+
         // Return updated member
         return $member;
     }
@@ -443,7 +422,7 @@ final class MemberController extends AbstractController
         #[CurrentUser()] User $from,
         #[MapEntity(id: 'userId')] User $to,
         EntityManagerInterface $em,
-        UrlGeneratorInterface $urlGen,
+        UserService $userService
     )
     {
         // Get the member
@@ -466,16 +445,8 @@ final class MemberController extends AbstractController
         $em->persist(object: $community);
         $em->flush();
         
-            // Generate AvatarUrl
-        if($member->getUser()->getAvatar() === null){
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-            ;
-        }else{
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-            ;
-        }
+        // Generate AvatarUrl
+        $userService->generateAvatarUrl($member->getUser());
 
         // Return updated member
         return $member;

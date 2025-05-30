@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Community;
 use App\Entity\User;
 use App\Repository\MemberRepository;
+use App\Service\UserService;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,7 +13,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api')]
@@ -49,8 +49,8 @@ final class BanController extends AbstractController
     public function baninfo(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
-        UrlGeneratorInterface $urlGen,
-        MemberRepository $memberRepository
+        MemberRepository $memberRepository,
+        UserService $userService
     )
     {
         // Get the member
@@ -65,15 +65,7 @@ final class BanController extends AbstractController
         }
 
         // Generate AvatarUrl
-        if($member->getUser()->getAvatar() === null){
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-            ;
-        }else{
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-            ;
-        }
+        $userService->generateAvatarUrl($member->getUser());
       
         return $member;
     }
