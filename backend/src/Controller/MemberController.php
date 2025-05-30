@@ -7,12 +7,14 @@ use App\Entity\Enum\CommunityRoleEnum;
 use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\MemberRepository;
+use App\Security\CommunityVoter;
 use App\Service\CommunityService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -193,6 +195,10 @@ final class MemberController extends AbstractController
                 description: 'Community not found',
             ),
             new OA\Response(
+                response: 409,
+                description: 'Cant change your own role',
+            ),
+            new OA\Response(
                 response: 422,
                 description: 'Invalid role input',
             ),
@@ -200,7 +206,8 @@ final class MemberController extends AbstractController
     )] 
     public function edit(
         #[MapEntity(id: 'communityId')] Community $community,
-        #[MapEntity(id: 'userId')] User $user,
+        #[CurrentUser()] User $from,
+        #[MapEntity(id: 'userId')] User $to,
         #[OA\Parameter( 
            description: "New role", 
            in: "query", 
@@ -214,9 +221,16 @@ final class MemberController extends AbstractController
     {
         // Get the member
         $member = $em->getRepository(Member::class)->findOneBy([
-            "user" => $user,
+            "user" => $to,
             "community" => $community,
         ]);
+
+        // Make sure the user is not demoting themselves
+        if ($from === $to)
+        {
+            return throw new ConflictHttpException("You can not change your own role!");
+        }
+
         // Change role
         if($role !== null){
             // Get Role
@@ -229,8 +243,16 @@ final class MemberController extends AbstractController
                 ], 422);
             }
 
+            // Check for ownership when role is admin
+            if($role === CommunityRoleEnum::ADMIN || $member->getRole() === CommunityRoleEnum::ADMIN){
+                $this->denyAccessUnlessGranted(
+                    CommunityVoter::MANAGE_ADMINS, 
+                    $community, 
+                    message:"You do not have permission to promote or demote this user to administrator."
+                );
+            }
+
             // Set
-            // /!\ No limitations for role changing
             $member->setRole($role);
 
             // Save

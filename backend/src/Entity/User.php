@@ -46,7 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Community>
      */
     #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
-    private Collection $communitiesCreated;
+    private Collection $communitiesOwned;
 
     #[ORM\Column(length: 255)]
     #[Groups(['user_register','member_basic'])]
@@ -82,7 +82,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->communitiesCreated = new ArrayCollection();
+        $this->communitiesOwned = new ArrayCollection();
         $this->memberships = new ArrayCollection();
         $this->donations = new ArrayCollection();
         $this->receipts = new ArrayCollection();
@@ -176,27 +176,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Community>
      */
-    public function getCommunitiesCreated(): Collection
+    public function getCommunitiesOwned(): Collection
     {
-        return $this->communitiesCreated;
+        return $this->communitiesOwned;
     }
 
-    public function addCommunityCreated(Community $community): static
+    public function addCommunityOwned(Community $community): static
     {
-        if (!$this->communitiesCreated->contains($community)) {
-            $this->communitiesCreated->add($community);
-            $community->setCreator($this);
+        if (!$this->communitiesOwned->contains($community)) {
+            $this->communitiesOwned->add($community);
+            $community->setOwner($this);
         }
 
         return $this;
     }
 
-    public function removeCommunityCreated(Community $community): static
+    public function removeCommunityOwned(Community $community): static
     {
-        if ($this->communitiesCreated->removeElement($community)) {
+        if ($this->communitiesOwned->removeElement($community)) {
             // set the owning side to null (unless already changed)
-            if ($community->getCreator() === $this) {
-                $community->setCreator(null);
+            if ($community->getOwner() === $this) {
+                $community->setOwner(null);
             }
         }
 

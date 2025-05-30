@@ -153,7 +153,7 @@ final class CommunityController extends AbstractController
         // Create new entity
         $community = new Community();
         $community
-            ->setCreator($user)
+            ->setOwner($user)
             ->setCreatedAt(new \DateTimeImmutable())
             ->setName($dto->name)
             ->setDescription($dto->description)

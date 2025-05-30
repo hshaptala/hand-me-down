@@ -113,7 +113,7 @@ class AppFixtures extends Fixture
             ->setVisibility(VisibilityEnum::PRIVATE)
             ->setPassword($this->communityPasswordHasher->hash( "password"))
             ->setImage(file_get_contents($folderPath . 'thomasmore.png'))
-            ->setCreator($user_secondary)
+            ->setOwner($user_secondary)
         ;
         $manager->persist($community_thomasmore);
 
@@ -126,7 +126,7 @@ class AppFixtures extends Fixture
             ->setLocation("Belgium, Geel")
             ->setVisibility(VisibilityEnum::PUBLIC)
             ->setImage(file_get_contents($folderPath . 'geel.jpg'))
-            ->setCreator($user_main)
+            ->setOwner($user_main)
         ;
         $manager->persist($community_cityofgeel);
 
@@ -139,7 +139,7 @@ class AppFixtures extends Fixture
             ->setLocation("France, Gradignan")
             ->setVisibility(VisibilityEnum::PUBLIC)
             ->setImage(file_get_contents($folderPath . 'iut.jpeg'))
-            ->setCreator($user_3)
+            ->setOwner($user_3)
         ;
         $manager->persist($community_iutbordeaux);
 
