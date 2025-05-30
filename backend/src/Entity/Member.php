@@ -32,11 +32,11 @@ class Member
 
     #[ORM\Column(options: ["default" => false])]
     #[Groups(['member_ban'])]
-    private ?bool $isBanned = null;
+    private ?bool $isBanned = false;
 
     #[ORM\Column(options: ["default" => 0])]
     #[Groups(['member_ban'])]
-    private ?int $banCount = null;
+    private ?int $banCount = 0;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['member_ban'])]
