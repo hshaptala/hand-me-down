@@ -65,12 +65,6 @@ nelmio_api_doc:
                         lastName: 
                             type: string
                             description: user's last name
-                        role: 
-                            type: string
-                            description: member's role in the community
-                        imageUrl: 
-                            type: string
-                            description: /images/users/1.png
                         isBanned:
                             type: boolean
                         banCount:
@@ -79,8 +73,14 @@ nelmio_api_doc:
                             type: string
                         lastBannedAt:
                             type: string
+                        lastBannedBy: 
+                            type: integer
+                            description: user id
                         lastUnbannedAt:
                             type: string
+                        lastUnbannedBy: 
+                            type: integer
+                            description: user id
                 Community:
                     type: object
                     properties:

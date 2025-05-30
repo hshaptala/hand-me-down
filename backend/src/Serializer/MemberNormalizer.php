@@ -22,7 +22,9 @@ class MemberNormalizer implements NormalizerInterface
         $data['id'] = $data['user']['id'];
         $data['firstName'] = $data['user']['firstName'];
         $data['lastName'] = $data['user']['lastName'];
-        $data['avatarUrl'] = $data['user']['avatarUrl'];
+        if(isset($data['user']['avatarUrl'])){
+            $data['avatarUrl'] = $data['user']['avatarUrl'];
+        }
 
         // Remove user
         unset($data['user']);
@@ -38,6 +40,17 @@ class MemberNormalizer implements NormalizerInterface
             }
             if(!isset($data['lastUnbannedAt'])){
                 $data['lastUnbannedAt'] = null;
+            }
+            // Also serialize other users
+            if(!isset($data['lastBannedBy'])){
+                $data['lastBannedBy'] = null;
+            }else{
+                $data['lastBannedBy'] = $data['lastBannedBy']['id'];
+            }
+            if(!isset($data['lastUnbannedBy'])){
+                $data['lastUnbannedBy'] = null;
+            }else{
+                $data['lastUnbannedBy'] = $data['lastUnbannedBy']['id'];
             }
         }
 

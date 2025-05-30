@@ -19,7 +19,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['item_basic','member_basic','community_basic'])]
+    #[Groups(['item_basic','member_basic','community_basic','member_ban'])]
     private ?int $id = null;
 
     #[Groups(['user_login'])]
@@ -49,11 +49,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $communitiesOwned;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register','member_basic'])]
+    #[Groups(['user_register','member_basic','member_ban'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register','member_basic'])]
+    #[Groups(['user_register','member_basic','member_ban'])]
     private ?string $lastName = null;
 
     /**

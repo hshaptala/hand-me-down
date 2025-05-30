@@ -19,8 +19,7 @@ class Member
 
     #[ORM\ManyToOne(inversedBy: 'memberships')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['member_basic'])]
-
+    #[Groups(['member_basic','member_ban'])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'members')]
@@ -50,6 +49,14 @@ class Member
     #[ORM\Column(nullable: true)]
     #[Groups(['member_ban'])]
     private ?\DateTimeImmutable $lastUnbannedAt = null;
+
+    #[ORM\ManyToOne]
+    #[Groups(['member_ban'])]
+    private ?User $lastBannedBy = null;
+
+    #[ORM\ManyToOne]
+    #[Groups(['member_ban'])]
+    private ?User $lastUnbannedBy = null;
 
     public function getId(): ?int
     {
@@ -109,9 +116,9 @@ class Member
         return $this->banCount;
     }
 
-    public function setBanCount(int $banCount): static
+    public function incrementBanCount(): static
     {
-        $this->banCount = $banCount;
+        $this->banCount += 1;
 
         return $this;
     }
@@ -148,6 +155,30 @@ class Member
     public function setLastUnbannedAt(?\DateTimeImmutable $lastUnbannedAt): static
     {
         $this->lastUnbannedAt = $lastUnbannedAt;
+
+        return $this;
+    }
+
+    public function getLastBannedBy(): ?User
+    {
+        return $this->lastBannedBy;
+    }
+
+    public function setLastBannedBy(?User $lastBannedBy): static
+    {
+        $this->lastBannedBy = $lastBannedBy;
+
+        return $this;
+    }
+
+    public function getLastUnbannedBy(): ?User
+    {
+        return $this->lastUnbannedBy;
+    }
+
+    public function setLastUnbannedBy(?User $lastUnbannedBy): static
+    {
+        $this->lastUnbannedBy = $lastUnbannedBy;
 
         return $this;
     }
