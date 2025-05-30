@@ -115,16 +115,25 @@ class CommunityService
 
     public function leave (User $user, Community $community): void
     {
+        // Get member
         $memberRepo = $this->em->getRepository(Member::class);
         $member = $memberRepo->findOneBy([
             'user' => $user,
             'community' => $community
         ]);
-        if ($member !== null) {
-            $this->em->remove($member);
-            $this->em->flush();
-        }else{
+
+        // Make sure user is in the community
+        if ($member === null) {
             throw new ConflictHttpException('Not in this community');
         }
+
+        // Make sure user is not the owner of the community
+        if ($user === $community->getOwner()) {
+            throw new ConflictHttpException('You can not leave a community you own');
+        }
+
+        // Save
+        $this->em->remove($member);
+        $this->em->flush();
     }
 }

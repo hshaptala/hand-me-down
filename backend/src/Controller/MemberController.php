@@ -15,6 +15,7 @@ use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
@@ -129,7 +130,7 @@ final class MemberController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description: 'Community not found',
+                description: 'Community or user not found',
             ),
         ]
     )] 
@@ -145,6 +146,11 @@ final class MemberController extends AbstractController
             "user" => $user,
             "community" => $community,
         ]);
+        
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
+        }
 
         // Generate AvatarUrl
         if($member->getUser()->getAvatar() === null){
@@ -164,7 +170,7 @@ final class MemberController extends AbstractController
 
 
 
-    
+
 
     // EDIT ROLE
 
@@ -192,7 +198,7 @@ final class MemberController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description: 'Community not found',
+                description: 'Community or user not found',
             ),
             new OA\Response(
                 response: 409,
@@ -224,6 +230,11 @@ final class MemberController extends AbstractController
             "user" => $to,
             "community" => $community,
         ]);
+
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
+        }
 
         // Make sure the user is not demoting themselves
         if ($from === $to)
@@ -390,6 +401,84 @@ final class MemberController extends AbstractController
         $communityService->leave($user, $community);
 
         return new JsonResponse("Successfully left community",200);
+    }
+
+
+
+
+
+
+    // GIVE OWNERSHIP
+
+    #[View(serializerGroups: ["member_basic"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}/give-ownership", methods: ["Post"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_MANAGE_OWNER', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        summary: "Transfer the ownership of the community to another member",
+        tags: ["Members"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Member object',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community or user not found',
+            ),
+        ]
+    )] 
+    public function giveOwnership(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[CurrentUser()] User $from,
+        #[MapEntity(id: 'userId')] User $to,
+        EntityManagerInterface $em,
+        UrlGeneratorInterface $urlGen,
+    )
+    {
+        // Get the member
+        $member = $em->getRepository(Member::class)->findOneBy([
+            "user" => $to,
+            "community" => $community,
+        ]);
+
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
+        }
+
+        // Promote to administrator
+        $member->setRole(CommunityRoleEnum::ADMIN);
+        $community->setOwner($to);
+
+        // Save
+        $em->persist($member);
+        $em->persist(object: $community);
+        $em->flush();
+        
+            // Generate AvatarUrl
+        if($member->getUser()->getAvatar() === null){
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
+            ;
+        }else{
+            $member->getUser()
+                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
+            ;
+        }
+
+        // Return updated member
+        return $member;
     }
 
 }
