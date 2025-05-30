@@ -53,6 +53,34 @@ nelmio_api_doc:
                         imageUrl: 
                             type: string
                             description: /images/users/1.png
+                MemberBan:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                            description: user id
+                        firstName: 
+                            type: string
+                            description: user's first name
+                        lastName: 
+                            type: string
+                            description: user's last name
+                        role: 
+                            type: string
+                            description: member's role in the community
+                        imageUrl: 
+                            type: string
+                            description: /images/users/1.png
+                        isBanned:
+                            type: boolean
+                        banCount:
+                            type: integer
+                        banReason:
+                            type: string
+                        lastBannedAt:
+                            type: string
+                        lastUnbannedAt:
+                            type: string
                 Community:
                     type: object
                     properties:

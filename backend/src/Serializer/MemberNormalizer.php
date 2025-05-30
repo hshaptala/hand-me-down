@@ -27,6 +27,20 @@ class MemberNormalizer implements NormalizerInterface
         // Remove user
         unset($data['user']);
 
+        // In case ban infos are provided
+        if(isset($data['isBanned'])){
+            // Make sure all nullable fields are provided
+            if(!isset($data['banReason'])){
+                $data['banReason'] = null;
+            }
+            if(!isset($data['lastBannedAt'])){
+                $data['lastBannedAt'] = null;
+            }
+            if(!isset($data['lastUnbannedAt'])){
+                $data['lastUnbannedAt'] = null;
+            }
+        }
+
         return $data;
     }
 
