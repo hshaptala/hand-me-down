@@ -55,6 +55,11 @@ class CommunityVoter extends Voter
             return false; // user is not in this community
         }
 
+        // Banned users cannot access the community in any way. They are not really members.
+        if($member->isBanned()){
+            return false;
+        }
+
         switch ($attribute) {
             case self::VIEW:
                 return in_array($member->getRole(), [CommunityRoleEnum::MEMBER, CommunityRoleEnum::MODERATOR, CommunityRoleEnum::ADMIN]);

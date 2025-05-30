@@ -86,7 +86,10 @@ final class MemberController extends AbstractController
         UserService $userService
     )
     {
-        $members = $memberRepository->findByCommunity($community);
+        $members = $memberRepository->findBy([
+            'community' => $community,
+            'isBanned' => false
+        ]);
         
         // Generate AvatarUrl
         foreach ($members as $member) {
@@ -138,6 +141,7 @@ final class MemberController extends AbstractController
         $member = $memberRepository->findOneBy([
             "user" => $user,
             "community" => $community,
+            "isBanned" => false,
         ]);
         
         // Make sure member exist
@@ -214,6 +218,7 @@ final class MemberController extends AbstractController
         $member = $em->getRepository(Member::class)->findOneBy([
             "user" => $to,
             "community" => $community,
+            "isBanned" => false
         ]);
 
         // Make sure member exist
@@ -429,6 +434,7 @@ final class MemberController extends AbstractController
         $member = $em->getRepository(Member::class)->findOneBy([
             "user" => $to,
             "community" => $community,
+            "isBanned" => false
         ]);
 
         // Make sure member exist

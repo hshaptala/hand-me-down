@@ -119,7 +119,8 @@ class CommunityService
         $memberRepo = $this->em->getRepository(Member::class);
         $member = $memberRepo->findOneBy([
             'user' => $user,
-            'community' => $community
+            'community' => $community,
+            'isBanned' => false // If they are banned, they cannot "leave". It just means the can't join more communities. 
         ]);
 
         // Make sure user is in the community
