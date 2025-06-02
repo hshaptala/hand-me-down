@@ -16,20 +16,34 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import type { Item } from "@/models/item";
+import type { User } from "@/models/user";
 import { fetchItem } from "@/service/item.service";
+import { fetchUser } from "@/service/user.service";
 
-export default function Item() {
-  const params = useParams<{ id: string; itemId: string }>();
+export default function Item() {  const params = useParams<{ id: string; itemId: string }>();
   const [item, setItem] = useState<Item | null>(null);
+  const [donor, setDonor] = useState<User | null>(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (!params.id || !params.itemId) return;
-    fetchItem(Number(params.id), Number(params.itemId)).then((data) => {
-      setItem(data);
-      setLoading(false);
-    });
+    
+    const loadItemAndDonor = async () => {
+      try {
+        const itemData = await fetchItem(Number(params.id), Number(params.itemId));
+        setItem(itemData);
+        
+        // Fetch donor information
+        const donorData = await fetchUser(itemData.donor);
+        setDonor(donorData);
+      } catch (error) {
+        console.error("Error loading item or donor data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadItemAndDonor();
   }, [params.id, params.itemId]);
 
   if (loading || !item) {
@@ -99,14 +113,20 @@ export default function Item() {
                   <p className="text-muted-foreground mt-4">
                     {item.description}
                   </p>
-                </div>
-                <div className="flex items-center gap-4 border-t pt-4">
+                </div>                <div className="flex items-center gap-4 border-t pt-4">
                   <Avatar>
-                    <AvatarImage src="/placeholder.svg" alt="Donor" />
-                    <AvatarFallback>D</AvatarFallback>
+                    <AvatarImage 
+                      src={donor?.avatarUrl ? import.meta.env.VITE_API_BASE_URL + donor.avatarUrl : "/placeholder.svg"} 
+                      alt="Donor" 
+                    />
+                    <AvatarFallback>
+                      {donor ? `${donor.firstName[0]}${donor.lastName[0]}` : "D"}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">Donor</p>
+                    <p className="font-medium">
+                      {donor ? `${donor.firstName} ${donor.lastName}` : "Loading..."}
+                    </p>
                     <p className="text-muted-foreground text-sm">
                       Posted on{" "}
                       {item.postedAt
