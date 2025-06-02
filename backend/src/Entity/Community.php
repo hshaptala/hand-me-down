@@ -77,6 +77,9 @@ class Community
         orphanRemoval: true
     )]
     private Collection $members;
+    
+    #[Groups(['community_basic'])]
+    private ?int $itemCount = null;
 
     public function __construct()
     {
@@ -264,6 +267,18 @@ class Community
                 $member->setCommunity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getItemCount(): ?int
+    {
+        return $this->itemCount;
+    }
+
+    public function setItemCount(int $itemCount): static
+    {
+        $this->itemCount = $itemCount;
 
         return $this;
     }

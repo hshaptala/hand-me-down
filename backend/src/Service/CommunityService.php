@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Community;
+use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Enum\VisibilityEnum;
+use App\Entity\Item;
 use App\Entity\Member;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -145,8 +147,9 @@ class CommunityService
         $this->em->flush();
     }
 
-    public function setMemberCount(Community $community)
+    public function generateInfo(Community $community)
     {
+        // Member count
         $count = $this->em
             ->getRepository(Member::class)
             ->count([
@@ -155,6 +158,16 @@ class CommunityService
             ])
         ;
         $community->setMemberCount($count);
+
+        // Item count
+        $count = $this->em
+            ->getRepository(Item::class)
+            ->count([
+                "community" => $community,
+                "status" => ItemStatusEnum::OPEN
+            ])
+        ;
+        $community->setItemCount($count);
     }
 
     public function generateImageUrl (Community $community)
