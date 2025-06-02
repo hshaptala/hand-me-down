@@ -84,7 +84,7 @@ export default function CreateItem() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!id) {
       toast.error("Community ID is missing");
       return;
@@ -103,7 +103,7 @@ export default function CreateItem() {
         keywords: formData.keywords,
         image: formData.image,
       });
-      
+
       toast.success("Item posted successfully!");
       navigate(`/communities/${id}`);
     } catch (error) {
@@ -144,7 +144,6 @@ export default function CreateItem() {
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -156,7 +155,8 @@ export default function CreateItem() {
                   required
                   rows={4}
                 />
-              </div>              <div className="space-y-2">
+              </div>{" "}
+              <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
                   value={formData.keywords[0] || ""}
@@ -174,11 +174,14 @@ export default function CreateItem() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>              <div className="space-y-2">
+              </div>{" "}
+              <div className="space-y-2">
                 <Label>Item Image *</Label>
-                <div 
+                <div
                   className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 ${
-                    dragActive ? "border-[#2E7D32] bg-green-50" : "border-gray-300"
+                    dragActive
+                      ? "border-[#2E7D32] bg-green-50"
+                      : "border-gray-300"
                   }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -234,20 +237,22 @@ export default function CreateItem() {
                   )}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Adding an image is required to help others understand what you're offering
+                  Adding an image is required to help others understand what
+                  you're offering
                 </p>
               </div>
-            </CardContent>            <CardFooter className="flex justify-between">
-              <Button 
-                variant="outline" 
+            </CardContent>{" "}
+            <CardFooter className="flex justify-between">
+              <Button
+                variant="outline"
                 type="button"
                 onClick={() => navigate(`/communities/${id}`)}
                 disabled={loading}
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-[#2E7D32] hover:bg-[#1B5E20]"
                 disabled={loading}
               >

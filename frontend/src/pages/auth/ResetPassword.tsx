@@ -18,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import supabase from "@/lib/supabase";
 
-
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,7 +30,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = searchParams.get("access_token");
-    
+
     if (!accessToken) {
       toast.error("Invalid or missing reset token");
       navigate("/login");
@@ -40,27 +39,27 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate passwords
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
-    
+
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters");
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
-      
+
       if (error) throw error;
-      
+
       toast.success("Password reset successfully");
       navigate("/login");
     } catch (error) {
