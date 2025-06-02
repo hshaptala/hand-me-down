@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getAllCategories } from "@/models/categories";
 import { createItem } from "@/service/item.service";
 
 export default function CreateItem() {
@@ -36,20 +37,8 @@ export default function CreateItem() {
   });
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-
   // Categories that will be converted to keywords
-  const categories = [
-    "Electronics",
-    "Furniture",
-    "Clothing",
-    "Books",
-    "Sports",
-    "Home & Garden",
-    "Toys & Games",
-    "Kitchen",
-    "Office Supplies",
-    "Other",
-  ];
+  const categories = getAllCategories();
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {

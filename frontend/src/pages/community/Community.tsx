@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAllCategories } from "@/models/categories";
 import type { Community } from "@/models/community";
 import type { Item } from "@/models/item";
 import type { Member } from "@/models/member";
@@ -42,32 +43,20 @@ export default function Community() {
   const [loading, setLoading] = useState(true);
   const [membersLoading, setMembersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   // Categories for filtering
-  const categories = [
-    "Electronics",
-    "Furniture", 
-    "Clothing",
-    "Books",
-    "Sports",
-    "Home & Garden",
-    "Toys & Games",
-    "Kitchen",
-    "Office Supplies",
-    "Other",
-  ];
+  const categories = getAllCategories();
 
   // Filter items based on search and category
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesSearch = 
+      const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesCategory = 
-        categoryFilter === "all" || 
+
+      const matchesCategory =
+        categoryFilter === "all" ||
         (item.keywords && item.keywords.includes(categoryFilter));
-      
+
       return matchesSearch && matchesCategory;
     });
   }, [items, searchQuery, categoryFilter]);
@@ -206,7 +195,8 @@ export default function Community() {
                   <SelectTrigger className="w-full sm:w-[180px]">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>                  <SelectContent>
+                  </SelectTrigger>{" "}
+                  <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
@@ -215,25 +205,28 @@ export default function Community() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              </div>{" "}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
                     <Card key={item.id}>
                       <CardHeader className="p-0">
                         <div className="relative h-48 w-full overflow-hidden">
                           <img
-                            src={import.meta.env.VITE_API_BASE_URL + item.imageUrl}
+                            src={
+                              import.meta.env.VITE_API_BASE_URL + item.imageUrl
+                            }
                             alt={item.title}
                             className="h-full w-full object-cover"
                           />
                           <Badge
                             className={`absolute top-4 right-4 ${
-                              item.status === "Available"
+                              item.status === "Open"
                                 ? "bg-[#2E7D32]"
                                 : "bg-[#1976D2]"
                             }`}
                           >
-                            {item.status}
+                            Available
                           </Badge>
                         </div>
                       </CardHeader>
@@ -249,13 +242,8 @@ export default function Community() {
                         </CardDescription>
                         <div className="mt-4 flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage
-                              src="/placeholder.svg"
-                              alt="Donor"
-                            />
-                            <AvatarFallback>
-                              U
-                            </AvatarFallback>
+                            <AvatarImage src="/placeholder.svg" alt="Donor" />
+                            <AvatarFallback>U</AvatarFallback>
                           </Avatar>
                           <span className="text-muted-foreground text-sm">
                             Donor • {new Date().toLocaleDateString()}
@@ -265,17 +253,17 @@ export default function Community() {
                       <CardFooter>
                         <Button
                           className={`w-full ${
-                            item.status === "Available"
+                            item.status === "Open"
                               ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
                               : "bg-muted hover:bg-muted/80"
                           }`}
-                          disabled={item.status !== "Available"}
+                          disabled={item.status !== "Open"}
                           asChild
                         >
                           <Link
                             to={`/communities/${community.id}/items/${item.id}`}
                           >
-                            {item.status === "Available"
+                            {item.status === "Open"
                               ? "Reserve Item"
                               : "View Item"}
                           </Link>
@@ -292,7 +280,8 @@ export default function Community() {
                 )}
               </div>
             </TabsContent>{" "}
-            {/* Members Tab */}            <TabsContent value="members" className="mt-6">
+            {/* Members Tab */}{" "}
+            <TabsContent value="members" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {membersLoading
                   ? // Show loading skeletons
@@ -305,7 +294,9 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <Avatar>
                               <AvatarImage
-                                src={member.user.avatarUrl || "/placeholder.svg"}
+                                src={
+                                  member.user.avatarUrl || "/placeholder.svg"
+                                }
                                 alt={`${member.user.firstName} ${member.user.lastName}`}
                               />
                               <AvatarFallback>
@@ -321,7 +312,8 @@ export default function Community() {
                               </Badge>
                             </div>
                           </div>
-                        </CardContent>                        <CardFooter>
+                        </CardContent>{" "}
+                        <CardFooter>
                           <Button variant="outline" className="w-full" asChild>
                             <Link to={`/profile/${member.id}`}>
                               View Profile
@@ -345,14 +337,16 @@ export default function Community() {
                       {community.description}
                     </p>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-medium">Location</h3>
                     <p className="text-muted-foreground mt-2">
                       {community.location}
                     </p>
-                  </div>                  <div>
-                    <h3 className="text-lg font-medium">Community visibility</h3>
+                  </div>{" "}
+                  <div>
+                    <h3 className="text-lg font-medium">
+                      Community visibility
+                    </h3>
                     <p className="text-muted-foreground mt-2">
                       This community is{" "}
                       <Badge
@@ -362,7 +356,6 @@ export default function Community() {
                       </Badge>
                     </p>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-medium">Members</h3>
                     <p className="text-muted-foreground mt-2">

@@ -7,4 +7,5 @@ export type Item = {
   imageUrl: string;
   keywords: string[];
   status: string;
+  postedAt?: string;
 };
