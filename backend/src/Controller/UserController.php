@@ -23,7 +23,8 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class UserController extends AbstractController
 {
@@ -37,6 +38,10 @@ final class UserController extends AbstractController
                 response: 200,
                 description: 'Registration successfull',
                 content: new OA\JsonContent(example:"access_token")
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Password must be at least 8 characters long, with at least one uppercase letter, one lowercase letter, and one special character.'
             ),
             new OA\Response(
                 response: 500,
@@ -63,7 +68,10 @@ final class UserController extends AbstractController
     public function register(
         EntityManagerInterface $em,
         UserPasswordHasherInterface $userPasswordHasher,
-        #[MapRequestPayload(serializationContext:["groups"=>["user_login","user_register"]])] User $user
+        #[MapRequestPayload(
+            serializationContext:["groups"=>["user_login","user_register"]],
+            validationGroups: ["user_register"]
+        )] User $user
     ){
 
         // email already used
@@ -224,7 +232,11 @@ final class UserController extends AbstractController
             new OA\Response(
                 response: 401,
                 description: 'Full authentication is required to access this resource.',
-            )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Password must be at least 8 characters long, with at least one uppercase letter, one lowercase letter, and one special character.'
+            ),
         ]
     )]    
     public function edit(
@@ -233,6 +245,7 @@ final class UserController extends AbstractController
         #[CurrentUser()] User $user,
         UserPasswordHasherInterface $userPasswordHasher,
         UserService $userService,
+        ValidatorInterface $validator
     )
     {
         // Manually populate DTO 
@@ -241,6 +254,18 @@ final class UserController extends AbstractController
         $dto->lastName = $request->request->get('lastName');
         $dto->password = $request->request->get('password');
         
+        // Check password
+        $violations = $validator->validate($dto);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return new JsonResponse(['errors' => $errors], 422);
+        }
 
         // Edit
         $dto->update($user, $userPasswordHasher);

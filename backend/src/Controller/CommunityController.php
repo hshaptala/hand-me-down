@@ -24,6 +24,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class CommunityController extends AbstractController
 {
@@ -332,6 +333,7 @@ final class CommunityController extends AbstractController
         #[CurrentUser()] User $user,
         CommunityService $communityService,
         PasswordHasherFactoryInterface $hasherFactory,
+        ValidatorInterface $validator
     )
     {
         // Manually populate DTO 
@@ -341,6 +343,19 @@ final class CommunityController extends AbstractController
         $dto->description = $request->request->get('description');
         $dto->password = $request->request->get('password');
         $dto->visibility = $request->request->get('visibility');
+
+        // Check password
+        $violations = $validator->validate($dto);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return new JsonResponse(['errors' => $errors], 422);
+        }
 
         // Check name uniqness
         $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
