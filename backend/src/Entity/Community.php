@@ -63,7 +63,7 @@ class Community
     #[Groups(['community_basic'])]
     private int $memberCount = 0;
 
-    #[ORM\ManyToOne(inversedBy: 'communitiesCreated')]
+    #[ORM\ManyToOne(inversedBy: 'communitiesOwned')]
     #[Groups(['community_basic'])]
     private ?User $owner = null;
 

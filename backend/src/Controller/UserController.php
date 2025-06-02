@@ -2,15 +2,14 @@
 
 namespace App\Controller;
 
-use App\Entity\Community;
 use App\Entity\DTO\UserEdit;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
 use App\Service\ItemService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -191,16 +190,16 @@ final class UserController extends AbstractController
     }
 
 
-    // EDIT (only avatar for now)
+    // EDIT 
 
 
-    #[View()]
+    #[View(serializerGroups: ["user_basic"])]
     #[Route(path:"/api/users", methods: ["PATCH", "POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Users'],
-        summary: 'Update user settings',
+        summary: 'Update user settings and avatar',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\MediaType(
@@ -209,7 +208,10 @@ final class UserController extends AbstractController
                     type: 'object',
                     properties: [
                         new OA\Property(property: '_method', type: 'string', example: 'PATCH', description: 'Method override for browsers and file upload compatibility'),
-                        new OA\Property(property: 'avatar', type: 'string', format: 'binary')
+                        new OA\Property(property: 'avatar', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'firstName', type: 'string', description: 'first name'),
+                        new OA\Property(property: 'lastName', type: 'string', description: 'last name'),
+                        new OA\Property(property: 'password', type: 'string', description: 'password'),
                     ]
                 )
             )
@@ -217,7 +219,7 @@ final class UserController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Settings update successfuly',
+                description: 'Settings updated successfuly',
             ),
             new OA\Response(
                 response: 401,
@@ -228,29 +230,30 @@ final class UserController extends AbstractController
     public function edit(
         Request $request,
         EntityManagerInterface $em,
-        #[CurrentUser()] User $user
+        #[CurrentUser()] User $user,
+        UserPasswordHasherInterface $userPasswordHasher,
+        UserService $userService,
     )
     {
         // Manually populate DTO 
         $dto = new UserEdit();
+        $dto->firstName = $request->request->get('firstName');
+        $dto->lastName = $request->request->get('lastName');
+        $dto->password = $request->request->get('password');
         
-        /* Get password hasher
-        $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
 
         // Edit
-        $dto->update($community, $passwordHasher);*/
+        $dto->update($user, $userPasswordHasher);
         $dto->updateAvatar($request, $user);
 
         // Save
         $em->persist($user);
         $em->flush();
 
-        /* Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-        ;
+        // Set values for return
+        $userService->generateAvatarUrl($user);
 
-        return $community;*/
+        return $user;
     }
 
 

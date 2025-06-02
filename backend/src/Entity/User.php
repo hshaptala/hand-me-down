@@ -45,15 +45,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Community>
      */
-    #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
+    #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'owner')]
     private Collection $communitiesOwned;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register','member_basic','member_ban'])]
+    #[Groups(['user_register','user_basic','member_basic','member_ban'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register','member_basic','member_ban'])]
+    #[Groups(['user_register','user_basic','member_basic','member_ban'])]
     private ?string $lastName = null;
 
     /**
@@ -65,7 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::BLOB, nullable: true)]
     private $avatar = null;
 
-    #[Groups(['member_basic'])]
+    #[Groups(['user_basic','member_basic'])]
     private ?string $avatarUrl = null;
 
     /**
@@ -257,7 +257,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getAvatar()
+    public function getAvatar(): mixed
     {
         return $this->avatar;
     }
