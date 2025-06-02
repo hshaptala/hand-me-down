@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\CommunityRepository;
 use App\Service\ItemService;
 use App\Service\UserService;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
@@ -93,6 +94,7 @@ final class UserController extends AbstractController
         $user->setToken( 
            bin2hex(random_bytes(64)) 
         );
+        $user->setJoinedAt(new DateTimeImmutable());
         $em->persist($user);
         $em->flush();
         return $user->getToken();

@@ -12,7 +12,11 @@ let cachedSession: Session | null = null;
 let sessionPromise: Promise<Session | null> | null = null;
 
 async function getCachedSession(): Promise<Session | null> {
-  if (cachedSession && cachedSession.expires_at && new Date(cachedSession.expires_at * 1000) > new Date()) {
+  if (
+    cachedSession &&
+    cachedSession.expires_at &&
+    new Date(cachedSession.expires_at * 1000) > new Date()
+  ) {
     return cachedSession;
   }
 
@@ -20,11 +24,13 @@ async function getCachedSession(): Promise<Session | null> {
     return sessionPromise;
   }
 
-  sessionPromise = getSupabase().auth.getSession().then(({ data: { session } }) => {
-    cachedSession = session;
-    sessionPromise = null;
-    return session;
-  });
+  sessionPromise = getSupabase()
+    .auth.getSession()
+    .then(({ data: { session } }) => {
+      cachedSession = session;
+      sessionPromise = null;
+      return session;
+    });
 
   return sessionPromise;
 }
@@ -56,37 +62,41 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
-    
+
     if (error.response?.status === 401) {
       cachedSession = null;
       sessionPromise = null;
       const supabase = getSupabase();
       await supabase.auth.signOut();
     }
-    
+
     if (!config || config.__isRetryRequest) {
       return Promise.reject(error);
     }
-    
-    if (error.code === 'ECONNABORTED' || error.code === 'NETWORK_ERROR' || !error.response) {
+
+    if (
+      error.code === "ECONNABORTED" ||
+      error.code === "NETWORK_ERROR" ||
+      !error.response
+    ) {
       config.__isRetryRequest = true;
       config.retryCount = config.retryCount || 0;
-      
+
       if (config.retryCount < 2) {
         config.retryCount += 1;
         const delay = Math.pow(2, config.retryCount) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return api(config);
       }
     }
-    
+
     return Promise.reject(error);
   },
 );

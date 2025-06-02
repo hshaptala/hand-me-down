@@ -22,17 +22,14 @@ import { ChatProvider, useChat } from "@/context/ChatContext";
 function ConversationContent({ id }: { id: string }) {
   const { setCurrentConversation, conversations, loading } = useChat();
 
-  // Set the current conversation when the component mounts
   useEffect(() => {
     setCurrentConversation(id);
 
-    // Clean up when the component unmounts
     return () => {
       setCurrentConversation(null);
     };
   }, [id, setCurrentConversation]);
 
-  // Find the current conversation details
   const conversation = conversations.find((c) => c.id === id);
 
   if (loading) {
@@ -51,7 +48,6 @@ function ConversationContent({ id }: { id: string }) {
     );
   }
 
-  // Get the other participant (assuming 1-on-1 conversations)
   const otherParticipant =
     conversation.participants.find((p) => p.id !== "currentUserId") ||
     conversation.participants[0];

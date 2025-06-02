@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import { Search, Book, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -283,7 +283,7 @@ export default function Communities() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredCommunities.length > 0 ? (
                 filteredCommunities.map((community) => (
-                  <Card key={community.id}>
+                  <Card key={community.id} className="flex h-full flex-col">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
@@ -312,18 +312,28 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
+                    </CardHeader>{" "}
+                    <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
-                      <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
+                      <CardDescription className="mt-2">
                         {community.description}
-                      </CardDescription>{" "}
+                      </CardDescription>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex flex-col gap-3 p-6 pt-0">
+                      <div className="text-muted-foreground flex w-full items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{community.memberCount || 0} members</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Book className="h-3 w-3" />
+                          <span>{community.itemCount || 0} items</span>
+                        </div>
+                      </div>
                       {isJoined(community.id) ? (
                         <Button
                           className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
@@ -362,9 +372,10 @@ export default function Communities() {
           </TabsContent>
           <TabsContent value="joined" className="mt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {" "}
               {joinedCommunities.length > 0 ? (
                 joinedCommunities.map((community) => (
-                  <Card key={community.id}>
+                  <Card key={community.id} className="flex h-full flex-col">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
@@ -393,19 +404,28 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
+                    </CardHeader>{" "}
+                    <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
-                      <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
+                      <CardDescription className="mt-2">
                         {community.description}
                       </CardDescription>
                     </CardContent>
-                    <CardFooter>
-                      {" "}
+                    <CardFooter className="flex flex-col gap-3 p-6 pt-0">
+                      <div className="text-muted-foreground flex w-full items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{community.memberCount || 0} members</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Plus className="h-3 w-3" />
+                          <span>{community.itemCount || 0} items</span>
+                        </div>
+                      </div>
                       <Button
                         className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
                         asChild

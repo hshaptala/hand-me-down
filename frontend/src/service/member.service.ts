@@ -9,7 +9,7 @@ export async function fetchMembers(communityId: number): Promise<Member[]> {
       const res = await api.get(`/api/communities/${communityId}/members`);
       return res.data;
     },
-    60000, // Cache for 1 minute
+    60000,
   );
 }
 
@@ -25,6 +25,6 @@ export async function fetchMember(
       );
       return res.data;
     },
-    60000, // Cache for 1 minute
+    60000,
   );
 }
