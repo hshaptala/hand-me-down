@@ -87,6 +87,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'receiver')]
     private Collection $receipts;
 
+    #[ORM\Column]
+    #[Groups(['user_info'])]
+    private ?\DateTimeImmutable $joinedAt = null;
+
+    #[Groups(['user_info'])]
+    private ?int $communityCount = null;
+
+    #[Groups(['user_info'])]
+    private ?int $itemsReceivedCount = null;
+
+    #[Groups(['user_info'])]
+    private ?int $itemsGivenCount = null;
+
+    #[Groups(['user_info'])]
+    private ?float $rating = null;
+
     public function __construct()
     {
         $this->communitiesOwned = new ArrayCollection();
@@ -343,6 +359,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $receipt->setReceiver(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getJoinedAt(): ?\DateTimeImmutable
+    {
+        return $this->joinedAt;
+    }
+
+    public function setJoinedAt(\DateTimeImmutable $joinedAt): static
+    {
+        $this->joinedAt = $joinedAt;
+
+        return $this;
+    }
+
+    public function getCommunityCount(): ?int
+    {
+        return $this->communityCount;
+    }
+
+    public function setCommunityCount(int $communityCount): static
+    {
+        $this->communityCount = $communityCount;
+
+        return $this;
+    }
+
+    public function getItemsReceivedCount(): ?int
+    {
+        return $this->itemsReceivedCount;
+    }
+
+    public function setItemsReceivedCount(int $itemsReceivedCount): static
+    {
+        $this->itemsReceivedCount = $itemsReceivedCount;
+
+        return $this;
+    }
+
+    public function getItemsGivenCount(): ?int
+    {
+        return $this->itemsGivenCount;
+    }
+
+    public function setItemsGivenCount(int $itemsGivenCount): static
+    {
+        $this->itemsGivenCount = $itemsGivenCount;
+
+        return $this;
+    }
+
+    public function getRating(): ?float
+    {
+        return $this->rating;
+    }
+
+    public function setRating(float $rating): static
+    {
+        $this->rating = $rating;
 
         return $this;
     }

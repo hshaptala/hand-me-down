@@ -49,6 +49,7 @@ class AppFixtures extends Fixture
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
             ->setAvatar(file_get_contents($folderPath . 'pp.jpeg'))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_main);
 
@@ -60,6 +61,7 @@ class AppFixtures extends Fixture
             ->setEmail("testsecond@mail.com")
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_secondary);
 
@@ -71,6 +73,7 @@ class AppFixtures extends Fixture
             ->setEmail("test3@mail.com")
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_3);
         $user_4 = new User();
@@ -80,6 +83,7 @@ class AppFixtures extends Fixture
             ->setEmail("test4@mail.com")
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_4);
         $user_5 = new User();
@@ -89,6 +93,7 @@ class AppFixtures extends Fixture
             ->setEmail("test5@mail.com")
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_5);
         $user_6 = new User();
@@ -98,6 +103,7 @@ class AppFixtures extends Fixture
             ->setEmail("test6@mail.com")
             ->setPassword($this->userPasswordHasher->hash("password"))
             ->setToken(bin2hex(random_bytes(64)))
+            ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_6);
  

@@ -333,6 +333,46 @@ final class UserController extends AbstractController
 
 
 
+
+    // User PROFILE
+
+
+    #[View(serializerGroups: ["user_basic","user_info"])]
+    #[Route(path:"/api/users/{id}", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get a user full information.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User profile info',
+                content:  new OA\JsonContent(ref:  "#/components/schemas/UserProfile")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+
+    )]
+    public function userinfo(
+        UserService $userService,
+        User $target,
+        #[CurrentUser()] User $user
+    ) {
+        $userService->generateAvatarUrl($target);
+        $userService->generateInfo($target);
+        return $target;
+    }
+
+
+
     // User RESERVATIONS
 
 
