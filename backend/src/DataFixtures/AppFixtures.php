@@ -4,9 +4,12 @@ namespace App\DataFixtures;
 
 use App\Entity\Community;
 use App\Entity\Enum\CommunityRoleEnum;
+use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Enum\VisibilityEnum;
+use App\Entity\Item;
 use App\Entity\Member;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -241,6 +244,151 @@ class AppFixtures extends Fixture
         ;
         $manager->persist($member_6);
 
+
+        // ===== ITEMS ======
+
+        // Glasses in city of Geel
+        $item_glasses = new Item();
+        $item_glasses
+            ->setCommunity($community_cityofgeel)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("Set of 5 glasses")
+            ->setDescription("5 water glasses I no longer use.")
+            ->setDonor($user_main)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'glasses.jpg'))
+            ->setKeywords(['glass','water','dishes'])
+        ;
+        $manager->persist($item_glasses);
+
+        $item_glasses2 = new Item();
+        $item_glasses2
+            ->setCommunity($community_cityofgeel)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("Set of 5 glasses")
+            ->setDescription("5 water glasses I no longer use.")
+            ->setDonor($user_4)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'glasses.jpg'))
+            ->setKeywords(['glass','water','dishes'])
+        ;
+        $manager->persist($item_glasses2);
+
+        $item_glasses3 = new Item();
+        $item_glasses3
+            ->setCommunity($community_cityofgeel)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("Set of 5 glasses")
+            ->setDescription("5 water glasses I no longer use.")
+            ->setDonor($user_5)
+            ->setReceiver($user_main)
+            ->setStatus(ItemStatusEnum::OVER)
+            ->setImage(file_get_contents($folderPath . 'glasses.jpg'))
+            ->setKeywords(['glass','water','dishes'])
+        ;
+        $manager->persist($item_glasses3);
+
+        // Orange and coffe cup in Thomas more
+        $item_orange = new Item();
+        $item_orange
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("Not pressed orange")
+            ->setDonor($user_secondary)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'notanorange.jpg'))
+            ->setKeywords(['orange','food'])
+        ;
+        $manager->persist($item_orange);
+    
+        $item_coffeecup = new Item();
+        $item_coffeecup
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("My Thomas More coffee cup")
+            ->setDonor($user_secondary)
+            ->setReceiver($user_3)
+            ->setStatus(ItemStatusEnum::OVER)
+            ->setImage(file_get_contents($folderPath . 'coffeecup.jpg'))
+            ->setKeywords(['dishes','coffee','drink'])
+        ;
+        $manager->persist($item_coffeecup);
+
+        // Other items (Mattress)
+        $item_mattress = new Item();
+        $item_mattress
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_secondary)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress);
+
+        $item_mattress2 = new Item();
+        $item_mattress2
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_5)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress2);
+
+        $item_mattress3 = new Item();
+        $item_mattress3
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_6)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress3);
+
+        $item_mattress4 = new Item();
+        $item_mattress4
+            ->setCommunity($community_thomasmore)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_6)
+            ->setReceiver($user_4)
+            ->setStatus(ItemStatusEnum::OVER)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress4);
+        $item_mattress4 = new Item();
+
+        $item_mattress5 = new Item();
+        $item_mattress5
+            ->setCommunity($community_cityofgeel)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_6)
+            ->setReceiver($user_4)
+            ->setStatus(ItemStatusEnum::OVER)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress5);
+
+        $item_mattress6 = new Item();
+        $item_mattress6
+            ->setCommunity($community_cityofgeel)
+            ->setPostedAt(new DateTimeImmutable())
+            ->setTitle("180x120 Mattress")
+            ->setDonor($user_6)
+            ->setStatus(ItemStatusEnum::OPEN)
+            ->setImage(file_get_contents($folderPath . 'mattress.jpeg'))
+            ->setKeywords(['mattress','furniture','bed'])
+        ;
+        $manager->persist($item_mattress6);
 
         // ===== Flush ======
         $manager->flush();
