@@ -99,6 +99,8 @@ nelmio_api_doc:
                             description: /images/communities/1.png
                         memberCount:
                             type: integer
+                        itemCount:
+                            type: integer
                         owner:
                             type: integer
                             description: owner user id

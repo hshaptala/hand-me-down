@@ -53,7 +53,7 @@ final class CommunityController extends AbstractController
     {
         $communities = $communityRepository->findAll();
         foreach ($communities as $community) {
-            $communityService->setMemberCount($community);
+            $communityService->generateInfo($community);
             $communityService->generateImageUrl($community);
         };
         return $communities;
@@ -379,7 +379,7 @@ final class CommunityController extends AbstractController
         $em->flush();
 
         // Set values for return
-        $communityService->setMemberCount($community);
+        $communityService->generateInfo($community);
         $communityService->generateImageUrl($community);
 
         return $community;
@@ -411,7 +411,7 @@ final class CommunityController extends AbstractController
         CommunityService $communityService
         )
     {
-        $communityService->setMemberCount($community);
+        $communityService->generateInfo($community);
         $communityService->generateImageUrl($community);
         return $community;
     }
