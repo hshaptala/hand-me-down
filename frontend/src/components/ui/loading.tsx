@@ -65,3 +65,21 @@ export function MemberCardSkeleton() {
     </div>
   );
 }
+
+export function ItemCardSkeleton() {
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <Skeleton className="h-48 w-full" />
+      <div className="p-6">
+        <Skeleton className="h-6 w-3/4 mb-2" />
+        <Skeleton className="h-4 w-1/4 mb-4" />
+        <Skeleton className="h-16 w-full mb-4" />
+        <div className="flex items-center gap-2 mb-4">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}

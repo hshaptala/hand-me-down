@@ -16,7 +16,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MemberCardSkeleton } from "@/components/ui/loading";
+import { MemberCardSkeleton, ItemCardSkeleton } from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -29,9 +29,11 @@ import { getAllCategories } from "@/models/categories";
 import type { Community } from "@/models/community";
 import type { Item } from "@/models/item";
 import type { Member } from "@/models/member";
+import type { User } from "@/models/user";
 import { fetchCommunity } from "@/service/community.service";
 import { fetchItems } from "@/service/item.service";
 import { fetchMembers } from "@/service/member.service";
+import { fetchUser } from "@/service/user.service";
 
 export default function Community() {
   const { id } = useParams<{ id: string }>();
@@ -40,13 +42,12 @@ export default function Community() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [donors, setDonors] = useState<Record<number, User>>({});
   const [loading, setLoading] = useState(true);
+  const [itemsLoading, setItemsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Categories for filtering
   const categories = getAllCategories();
-
-  // Filter items based on search and category
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
       const matchesSearch =
@@ -74,8 +75,30 @@ export default function Community() {
         setLoading(false);
 
         // fetch items
+        setItemsLoading(true);
         const itemsData = await fetchItems(Number(id));
         setItems(itemsData);
+
+        // fetch donor information for each item
+        const donorPromises = itemsData.map(async (item) => {
+          try {
+            const donor = await fetchUser(item.donor);
+            return { itemId: item.id, donor };
+          } catch (error) {
+            console.error(`Error fetching donor for item ${item.id}:`, error);
+            return null;
+          }
+        });
+
+        const donorResults = await Promise.all(donorPromises);
+        const donorMap: Record<number, User> = {};
+        donorResults.forEach((result) => {
+          if (result) {
+            donorMap[result.itemId] = result.donor;
+          }
+        });
+        setDonors(donorMap);
+        setItemsLoading(false);
 
         setMembersLoading(true);
         const membersData = await fetchMembers(Number(id));
@@ -86,6 +109,7 @@ export default function Community() {
         setLoading(false);
       } finally {
         setMembersLoading(false);
+        setItemsLoading(false);
       }
     };
 
@@ -207,7 +231,12 @@ export default function Community() {
                 </Select>
               </div>{" "}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredItems.length > 0 ? (
+                {itemsLoading ? (
+                  // Show loading skeletons while items are loading
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <ItemCardSkeleton key={index} />
+                  ))
+                ) : filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
                     <Card key={item.id}>
                       <CardHeader className="p-0">
@@ -239,14 +268,32 @@ export default function Community() {
                         )}
                         <CardDescription className="mt-2 line-clamp-2">
                           {item.description}
-                        </CardDescription>
+                        </CardDescription>{" "}
                         <div className="mt-4 flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src="/placeholder.svg" alt="Donor" />
-                            <AvatarFallback>U</AvatarFallback>
+                            <AvatarImage
+                              src={
+                                donors[item.id]?.avatarUrl
+                                  ? import.meta.env.VITE_API_BASE_URL +
+                                    donors[item.id].avatarUrl
+                                  : "/placeholder.svg"
+                              }
+                              alt="Donor"
+                            />
+                            <AvatarFallback>
+                              {donors[item.id]
+                                ? `${donors[item.id].firstName[0]}${donors[item.id].lastName[0]}`
+                                : "U"}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="text-muted-foreground text-sm">
-                            Donor • {new Date().toLocaleDateString()}
+                            {donors[item.id]
+                              ? `${donors[item.id].firstName} ${donors[item.id].lastName}`
+                              : "Loading..."}{" "}
+                            •{" "}
+                            {item.postedAt
+                              ? new Date(item.postedAt).toLocaleDateString()
+                              : new Date().toLocaleDateString()}
                           </span>
                         </div>
                       </CardContent>
