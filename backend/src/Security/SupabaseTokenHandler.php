@@ -64,6 +64,7 @@ class SupabaseTokenHandler implements AccessTokenHandlerInterface
                 $user->setPassword(''); 
                 $user->setFirstName($firstName);
                 $user->setLastName($lastName);
+                $user->setJoinedAt(new \DateTimeImmutable());
                 
                 $this->entityManager->persist($user);
                 $this->entityManager->flush();

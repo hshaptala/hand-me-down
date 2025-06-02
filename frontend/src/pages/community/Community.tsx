@@ -294,18 +294,16 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <Avatar>
                               <AvatarImage
-                                src={
-                                  member.user.avatarUrl || "/placeholder.svg"
-                                }
-                                alt={`${member.user.firstName} ${member.user.lastName}`}
+                                src={member.avatarUrl || "/placeholder.svg"}
+                                alt={`${member.firstName} ${member.lastName}`}
                               />
                               <AvatarFallback>
-                                {`${member.user.firstName[0] ?? ""}${member.user.lastName ? member.user.lastName[0] : ""}`}
+                                {`${member.firstName[0] ?? ""}${member.lastName ? member.lastName[0] : ""}`}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <h3 className="font-medium">
-                                {`${member.user.firstName} ${member.user.lastName}`}
+                                {`${member.firstName} ${member.lastName}`}
                               </h3>
                               <Badge variant="outline" className="mt-1">
                                 {member.role}
