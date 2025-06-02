@@ -13,6 +13,7 @@ import type {
   MessageWithUser,
 } from "@/lib/database.types";
 import { getSupabase, getCurrentUser } from "@/lib/supabase";
+import { fetchUserBySupabaseId } from "@/service/user.service";
 
 interface ChatContextType {
   conversations: ConversationWithDetails[];
@@ -109,28 +110,48 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         console.error("Error fetching conversations:", conversationsError);
         setLoading(false);
         return;
-      }
+      }      // Enhance conversations with additional data
+      const enhancedConversations = await Promise.all(
+        conversationsData.map(async (conv) => {          // Get participants for this conversation
+          const { data: participantsData } = await supabase
+            .from("conversation_participants")
+            .select("user_id")
+            .eq("conversation_id", conv.id);
 
-      // Enhance conversations with additional data (mock data for now)
-      // In a real app, you would fetch this data from your database
-      const enhancedConversations = conversationsData.map((conv) => ({
-        ...conv,
-        participants: [
-          {
-            id: "1",
-            name: "John Doe",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-        ],
-        unreadCount: 0,
-        item: conv.item_id
-          ? {
-              id: conv.item_id,
-              title: "Item Title",
-              image: "/placeholder.svg?height=60&width=60",
-            }
-          : undefined,
-      }));
+          const participants = await Promise.all(
+            (participantsData || []).map(async (p) => {
+              try {
+                const user = await fetchUserBySupabaseId(p.user_id);
+                return {
+                  id: p.user_id,
+                  name: `${user.firstName} ${user.lastName}`,
+                  avatar: user.avatarUrl || "/placeholder.svg?height=40&width=40",
+                };
+              } catch (error) {
+                console.error("Error fetching user:", error);
+                return {
+                  id: p.user_id,
+                  name: "Unknown User",
+                  avatar: "/placeholder.svg?height=40&width=40",
+                };
+              }
+            })
+          );
+
+          return {
+            ...conv,
+            participants,
+            unreadCount: 0, // TODO: Calculate actual unread count
+            item: conv.item_id
+              ? {
+                  id: conv.item_id,
+                  title: "Item Title", // TODO: Fetch from backend
+                  image: "/placeholder.svg?height=60&width=60",
+                }
+              : undefined,
+          };
+        })
+      );
 
       setConversations(enhancedConversations);
       setLoading(false);
@@ -148,27 +169,45 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           event: "INSERT",
           schema: "public",
           table: "conversations",
-        },
-        (payload) => {
+        },        (payload) => {
           // Check if the current user is a participant
           supabase
             .from("conversation_participants")
             .select("*")
             .eq("conversation_id", payload.new.id)
             .eq("user_id", currentUser.id)
-            .then(({ data }) => {
-              if (data && data.length > 0) {
+            .then(async ({ data }) => {
+              if (data && data.length > 0) {                // Get other participants for this conversation
+                const { data: participantsData } = await supabase
+                  .from("conversation_participants")
+                  .select("user_id")
+                  .eq("conversation_id", payload.new.id);
+
+                const participants = await Promise.all(
+                  (participantsData || []).map(async (p) => {
+                    try {
+                      const user = await fetchUserBySupabaseId(p.user_id);
+                      return {
+                        id: p.user_id,
+                        name: `${user.firstName} ${user.lastName}`,
+                        avatar: user.avatarUrl || "/placeholder.svg?height=40&width=40",
+                      };
+                    } catch (error) {
+                      console.error("Error fetching user:", error);
+                      return {
+                        id: p.user_id,
+                        name: "Unknown User",
+                        avatar: "/placeholder.svg?height=40&width=40",
+                      };
+                    }
+                  })
+                );
+
                 // Add the new conversation to the list
                 setConversations((prev) => [
                   {
                     ...(payload.new as ConversationWithDetails),
-                    participants: [
-                      {
-                        id: "1",
-                        name: "John Doe",
-                        avatar: "/placeholder.svg?height=40&width=40",
-                      },
-                    ],
+                    participants,
                     unreadCount: 0,
                     item: payload.new.item_id
                       ? {
@@ -209,17 +248,34 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         console.error("Error fetching messages:", error);
         setLoading(false);
         return;
-      }
+      }      // Enhance messages with user data
+      const enhancedMessages = await Promise.all(
+        data.map(async (msg) => {
+          let userName = "Unknown User";
+          let userAvatar = "/placeholder.svg?height=40&width=40";
 
-      // Enhance messages with user data (mock data for now)
-      const enhancedMessages = data.map((msg) => ({
-        ...msg,
-        user: {
-          id: msg.sender_id,
-          name: msg.sender_id === currentUser.id ? "You" : "Other User",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-      }));
+          if (msg.sender_id === currentUser.id) {
+            userName = "You";
+          } else {
+            try {
+              const user = await fetchUserBySupabaseId(msg.sender_id);
+              userName = `${user.firstName} ${user.lastName}`;
+              userAvatar = user.avatarUrl || "/placeholder.svg?height=40&width=40";
+            } catch (error) {
+              console.error("Error fetching user for message:", error);
+            }
+          }
+
+          return {
+            ...msg,
+            user: {
+              id: msg.sender_id,
+              name: userName,
+              avatar: userAvatar,
+            },
+          };
+        })
+      );
 
       setMessages(enhancedMessages);
       setLoading(false); // Mark messages as read if there are any unread messages
@@ -252,8 +308,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           schema: "public",
           table: "messages",
           filter: `conversation_id=eq.${currentConversation}`,
-        },
-        (payload) => {
+        },        async (payload) => {
           // Add the new message to the list
           // Type cast to ensure we have all required fields
           const messageData = payload.new as {
@@ -265,15 +320,27 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             read: boolean;
           };
 
+          let userName = "Unknown User";
+          let userAvatar = "/placeholder.svg?height=40&width=40";
+
+          if (messageData.sender_id === currentUser?.id) {
+            userName = "You";
+          } else {
+            try {
+              const user = await fetchUserBySupabaseId(messageData.sender_id);
+              userName = `${user.firstName} ${user.lastName}`;
+              userAvatar = user.avatarUrl || "/placeholder.svg?height=40&width=40";
+            } catch (error) {
+              console.error("Error fetching user for message:", error);
+            }
+          }
+
           const newMessage: MessageWithUser = {
             ...messageData,
             user: {
               id: messageData.sender_id,
-              name:
-                messageData.sender_id === currentUser?.id
-                  ? "You"
-                  : "Other User",
-              avatar: "/placeholder.svg?height=40&width=40",
+              name: userName,
+              avatar: userAvatar,
             },
           };
 

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { ArrowLeft, MapPin, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
@@ -20,7 +20,7 @@ import {
 import { ChatProvider, useChat } from "@/context/ChatContext";
 
 function ConversationContent({ id }: { id: string }) {
-  const { setCurrentConversation, conversations, loading } = useChat();
+  const { setCurrentConversation, conversations, loading, currentUser } = useChat();
 
   useEffect(() => {
     setCurrentConversation(id);
@@ -46,11 +46,35 @@ function ConversationContent({ id }: { id: string }) {
         Conversation not found
       </div>
     );
-  }
+  }  // Debug logging
+  console.log("Conversation:", conversation);
+  console.log("Participants:", conversation.participants);
+  console.log("Current user:", currentUser);
 
-  const otherParticipant =
-    conversation.participants.find((p) => p.id !== "currentUserId") ||
-    conversation.participants[0];
+  // Filter participants to exclude current user
+  const otherParticipants = conversation.participants 
+    ? conversation.participants.filter((p) => p.id !== currentUser?.id)
+    : [];
+
+  const otherParticipant = otherParticipants.length > 0 
+    ? otherParticipants[0] 
+    : null;
+
+  if (!otherParticipant) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p>No other participants found in this conversation</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Total participants: {conversation.participants?.length || 0}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Current user ID: {currentUser?.id}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Container className="py-6">
@@ -155,10 +179,16 @@ function ConversationContent({ id }: { id: string }) {
   );
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage() {
+  const { id } = useParams<{ id: string }>();
+  
+  if (!id) {
+    return <div>Invalid conversation ID</div>;
+  }
+
   return (
     <ChatProvider>
-      <ConversationContent id={params.id} />
+      <ConversationContent id={id} />
     </ChatProvider>
   );
 }

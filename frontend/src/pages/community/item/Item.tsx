@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
+import { StartConversation } from "@/components/chat/StartConversation";
 import Container from "@/components/layout/Container";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { ChatProvider } from "@/context/ChatContext";
 import type { Item } from "@/models/item";
 import type { User } from "@/models/user";
 import { fetchItem } from "@/service/item.service";
@@ -23,9 +24,7 @@ import { fetchUser } from "@/service/user.service";
 export default function Item() {  const params = useParams<{ id: string; itemId: string }>();
   const [item, setItem] = useState<Item | null>(null);
   const [donor, setDonor] = useState<User | null>(null);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
+  const [loading, setLoading] = useState(true);  useEffect(() => {
     if (!params.id || !params.itemId) return;
     
     const loadItemAndDonor = async () => {
@@ -43,8 +42,7 @@ export default function Item() {  const params = useParams<{ id: string; itemId:
       }
     };
     
-    loadItemAndDonor();
-  }, [params.id, params.itemId]);
+    loadItemAndDonor();  }, [params.id, params.itemId]);
 
   if (loading || !item) {
     return (
@@ -57,16 +55,9 @@ export default function Item() {  const params = useParams<{ id: string; itemId:
     );
   }
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      console.log("Sending message:", message);
-      setMessage("");
-    }
-  };
-
   return (
-    <Container className="py-10">
+    <ChatProvider>
+      <Container className="py-10">
       <div className="flex flex-col space-y-6">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild className="h-8 w-8">
@@ -137,39 +128,29 @@ export default function Item() {  const params = useParams<{ id: string; itemId:
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Contact Donor */}
+          </div>          {/* Contact Donor */}
           <div>
             <Card>
               <CardHeader>
                 <CardTitle>Contact Donor</CardTitle>
                 <CardDescription>
-                  Send a message to arrange pickup details
+                  Start a conversation to arrange pickup details
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSendMessage} className="space-y-4">
-                  <Textarea
-                    placeholder="Write your message here..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={4}
-                    required
+                {donor?.supabaseUserId && (
+                  <StartConversation
+                    recipientId={donor.supabaseUserId}
+                    recipientName={`${donor.firstName} ${donor.lastName}`}
+                    itemId={item.id.toString()}
+                    itemTitle={item.title}
                   />
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                </form>
-              </CardContent>{" "}
+                )}
+              </CardContent>
             </Card>
           </div>
         </div>
-      </div>
-    </Container>
+      </div>    </Container>
+    </ChatProvider>
   );
 }
