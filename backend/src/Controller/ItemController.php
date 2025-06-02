@@ -66,7 +66,10 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen
     )
     {
-        $items = $itemRepository->findByCommunity($community);
+        $items = $itemRepository->findBy([
+            "community" => $community,
+            "status" => ItemStatusEnum::OPEN,
+        ]);
         
         // Generate image urls
         foreach ($items as $item) {
