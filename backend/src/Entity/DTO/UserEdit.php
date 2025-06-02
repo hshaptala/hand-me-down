@@ -23,28 +23,30 @@ class UserEdit
     #[Assert\Callback]
     public function validatePasswordRequirement(ExecutionContextInterface $context): void
     {
-        if (strlen($this->password) > 0 && strlen($this->password) < 8) {
-            $context->buildViolation('Password must be at least 8 characters.')
-                ->atPath('password')
-                ->addViolation();
-        }
-
-        if (!preg_match('/[A-Z]/', $this->password)) {
-            $context->buildViolation('Password must contain at least one uppercase letter.')
-                ->atPath('password')
-                ->addViolation();
-        }
-
-        if (!preg_match('/[a-z]/', $this->password)) {
-            $context->buildViolation('Password must contain at least one lowercase letter.')
-                ->atPath('password')
-                ->addViolation();
-        }
-
-        if (!preg_match('/[\W]/', $this->password)) {
-            $context->buildViolation('Password must contain at least one special character.')
-                ->atPath('password')
-                ->addViolation();
+        if (strlen($this->password) > 0){
+            if (strlen($this->password) < 8) {
+                $context->buildViolation('Password must be at least 8 characters.')
+                    ->atPath('password')
+                    ->addViolation();
+            }
+    
+            if (!preg_match('/[A-Z]/', $this->password)) {
+                $context->buildViolation('Password must contain at least one uppercase letter.')
+                    ->atPath('password')
+                    ->addViolation();
+            }
+    
+            if (!preg_match('/[a-z]/', $this->password)) {
+                $context->buildViolation('Password must contain at least one lowercase letter.')
+                    ->atPath('password')
+                    ->addViolation();
+            }
+    
+            if (!preg_match('/[\W]/', $this->password)) {
+                $context->buildViolation('Password must contain at least one special character.')
+                    ->atPath('password')
+                    ->addViolation();
+            }
         }
     }
 
