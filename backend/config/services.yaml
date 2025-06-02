@@ -32,3 +32,9 @@ services:
     App\Serializer\ItemUsersNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 500 }
+    App\Serializer\MemberNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 500 }
+    App\Serializer\CommunityOwnerNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 500 }

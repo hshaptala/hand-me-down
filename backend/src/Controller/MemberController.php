@@ -7,21 +7,21 @@ use App\Entity\Enum\CommunityRoleEnum;
 use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\MemberRepository;
+use App\Security\CommunityVoter;
 use App\Service\CommunityService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -64,7 +64,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of members',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Member::class, groups: ['member_basic'])))
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Member"))
             ),
             new OA\Response(
                 response: 401,
@@ -83,23 +83,19 @@ final class MemberController extends AbstractController
     public function members(
         Community $community,
         MemberRepository $memberRepository,
-        UrlGeneratorInterface $urlGen
+        UserService $userService
     )
     {
-        $members = $memberRepository->findByCommunity($community);
+        $members = $memberRepository->findBy([
+            'community' => $community,
+            'isBanned' => false
+        ]);
         
         // Generate AvatarUrl
         foreach ($members as $member) {
-            if($member->getUser()->getAvatar() === null){
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-                ;
-            }else{
-                $member->getUser()
-                    ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-                ;
-            }
+            $userService->generateAvatarUrl($member->getUser());
         };
+
         return $members;
     }
 
@@ -107,7 +103,7 @@ final class MemberController extends AbstractController
 
 
     #[View(serializerGroups: ["member_basic"])]
-    #[Route(path:"/communities/{communityId}/members/{memberId}", methods: ["GET"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
@@ -118,7 +114,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: new Model(type: Member::class, groups: ['member_basic']))
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -130,26 +126,31 @@ final class MemberController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description: 'Community not found',
+                description: 'Community or user not found',
             ),
         ]
     )] 
     public function member(
         #[MapEntity(id: 'communityId')] Community $community,
-        #[MapEntity(id: 'memberId')] Member $member,
-        UrlGeneratorInterface $urlGen
+        #[MapEntity(id: 'userId')] User $user,
+        UserService $userService,
+        MemberRepository $memberRepository
     )
     {
-        // Generate AvatarUrl
-        if($member->getUser()->getAvatar() === null){
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_default_avatar'))
-            ;
-        }else{
-            $member->getUser()
-                ->setAvatarUrl($urlGen->generate('api_user_avatar', ['id' => $member->getUser()->getId()]))
-            ;
+        // Get the member
+        $member = $memberRepository->findOneBy([
+            "user" => $user,
+            "community" => $community,
+            "isBanned" => false,
+        ]);
+        
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
         }
+
+        // Generate AvatarUrl
+        $userService->generateAvatarUrl($member->getUser());
       
         return $member;
     }
@@ -158,12 +159,12 @@ final class MemberController extends AbstractController
 
 
 
-    
+
 
     // EDIT ROLE
 
     #[View(serializerGroups: ["member_basic"])]
-    #[Route(path:"/communities/{communityId}/members/{memberId}", methods: ["PATCH"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}", methods: ["PATCH"])]
     #[IsGranted("ROLE_USER")]
     #[IsGranted('COMMUNITY_MANAGE_ROLES', subject: 'community')]
     #[Security(name:"Bearer")]
@@ -174,7 +175,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: new Model(type: Member::class, groups: ['member_basic']))
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -186,7 +187,11 @@ final class MemberController extends AbstractController
             ),
             new OA\Response(
                 response: 404,
-                description: 'Community not found',
+                description: 'Community or user not found',
+            ),
+            new OA\Response(
+                response: 409,
+                description: 'Cant change your own role',
             ),
             new OA\Response(
                 response: 422,
@@ -196,7 +201,8 @@ final class MemberController extends AbstractController
     )] 
     public function edit(
         #[MapEntity(id: 'communityId')] Community $community,
-        #[MapEntity(id: 'memberId')] Member $member,
+        #[CurrentUser()] User $from,
+        #[MapEntity(id: 'userId')] User $to,
         #[OA\Parameter( 
            description: "New role", 
            in: "query", 
@@ -205,8 +211,28 @@ final class MemberController extends AbstractController
        )] 
         #[MapQueryParameter()] ?string $role,
         EntityManagerInterface $em,
+        UserService $userService,
     )
     {
+        // Get the member
+        $member = $em->getRepository(Member::class)->findOneBy([
+            "user" => $to,
+            "community" => $community,
+            "isBanned" => false
+        ]);
+
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
+        }
+
+        // Make sure the user is not demoting themselves
+        if ($from === $to)
+        {
+            return throw new ConflictHttpException("You can not change your own role!");
+        }
+
+        // Change role
         if($role !== null){
             // Get Role
             $role = CommunityRoleEnum::tryFrom($role);
@@ -218,8 +244,16 @@ final class MemberController extends AbstractController
                 ], 422);
             }
 
+            // Check for ownership when role is admin
+            if($role === CommunityRoleEnum::ADMIN || $member->getRole() === CommunityRoleEnum::ADMIN){
+                $this->denyAccessUnlessGranted(
+                    CommunityVoter::MANAGE_ADMINS, 
+                    $community, 
+                    message:"You do not have permission to promote or demote this user to administrator."
+                );
+            }
+
             // Set
-            // /!\ No limitations for role changing
             $member->setRole($role);
 
             // Save
@@ -227,6 +261,10 @@ final class MemberController extends AbstractController
             $em->flush();
         }
 
+        // Generate AvatarUrl
+        $userService->generateAvatarUrl($member->getUser());
+
+        // Return updated member
         return $member;
     }
 
@@ -289,11 +327,6 @@ final class MemberController extends AbstractController
         CommunityService $communityService
     )
     {
-        // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Get community
         if (!$community){
             return throw new UnprocessableEntityHttpException('Invalid community id');
@@ -348,15 +381,81 @@ final class MemberController extends AbstractController
         CommunityService $communityService
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Leave
         $communityService->leave($user, $community);
 
         return new JsonResponse("Successfully left community",200);
+    }
+
+
+
+
+
+
+    // GIVE OWNERSHIP
+
+    #[View(serializerGroups: ["member_basic"])]
+    #[Route(path:"/communities/{communityId}/members/{userId}/give-ownership", methods: ["Post"])]
+    #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_MANAGE_OWNER', subject: 'community')]
+    #[Security(name:"Bearer")]
+    #[OA\Post(
+        summary: "Transfer the ownership of the community to another member",
+        tags: ["Members"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Member object',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Community or user not found',
+            ),
+        ]
+    )] 
+    public function giveOwnership(
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[CurrentUser()] User $from,
+        #[MapEntity(id: 'userId')] User $to,
+        EntityManagerInterface $em,
+        UserService $userService
+    )
+    {
+        // Get the member
+        $member = $em->getRepository(Member::class)->findOneBy([
+            "user" => $to,
+            "community" => $community,
+            "isBanned" => false
+        ]);
+
+        // Make sure member exist
+        if ($member === null) {
+            return throw new NotFoundHttpException("User not found in this community.");
+        }
+
+        // Promote to administrator
+        $member->setRole(CommunityRoleEnum::ADMIN);
+        $community->setOwner($to);
+
+        // Save
+        $em->persist($member);
+        $em->persist(object: $community);
+        $em->flush();
+        
+        // Generate AvatarUrl
+        $userService->generateAvatarUrl($member->getUser());
+
+        // Return updated member
+        return $member;
     }
 
 }

@@ -2,15 +2,14 @@
 
 namespace App\Controller;
 
-use App\Entity\Community;
 use App\Entity\DTO\UserEdit;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
 use App\Service\ItemService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,11 +20,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class UserController extends AbstractController
 {
@@ -39,6 +38,10 @@ final class UserController extends AbstractController
                 response: 200,
                 description: 'Registration successfull',
                 content: new OA\JsonContent(example:"access_token")
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Password must be at least 8 characters long, with at least one uppercase letter, one lowercase letter, and one special character.'
             ),
             new OA\Response(
                 response: 500,
@@ -65,7 +68,10 @@ final class UserController extends AbstractController
     public function register(
         EntityManagerInterface $em,
         UserPasswordHasherInterface $userPasswordHasher,
-        #[MapRequestPayload(serializationContext:["groups"=>["user_login","user_register"]])] User $user
+        #[MapRequestPayload(
+            serializationContext:["groups"=>["user_login","user_register"]],
+            validationGroups: ["user_register"]
+        )] User $user
     ){
 
         // email already used
@@ -130,7 +136,7 @@ final class UserController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of communities',
-                content: new OA\JsonContent(ref: new Model(type: Community::class, groups: ['community_basic']))
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Community"))
             ),
             new OA\Response(
                 response: 401,
@@ -144,10 +150,6 @@ final class UserController extends AbstractController
         UrlGeneratorInterface $urlGen,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Get its communities
         $communities = $communityRepository->findAllForUser($user);
         foreach ($communities as $community) {
@@ -186,10 +188,6 @@ final class UserController extends AbstractController
         #[CurrentUser()] User $user
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
         // Edit
         $user->setAvatar(null);
         // Save
@@ -200,16 +198,16 @@ final class UserController extends AbstractController
     }
 
 
-    // EDIT (only avatar for now)
+    // EDIT 
 
 
-    #[View()]
+    #[View(serializerGroups: ["user_basic"])]
     #[Route(path:"/api/users", methods: ["PATCH", "POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Users'],
-        summary: 'Update user settings',
+        summary: 'Update user settings and avatar',
         requestBody: new OA\RequestBody(
             required: false,
             content: new OA\MediaType(
@@ -218,7 +216,10 @@ final class UserController extends AbstractController
                     type: 'object',
                     properties: [
                         new OA\Property(property: '_method', type: 'string', example: 'PATCH', description: 'Method override for browsers and file upload compatibility'),
-                        new OA\Property(property: 'avatar', type: 'string', format: 'binary')
+                        new OA\Property(property: 'avatar', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'firstName', type: 'string', description: 'first name'),
+                        new OA\Property(property: 'lastName', type: 'string', description: 'last name'),
+                        new OA\Property(property: 'password', type: 'string', description: 'password'),
                     ]
                 )
             )
@@ -226,45 +227,58 @@ final class UserController extends AbstractController
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Settings update successfuly',
+                description: 'Settings updated successfuly',
             ),
             new OA\Response(
                 response: 401,
                 description: 'Full authentication is required to access this resource.',
-            )
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Password must be at least 8 characters long, with at least one uppercase letter, one lowercase letter, and one special character.'
+            ),
         ]
     )]    
     public function edit(
         Request $request,
         EntityManagerInterface $em,
-        #[CurrentUser()] User $user
+        #[CurrentUser()] User $user,
+        UserPasswordHasherInterface $userPasswordHasher,
+        UserService $userService,
+        ValidatorInterface $validator
     )
     {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
         // Manually populate DTO 
         $dto = new UserEdit();
+        $dto->firstName = $request->request->get('firstName');
+        $dto->lastName = $request->request->get('lastName');
+        $dto->password = $request->request->get('password');
         
-        /* Get password hasher
-        $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
+        // Check password
+        $violations = $validator->validate($dto);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return new JsonResponse(['errors' => $errors], 422);
+        }
 
         // Edit
-        $dto->update($community, $passwordHasher);*/
+        $dto->update($user, $userPasswordHasher);
         $dto->updateAvatar($request, $user);
 
         // Save
         $em->persist($user);
         $em->flush();
 
-        /* Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-        ;
+        // Set values for return
+        $userService->generateAvatarUrl($user);
 
-        return $community;*/
+        return $user;
     }
 
 
@@ -319,6 +333,46 @@ final class UserController extends AbstractController
 
 
 
+
+    // User PROFILE
+
+
+    #[View(serializerGroups: ["user_basic","user_info"])]
+    #[Route(path:"/api/users/{id}", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get a user full information.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User profile info',
+                content:  new OA\JsonContent(ref:  "#/components/schemas/UserProfile")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+
+    )]
+    public function userinfo(
+        UserService $userService,
+        User $target,
+        #[CurrentUser()] User $user
+    ) {
+        $userService->generateAvatarUrl($target);
+        $userService->generateInfo($target);
+        return $target;
+    }
+
+
+
     // User RESERVATIONS
 
 
@@ -346,10 +400,6 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return its reserved items
         return $itemService->getItemsOnCriteria([
             "receiver" => $user,
@@ -386,10 +436,6 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return user donation items
         return $itemService->getItemsOnCriteria(["donor"=>$user]);
     }
@@ -423,17 +469,11 @@ final class UserController extends AbstractController
         ItemService $itemService,
         #[CurrentUser()] User $user
     ) {
-        // Check User
-        if ($user === null) {
-            throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource.");
-        }
         // Return user received items
         return $itemService->getItemsOnCriteria([
             "receiver"=>$user,
             "status"=>ItemStatusEnum::OVER
         ]);
     }
-
-
 
 }

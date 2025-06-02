@@ -11,6 +11,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CommunityService
 {
@@ -18,11 +19,17 @@ class CommunityService
 
     private EntityManagerInterface $em;
     private PasswordHasherFactoryInterface $phf;
+    private UrlGeneratorInterface $urlGen;
 
-    public function __construct(private EntityManagerInterface $entityManager, PasswordHasherFactoryInterface $hasherFactory,)
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        PasswordHasherFactoryInterface $hasherFactory,
+        UrlGeneratorInterface $router,
+        )
     {
         $this->em = $entityManager;
         $this->phf = $hasherFactory;
+        $this->urlGen = $router;
     }
 
     /**
@@ -115,16 +122,46 @@ class CommunityService
 
     public function leave (User $user, Community $community): void
     {
+        // Get member
         $memberRepo = $this->em->getRepository(Member::class);
         $member = $memberRepo->findOneBy([
             'user' => $user,
-            'community' => $community
+            'community' => $community,
+            'isBanned' => false // If they are banned, they cannot "leave". It just means the can't join more communities. 
         ]);
-        if ($member !== null) {
-            $this->em->remove($member);
-            $this->em->flush();
-        }else{
+
+        // Make sure user is in the community
+        if ($member === null) {
             throw new ConflictHttpException('Not in this community');
         }
+
+        // Make sure user is not the owner of the community
+        if ($user === $community->getOwner()) {
+            throw new ConflictHttpException('You can not leave a community you own');
+        }
+
+        // Save
+        $this->em->remove($member);
+        $this->em->flush();
+    }
+
+    public function setMemberCount(Community $community)
+    {
+        $count = $this->em
+            ->getRepository(Member::class)
+            ->count([
+                "community" => $community,
+                "isBanned" => false
+            ])
+        ;
+        $community->setMemberCount($count);
+    }
+
+    public function generateImageUrl (Community $community)
+    {
+        $community->setImageUrl($this->urlGen->generate(
+            'api_communities_image', 
+            ['id' => $community->getId()]
+        ));
     }
 }

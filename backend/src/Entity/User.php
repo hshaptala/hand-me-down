@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -19,7 +20,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['item_basic'])]
+    #[Groups(['item_basic','member_basic','community_basic','member_ban'])]
     private ?int $id = null;
 
     #[Groups(['user_login'])]
@@ -35,6 +36,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var string The hashed password
      */
+    #[Assert\NotBlank(groups: ['user_register'])]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,}$/',
+        message: 'Password must be at least 8 characters long, with at least one uppercase letter, one lowercase letter, and one special character.',
+        groups: ['user_register']
+    )]
     #[Groups(['user_login'])]
     #[ORM\Column]
     private ?string $password = null;
@@ -50,15 +57,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Community>
      */
-    #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'creator')]
-    private Collection $communitiesCreated;
+    #[ORM\OneToMany(targetEntity: Community::class, mappedBy: 'owner')]
+    private Collection $communitiesOwned;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register', 'member_basic'])]
+    #[Groups(['user_register','user_basic','member_basic','member_ban'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user_register', 'member_basic'])]
+    #[Groups(['user_register','user_basic','member_basic','member_ban'])]
     private ?string $lastName = null;
 
     /**
@@ -70,7 +77,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::BLOB, nullable: true)]
     private $avatar = null;
 
-    #[Groups(['member_basic'])]
+    #[Groups(['user_basic','member_basic'])]
     private ?string $avatarUrl = null;
 
     /**
@@ -85,9 +92,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Item::class, mappedBy: 'receiver')]
     private Collection $receipts;
 
+    #[ORM\Column]
+    #[Groups(['user_info'])]
+    private ?\DateTimeImmutable $joinedAt = null;
+
+    #[Groups(['user_info'])]
+    private ?int $communityCount = null;
+
+    #[Groups(['user_info'])]
+    private ?int $itemsReceivedCount = null;
+
+    #[Groups(['user_info'])]
+    private ?int $itemsGivenCount = null;
+
+    #[Groups(['user_info'])]
+    private ?float $rating = null;
+
     public function __construct()
     {
-        $this->communitiesCreated = new ArrayCollection();
+        $this->communitiesOwned = new ArrayCollection();
         $this->memberships = new ArrayCollection();
         $this->donations = new ArrayCollection();
         $this->receipts = new ArrayCollection();
@@ -192,27 +215,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Community>
      */
-    public function getCommunitiesCreated(): Collection
+    public function getCommunitiesOwned(): Collection
     {
-        return $this->communitiesCreated;
+        return $this->communitiesOwned;
     }
 
-    public function addCommunityCreated(Community $community): static
+    public function addCommunityOwned(Community $community): static
     {
-        if (!$this->communitiesCreated->contains($community)) {
-            $this->communitiesCreated->add($community);
-            $community->setCreator($this);
+        if (!$this->communitiesOwned->contains($community)) {
+            $this->communitiesOwned->add($community);
+            $community->setOwner($this);
         }
 
         return $this;
     }
 
-    public function removeCommunityCreated(Community $community): static
+    public function removeCommunityOwned(Community $community): static
     {
-        if ($this->communitiesCreated->removeElement($community)) {
+        if ($this->communitiesOwned->removeElement($community)) {
             // set the owning side to null (unless already changed)
-            if ($community->getCreator() === $this) {
-                $community->setCreator(null);
+            if ($community->getOwner() === $this) {
+                $community->setOwner(null);
             }
         }
 
@@ -273,7 +296,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getAvatar()
+    public function getAvatar(): mixed
     {
         return $this->avatar;
     }
@@ -352,6 +375,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $receipt->setReceiver(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getJoinedAt(): ?\DateTimeImmutable
+    {
+        return $this->joinedAt;
+    }
+
+    public function setJoinedAt(\DateTimeImmutable $joinedAt): static
+    {
+        $this->joinedAt = $joinedAt;
+
+        return $this;
+    }
+
+    public function getCommunityCount(): ?int
+    {
+        return $this->communityCount;
+    }
+
+    public function setCommunityCount(int $communityCount): static
+    {
+        $this->communityCount = $communityCount;
+
+        return $this;
+    }
+
+    public function getItemsReceivedCount(): ?int
+    {
+        return $this->itemsReceivedCount;
+    }
+
+    public function setItemsReceivedCount(int $itemsReceivedCount): static
+    {
+        $this->itemsReceivedCount = $itemsReceivedCount;
+
+        return $this;
+    }
+
+    public function getItemsGivenCount(): ?int
+    {
+        return $this->itemsGivenCount;
+    }
+
+    public function setItemsGivenCount(int $itemsGivenCount): static
+    {
+        $this->itemsGivenCount = $itemsGivenCount;
+
+        return $this;
+    }
+
+    public function getRating(): ?float
+    {
+        return $this->rating;
+    }
+
+    public function setRating(float $rating): static
+    {
+        $this->rating = $rating;
 
         return $this;
     }
