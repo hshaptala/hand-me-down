@@ -28,7 +28,10 @@ export async function joinCommunity(
   id: number,
   password?: string,
 ): Promise<Community> {
-  const res = await api.post(`/api/communities/${id}/join`, { password });
+  const url = `/api/communities/${id}/join`;
+  const params = password ? { password } : {};
+
+  const res = await api.post(url, {}, { params });
   requestCache.clearRequest("user-communities");
   requestCache.clearRequest("fetch-communities");
   requestCache.clearRequest(`fetch-community-${id}`);
