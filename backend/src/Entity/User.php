@@ -108,6 +108,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user_info'])]
     private ?float $rating = null;
 
+    #[ORM\Column(options: ["default" => false])]
+    private ?bool $isRestricted = false;
+
     public function __construct()
     {
         $this->communitiesOwned = new ArrayCollection();
@@ -435,6 +438,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRating(float $rating): static
     {
         $this->rating = $rating;
+
+        return $this;
+    }
+
+    public function isRestricted(): ?bool
+    {
+        return $this->isRestricted;
+    }
+
+    public function setIsRestricted(bool $isRestricted): static
+    {
+        $this->isRestricted = $isRestricted;
 
         return $this;
     }

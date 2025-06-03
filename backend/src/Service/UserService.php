@@ -13,6 +13,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class UserService
 {
 
+    private const RESTRICTION_BAN_COUNT = 4;
+    private const RESTRICTION_SIMULTANEOUS_BAN_COUNT = 2;
+
     private EntityManagerInterface $em;
     private UrlGeneratorInterface $urlGen;
 
@@ -74,5 +77,40 @@ class UserService
             ->setItemsReceivedCount($itemsReceived)
             ->setRating(0.0)
         ;
+    }
+
+    /**
+     * Will ban the user from the website if they go beyond the limits.
+     * @param \App\Entity\User $user
+     * @return void
+     */
+    public function tryRestrictUser(User $user)
+    {
+        // Get repository
+        $memberRepository = $this->em->getRepository(Member::class);
+
+        // Current bans
+        $currentBans = $memberRepository->count([
+            "user" => $user,
+            "isBanned" => true,
+        ]);
+
+        // Ban count
+        $banCount = $memberRepository->sumBanCountForUser($user);
+
+        // Check
+        if(
+            $currentBans >= self::RESTRICTION_SIMULTANEOUS_BAN_COUNT 
+            ||
+            $banCount >= self::RESTRICTION_BAN_COUNT
+        ){
+            $user->setIsRestricted(true); // Restrict
+        }else{
+            $user->setIsRestricted( false); // Unrestrict
+        }
+
+        // Save
+        $this->em->persist($user);
+        $this->em->flush();
     }
 }

@@ -8,6 +8,7 @@ use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\MemberRepository;
 use App\Security\CommunityVoter;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use Nelmio\ApiDocBundle\Attribute\Security;
@@ -161,7 +162,8 @@ final class BanController extends AbstractController
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         #[CurrentUser()] User $moderator,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        UserService $userService
         ) 
     {
 
@@ -215,6 +217,9 @@ final class BanController extends AbstractController
         // Save
         $em->persist($member);
         $em->flush();
+
+        // TryRestrict
+        $userService->tryRestrictUser($user);
       
         // Return
         return $member;
@@ -256,7 +261,8 @@ final class BanController extends AbstractController
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         #[CurrentUser()] User $moderator,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        UserService $userService
         ) 
     {
         // Get the member
@@ -281,6 +287,9 @@ final class BanController extends AbstractController
         // Save
         $em->persist($member);
         $em->flush();
+
+        // TryRestrict
+        $userService->tryRestrictUser($user);
       
         // Return
         return $member;
