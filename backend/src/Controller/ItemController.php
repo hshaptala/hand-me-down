@@ -133,41 +133,6 @@ final class ItemController extends AbstractController
         return $item;
     }
 
-    #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{itemId}", methods: ["GET"])]
-    #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
-    #[OA\Get(
-        summary: "Get the information about an item by ID.",
-        tags: ["Items"],
-        responses: [
-            new OA\Response(
-                response: 200,
-                description: 'Item object',
-                content: new OA\JsonContent(ref: "#/components/schemas/Item")
-            ),
-            new OA\Response(
-                response: 401,
-                description: 'Full authentication is required to access this resource.',
-            ),
-            new OA\Response(
-                response: 403,
-                description: 'Permission denied.',
-            ),
-        ]
-    )] 
-    public function itemById(
-        #[MapEntity(id: 'itemId')] Item $item,
-        UrlGeneratorInterface $urlGen
-    )
-    {
-        // Generate imageUrl
-        $item
-            ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
-        ;
-        return $item;
-    }
-
     
 
 
