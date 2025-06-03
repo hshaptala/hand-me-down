@@ -18,7 +18,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -116,7 +115,8 @@ final class ItemController extends AbstractController
     )] 
     public function item(
         Item $item,
-        UrlGeneratorInterface $urlGen
+        UrlGeneratorInterface $urlGen,
+        #[CurrentUser()] User $user
     )
     {
         // Make sure user is in the community
@@ -125,6 +125,14 @@ final class ItemController extends AbstractController
                 $item->getCommunity(), 
                 message:"You do not have permission to access this item."
         );
+
+        if(
+            $item->getStatus() !== ItemStatusEnum::OPEN &&
+            $user !== $item->getDonor() &&
+            $user !== $item->getReceiver()
+        ){
+            return new JsonResponse("You do not have permission to access this item.", 403);
+        }
 
         // Generate imageUrl
         $item
