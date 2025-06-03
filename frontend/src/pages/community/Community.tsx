@@ -255,7 +255,7 @@ export default function Community() {
                                 : "bg-[#1976D2]"
                             }`}
                           >
-                            Available
+                            {item.status}
                           </Badge>
                         </div>
                       </CardHeader>

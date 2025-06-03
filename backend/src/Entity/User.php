@@ -48,9 +48,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $token = null;
-
-
-    #[Groups(['user_register'])]
+    #[Groups(['user_register', 'user_basic'])]
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $supabaseUserId = null;
 

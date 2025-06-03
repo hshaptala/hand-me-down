@@ -41,3 +41,8 @@ export async function createItem(
 
   return res.data;
 }
+
+export async function fetchItemById(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
+  return res.data;
+}
