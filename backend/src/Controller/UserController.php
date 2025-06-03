@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
@@ -504,8 +505,7 @@ final class UserController extends AbstractController
                 description: 'User not found',
             ),
         ]
-    )]
-    public function getUserBySupabaseId(
+    )]    public function getUserBySupabaseId(
         string $supabaseId,
         EntityManagerInterface $em,
         UserService $userService
@@ -518,6 +518,132 @@ final class UserController extends AbstractController
         
         $userService->generateAvatarUrl($user);
         return $user;
+    }
+
+    // Get items for a specific user (for member profile viewing)
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/{id}/items/donations", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items a specific user is donating and has donated.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+    )]
+    public function getUserDonations(
+        #[MapEntity(id: 'id')] User $targetUser,
+        ItemService $itemService,
+        #[CurrentUser()] User $currentUser
+    ) {
+        // Check if current user is in the same community as target user
+        $this->checkCommunityMembership($currentUser, $targetUser);
+        
+        // Return target user donation items
+        return $itemService->getItemsOnCriteria(["donor" => $targetUser]);
+    }
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/{id}/items/receipts", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items a specific user has received.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+    )]
+    public function getUserReceipts(
+        #[MapEntity(id: 'id')] User $targetUser,
+        ItemService $itemService,
+        #[CurrentUser()] User $currentUser
+    ) {
+        // Check if current user is in the same community as target user
+        $this->checkCommunityMembership($currentUser, $targetUser);
+        
+        // Return target user received items
+        return $itemService->getItemsOnCriteria([
+            "receiver" => $targetUser,
+            "status" => ItemStatusEnum::OVER
+        ]);
+    }
+
+    #[View(serializerGroups: ["item_basic"])]
+    #[Route(path:"/api/users/{id}/items/reservations", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get the list of items a specific user is currently reserving.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of items',
+                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+    )]
+    public function getUserReservations(
+        #[MapEntity(id: 'id')] User $targetUser,
+        ItemService $itemService,
+        #[CurrentUser()] User $currentUser
+    ) {
+        // Check if current user is in the same community as target user
+        $this->checkCommunityMembership($currentUser, $targetUser);
+        
+        // Return target user reserved items
+        return $itemService->getItemsOnCriteria([
+            "receiver" => $targetUser,
+            "status" => ItemStatusEnum::RESERVED
+        ]);
+    }    /**
+     * Check if current user shares at least one community with target user
+     */
+    private function checkCommunityMembership(User $currentUser, User $targetUser): void
+    {
+        $currentUserCommunities = $currentUser->getMemberships()->map(fn($member) => $member->getCommunity()->getId())->toArray();
+        $targetUserCommunities = $targetUser->getMemberships()->map(fn($member) => $member->getCommunity()->getId())->toArray();
+        
+        $sharedCommunities = array_intersect($currentUserCommunities, $targetUserCommunities);
+        
+        if (empty($sharedCommunities)) {
+            throw $this->createAccessDeniedException('You can only view profiles of users in your communities.');
+        }
     }
 
 }
