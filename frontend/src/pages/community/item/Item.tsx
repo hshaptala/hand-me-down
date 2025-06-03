@@ -31,10 +31,7 @@ export default function Item() {
 
     const loadItemAndDonor = async () => {
       try {
-        const itemData = await fetchItem(
-          Number(params.id),
-          Number(params.itemId),
-        );
+        const itemData = await fetchItem(Number(params.itemId));
         setItem(itemData);
 
         // Fetch donor information
