@@ -9,7 +9,6 @@ use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
 use App\Entity\User;
 use App\Repository\ItemRepository;
-use App\Security\CommunityVoter;
 use App\Service\ItemService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
@@ -88,8 +87,9 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{id}", methods: ["GET"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Get(
         summary: "Get the information about an item.",
@@ -115,17 +115,11 @@ final class ItemController extends AbstractController
         ]
     )] 
     public function item(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         UrlGeneratorInterface $urlGen
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
-        );
-
         // Generate imageUrl
         $item
             ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
@@ -303,8 +297,9 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{id}", methods: ["DELETE"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["DELETE"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Delete(
         summary: "Delete an item.",
@@ -333,18 +328,12 @@ final class ItemController extends AbstractController
         ]
     )] 
     public function delete(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         #[CurrentUser()] User $user,
         EntityManagerInterface $em
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
-        );
-
         // Check Item status
         if($item->getStatus() !== ItemStatusEnum::OPEN){
             return throw new ConflictHttpException("You can't delete an item after it is reserved.");
@@ -365,8 +354,9 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{id}", methods: ["PATCH", "POST"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}", methods: ["PATCH", "POST"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Items'],
@@ -411,20 +401,14 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function edit(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
         UrlGeneratorInterface $urlGen,
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
-        );
-
         // Check permission
         if($item->getDonor() !== $user){
             return new JsonResponse("You do not have permission to edit this item.",403);
@@ -466,8 +450,9 @@ final class ItemController extends AbstractController
     // RESERVE
 
     #[View()]
-    #[Route(path:"/api/items/{id}/reserve", methods: ["POST"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}/reserve", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Items'],
@@ -496,22 +481,13 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function reserve(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to reserve this item."
-        );
-
-        // Reserve
         $itemService->reserve($user, $item);
-        
-        // Return
         return new JsonResponse("Item reserved successfuly",200);
     }
 
@@ -521,8 +497,9 @@ final class ItemController extends AbstractController
 
 
     #[View()]
-    #[Route(path:"/api/items/{id}/cancel", methods: ["POST"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}/cancel", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Items'],
@@ -551,22 +528,13 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function cancel(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
-        );
-
-        // Cancel
         $itemService->cancel($user, $item);
-
-        // Return
         return new JsonResponse("Reservation canceled successfuly",200);
     }
 
@@ -576,8 +544,9 @@ final class ItemController extends AbstractController
 
 
     #[View()]
-    #[Route(path:"/api/items/{id}/confirm", methods: ["POST"])]
+    #[Route(path:"/api/communities/{communityId}/items/{itemId}/confirm", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
+    #[IsGranted('COMMUNITY_VIEW', subject: 'community')]
     #[Security(name:"Bearer")]
     #[OA\Post(
         tags: ['Items'],
@@ -606,22 +575,13 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function confirm(
-        Item $item,
+        #[MapEntity(id: 'communityId')] Community $community,
+        #[MapEntity(id: 'itemId')] Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
     {
-        // Make sure user is in the community
-        $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
-        );
-
-        // Confirm
         $itemService->confirm($user, $item);
-
-        // Return
         return new JsonResponse("Reservation ended successfuly",200);
     }
 
