@@ -88,7 +88,7 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{itemId}", methods: ["GET"])]
+    #[Route(path:"/api/items/{id}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Get(
@@ -115,7 +115,7 @@ final class ItemController extends AbstractController
         ]
     )] 
     public function item(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         UrlGeneratorInterface $urlGen
     )
     {
@@ -266,7 +266,7 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{itemId}", methods: ["DELETE"])]
+    #[Route(path:"/api/items/{id}", methods: ["DELETE"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Delete(
@@ -296,7 +296,7 @@ final class ItemController extends AbstractController
         ]
     )] 
     public function delete(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         #[CurrentUser()] User $user,
         EntityManagerInterface $em
     )
@@ -328,7 +328,7 @@ final class ItemController extends AbstractController
 
 
     #[View(serializerGroups: ["item_basic"])]
-    #[Route(path:"/api/items/{itemId}", methods: ["PATCH", "POST"])]
+    #[Route(path:"/api/items/{id}", methods: ["PATCH", "POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
@@ -374,7 +374,7 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function edit(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
@@ -429,7 +429,7 @@ final class ItemController extends AbstractController
     // RESERVE
 
     #[View()]
-    #[Route(path:"/api/items/{itemId}/reserve", methods: ["POST"])]
+    #[Route(path:"/api/items/{id}/reserve", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
@@ -459,7 +459,7 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function reserve(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
@@ -484,7 +484,7 @@ final class ItemController extends AbstractController
 
 
     #[View()]
-    #[Route(path:"/api/items/{itemId}/cancel", methods: ["POST"])]
+    #[Route(path:"/api/items/{id}/cancel", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
@@ -514,7 +514,7 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function cancel(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
@@ -539,7 +539,7 @@ final class ItemController extends AbstractController
 
 
     #[View()]
-    #[Route(path:"/api/items/{itemId}/confirm", methods: ["POST"])]
+    #[Route(path:"/api/items/{id}/confirm", methods: ["POST"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
     #[OA\Post(
@@ -569,7 +569,7 @@ final class ItemController extends AbstractController
         ]
     )]    
     public function confirm(
-        #[MapEntity(id: 'itemId')] Item $item,
+        Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
     )
