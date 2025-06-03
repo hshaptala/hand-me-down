@@ -13,7 +13,7 @@ import type {
   MessageWithUser,
 } from "@/lib/database.types";
 import { getSupabase, getCurrentUser } from "@/lib/supabase";
-import { fetchItemById } from "@/service/item.service";
+import { fetchItem } from "@/service/item.service";
 import { fetchUserBySupabaseId } from "@/service/user.service";
 
 interface ChatContextType {
@@ -138,11 +138,18 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             }),
           );
           let itemData:
-            | { id: number; title: string; image: string }
+            | {
+                id: string;
+                title: string;
+                image: string;
+                description?: string;
+                status?: string;
+                keywords?: string[];
+              }
             | undefined = undefined;
           if (conv.item_id) {
             try {
-              const fetchedItem = await fetchItemById(conv.item_id);
+              const fetchedItem = await fetchItem(conv.item_id);
               itemData = {
                 id: fetchedItem.id.toString(),
                 title: fetchedItem.title,
@@ -226,9 +233,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
                   | undefined = undefined;
                 if (payload.new.item_id) {
                   try {
-                    const fetchedItem = await fetchItemById(
-                      payload.new.item_id,
-                    );
+                    const fetchedItem = await fetchItem(payload.new.item_id);
                     itemData = {
                       id: fetchedItem.id,
                       title: fetchedItem.title,
