@@ -13,7 +13,9 @@ export async function fetchUser(userId: number): Promise<User> {
   );
 }
 
-export async function fetchUserBySupabaseId(supabaseUserId: string): Promise<User> {
+export async function fetchUserBySupabaseId(
+  supabaseUserId: string,
+): Promise<User> {
   return requestCache.getOrCreate(
     `fetch-user-supabase-${supabaseUserId}`,
     async () => {
