@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ConversationSkeleton } from "@/components/ui/loading";
 import { useChat } from "@/context/ChatContext";
 
 export function ConversationList() {
@@ -12,7 +13,18 @@ export function ConversationList() {
     setCurrentConversation,
     currentConversation,
     isTyping,
+    loading,
   } = useChat();
+
+  if (loading) {
+    return (
+      <div className="max-h-[600px] space-y-4 overflow-y-auto pr-2">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <ConversationSkeleton key={index} />
+        ))}
+      </div>
+    );
+  }
 
   if (!conversations.length) {
     return (

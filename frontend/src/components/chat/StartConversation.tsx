@@ -35,7 +35,7 @@ export function StartConversation({
   const [message, setMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { createConversation, sendMessage } = useChat();
+  const { createConversation, sendMessage, setCurrentConversation } = useChat();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,6 +46,9 @@ export function StartConversation({
     try {
       // Create a new conversation
       const conversationId = await createConversation([recipientId], itemId);
+
+      // Set the current conversation before sending the message
+      setCurrentConversation(conversationId);
 
       // Send the initial message
       await sendMessage(message); // Close the dialog and navigate to the conversation

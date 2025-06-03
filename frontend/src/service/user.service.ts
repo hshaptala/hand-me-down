@@ -12,3 +12,16 @@ export async function fetchUser(userId: number): Promise<User> {
     60000,
   );
 }
+
+export async function fetchUserBySupabaseId(
+  supabaseUserId: string,
+): Promise<User> {
+  return requestCache.getOrCreate(
+    `fetch-user-supabase-${supabaseUserId}`,
+    async () => {
+      const res = await api.get(`/api/users/supabase/${supabaseUserId}`);
+      return res.data;
+    },
+    60000,
+  );
+}

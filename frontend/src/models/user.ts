@@ -8,4 +8,5 @@ export type User = {
   itemsReceivedCount: number;
   itemsGivenCount: number;
   rating: number;
+  supabaseUserId?: string;
 };
