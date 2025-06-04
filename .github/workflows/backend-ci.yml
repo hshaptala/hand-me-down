@@ -17,14 +17,33 @@ defaults:
     working-directory: ./backend
 
 jobs:
-  security-check:
-    name: Security Checker
+
+  setup:
+    name: Setup Environment
     runs-on: ubuntu-latest
-    container: jakzal/phpqa:php8.2
     steps:
       - uses: actions/checkout@v4
       - name: Create env file
         run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
+      - name: Upload env file
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-file
+          path: backend/.env.local
+          retention-days: 1
+
+  security-check:
+    name: Security Checker
+    runs-on: ubuntu-latest
+    container: jakzal/phpqa:php8.2
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
+          path: .
       - name: Update composer
         run: composer update
       - name: Install dependencies
@@ -36,8 +55,14 @@ jobs:
     name: PHP CodeSniffer
     runs-on: ubuntu-latest
     container: jakzal/phpqa:php8.2
+    needs: setup
     steps:
       - uses: actions/checkout@v4
+      - name: Download env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
+          path: .
       - name: Install dependencies
         run: composer install
       - name: Run PHP CodeSniffer
@@ -47,8 +72,14 @@ jobs:
     name: PHPStan Analysis
     runs-on: ubuntu-latest
     container: jakzal/phpqa:php8.2
+    needs: setup
     steps:
       - uses: actions/checkout@v4
+      - name: Download env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
+          path: .
       - name: Install dependencies
         run: composer install
       - name: Run PHPStan
@@ -58,8 +89,14 @@ jobs:
     name: Twig Linter
     runs-on: ubuntu-latest
     container: jakzal/phpqa:php8.2
+    needs: setup
     steps:
       - uses: actions/checkout@v4
+      - name: Download env file
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file
+          path: .
       - name: Install dependencies
         run: composer install
       - name: Run Twig Linter
