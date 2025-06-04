@@ -6,6 +6,7 @@ use App\Entity\DTO\UserEdit;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
+use App\Service\CommunityService;
 use App\Service\ItemService;
 use App\Service\UserService;
 use DateTimeImmutable;
@@ -16,16 +17,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class UserController extends AbstractController
@@ -149,16 +147,15 @@ final class UserController extends AbstractController
     )]
     public function getCommunities(
         CommunityRepository $communityRepository,
-        UrlGeneratorInterface $urlGen,
+        CommunityService $communityService,
         #[CurrentUser()] User $user
     ) {
         // Get its communities
         $communities = $communityRepository->findAllForUser($user);
         foreach ($communities as $community) {
-            $community
-                ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-                ->setMemberCount(count($community->getMembers()))
-            ;        };
+            $communityService->generateInfo($community);
+            $communityService->generateImageUrl($community);       
+        };
         return $communities;
     }
 
@@ -190,15 +187,13 @@ final class UserController extends AbstractController
     public function getUserCommunities(
         User $targetUser,
         CommunityRepository $communityRepository,
-        UrlGeneratorInterface $urlGen,
+        CommunityService $communityService,
     ) {
         // Get communities for the target user
         $communities = $communityRepository->findAllForUser($targetUser);
         foreach ($communities as $community) {
-            $community
-                ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-                ->setMemberCount(count($community->getMembers()))
-            ;
+            $communityService->generateInfo($community);
+            $communityService->generateImageUrl($community);       
         };
         return $communities;
     }
