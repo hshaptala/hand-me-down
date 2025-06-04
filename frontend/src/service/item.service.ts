@@ -6,14 +6,14 @@ export async function fetchItems(communityId: number): Promise<Item[]> {
   return res.data;
 }
 
-export async function fetchItem(
-  communityId: number,
-  itemId: number,
-): Promise<Item> {
-  const res = await api.get(`/api/communities/${communityId}/items/${itemId}`);
+export async function fetchItem(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
   return res.data;
 }
-
+export async function fetchItemById(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
+  return res.data;
+}
 export async function createItem(
   communityId: number,
   data: {
@@ -41,3 +41,18 @@ export async function createItem(
 
   return res.data;
 }
+
+/*export async function reserveItem(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
+  return res.data;
+}
+
+export async function cancelReserveItem(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
+  return res.data;
+}
+
+export async function confirmReceiveItem(itemId: number): Promise<Item> {
+  const res = await api.get(`/api/items/${itemId}`);
+  return res.data;
+}*/

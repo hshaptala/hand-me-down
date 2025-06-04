@@ -124,6 +124,9 @@ export interface ConversationWithDetails extends Conversation {
     id: string;
     title: string;
     image?: string;
+    description?: string;
+    status?: string;
+    keywords?: string[];
   };
 }
 export interface MessageWithUser extends Message {

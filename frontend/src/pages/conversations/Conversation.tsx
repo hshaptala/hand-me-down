@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { ArrowLeft, MapPin, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Check } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
@@ -20,7 +20,8 @@ import {
 import { ChatProvider, useChat } from "@/context/ChatContext";
 
 function ConversationContent({ id }: { id: string }) {
-  const { setCurrentConversation, conversations, loading } = useChat();
+  const { setCurrentConversation, conversations, loading, currentUser } =
+    useChat();
 
   useEffect(() => {
     setCurrentConversation(id);
@@ -32,25 +33,39 @@ function ConversationContent({ id }: { id: string }) {
 
   const conversation = conversations.find((c) => c.id === id);
 
-  if (loading) {
+  if (!conversation || loading) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        Loading...
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-[#2E7D32]"></div>
+          <p className="text-muted-foreground">Loading conversation...</p>
+        </div>
       </div>
     );
   }
 
-  if (!conversation) {
-    return (
-      <div className="flex h-[400px] items-center justify-center">
-        Conversation not found
-      </div>
-    );
-  }
+  const otherParticipants = conversation.participants
+    ? conversation.participants.filter((p) => p.id !== currentUser?.id)
+    : [];
 
   const otherParticipant =
-    conversation.participants.find((p) => p.id !== "currentUserId") ||
-    conversation.participants[0];
+    otherParticipants.length > 0 ? otherParticipants[0] : null;
+
+  if (!otherParticipant) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p>No other participants found in this conversation</p>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Total participants: {conversation.participants?.length || 0}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Current user ID: {currentUser?.id}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Container className="py-6">
@@ -112,7 +127,10 @@ function ConversationContent({ id }: { id: string }) {
               <CardContent className="space-y-4">
                 <div className="aspect-square w-full overflow-hidden rounded-md">
                   <img
-                    src={conversation.item.image || "/placeholder.svg"}
+                    src={
+                      import.meta.env.VITE_API_BASE_URL +
+                        conversation.item.image || "/placeholder.svg"
+                    }
                     alt={conversation.item.title}
                     className="h-full w-full object-cover"
                   />
@@ -121,22 +139,33 @@ function ConversationContent({ id }: { id: string }) {
                   <h3 className="text-xl font-bold">
                     {conversation.item.title}
                   </h3>
-                  <Badge className="bg-primary mt-1">Available</Badge>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Item description would go here.
-                  </p>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-sm font-medium">Community</h4>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="text-muted-foreground h-4 w-4" />
-                    <span>Community Name</span>
-                  </div>
+                  <Badge className="mt-1 bg-[#2E7D32]">
+                    {conversation.item.status}
+                  </Badge>
+                  {conversation.item.description && (
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      {conversation.item.description}
+                    </p>
+                  )}
+                  {conversation.item.keywords &&
+                    conversation.item.keywords.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {conversation.item.keywords.map((keyword, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
                 <div className="w-full">
-                  <Button className="bg-primary hover:bg-primary/90 w-full">
+                  <Button className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]">
                     Reserve Item
                   </Button>
                 </div>
@@ -155,10 +184,16 @@ function ConversationContent({ id }: { id: string }) {
   );
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage() {
+  const { id } = useParams<{ id: string }>();
+
+  if (!id) {
+    return <div>Invalid conversation ID</div>;
+  }
+
   return (
     <ChatProvider>
-      <ConversationContent id={params.id} />
+      <ConversationContent id={id} />
     </ChatProvider>
   );
 }

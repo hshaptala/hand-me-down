@@ -478,4 +478,46 @@ final class UserController extends AbstractController
         ]);
     }
 
+
+
+    // User by Supabase ID (for chat integration)
+    
+    #[View(serializerGroups: ["user_basic"])]
+    #[Route(path:"/api/users/supabase/{supabaseId}", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name: "Bearer")]
+    #[OA\Get(
+        summary: "Get a user by their Supabase ID.",
+        tags: ["Users"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User basic info',
+                content: new OA\JsonContent(ref: "#/components/schemas/User")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+    )]
+    public function getUserBySupabaseId(
+        string $supabaseId,
+        EntityManagerInterface $em,
+        UserService $userService
+    ) {
+        $user = $em->getRepository(User::class)->findOneBy(['supabaseUserId' => $supabaseId]);
+        
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+        
+        $userService->generateAvatarUrl($user);
+        return $user;
+    }
+
 }

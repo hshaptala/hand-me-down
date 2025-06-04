@@ -13,6 +13,7 @@ import Community from "./pages/community/Community.tsx";
 import CreateCommunity from "./pages/community/CreateCommunity.tsx";
 import CreateItem from "./pages/community/item/CreateItem.tsx";
 import Item from "./pages/community/item/Item.tsx";
+import Conversation from "./pages/conversations/Conversation.tsx";
 import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
 import Profile from "./pages/user/UserProfile.tsx";
@@ -27,6 +28,7 @@ function App() {
             <Route path="communities" element={<Communities />} />
             <Route path="communities/:id" element={<Community />} />
             <Route path="conversations" element={<ConversationsPage />} />
+            <Route path="conversations/:id" element={<Conversation />} />
             <Route path="communities/:id/items/:itemId" element={<Item />} />
             <Route
               path="communities/:id/items/create"
