@@ -42,6 +42,22 @@ export async function createItem(
   return res.data;
 }
 
+// Functions to fetch items for a specific user (for member profile viewing)
+export async function fetchUserDonations(userId: number): Promise<Item[]> {
+  const res = await api.get(`/api/users/${userId}/items/donations`);
+  return res.data;
+}
+
+export async function fetchUserReceipts(userId: number): Promise<Item[]> {
+  const res = await api.get(`/api/users/${userId}/items/receipts`);
+  return res.data;
+}
+
+export async function fetchUserReservations(userId: number): Promise<Item[]> {
+  const res = await api.get(`/api/users/${userId}/items/reservations`);
+  return res.data;
+}
+
 /*export async function reserveItem(itemId: number): Promise<Item> {
   const res = await api.get(`/api/items/${itemId}`);
   return res.data;
