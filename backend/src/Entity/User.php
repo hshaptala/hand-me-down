@@ -112,12 +112,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $restrictReason = null;
 
+    /**
+     * @var Collection<int, Rating>
+     */
+    #[ORM\OneToMany(targetEntity: Rating::class, mappedBy: 'userRating')]
+    private Collection $ratingsGiven;
+
+    /**
+     * @var Collection<int, Rating>
+     */
+    #[ORM\OneToMany(targetEntity: Rating::class, mappedBy: 'userRated')]
+    private Collection $ratingsRecieved;
+
     public function __construct()
     {
         $this->communitiesOwned = new ArrayCollection();
         $this->memberships = new ArrayCollection();
         $this->donations = new ArrayCollection();
         $this->receipts = new ArrayCollection();
+        $this->ratingsGiven = new ArrayCollection();
+        $this->ratingsRecieved = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -463,6 +477,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRestrictReason(?string $restrictReason): static
     {
         $this->restrictReason = $restrictReason;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Rating>
+     */
+    public function getRatingsGiven(): Collection
+    {
+        return $this->ratingsGiven;
+    }
+
+    public function addRatingsGiven(Rating $ratingsGiven): static
+    {
+        if (!$this->ratingsGiven->contains($ratingsGiven)) {
+            $this->ratingsGiven->add($ratingsGiven);
+            $ratingsGiven->setUserRating($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRatingsGiven(Rating $ratingsGiven): static
+    {
+        if ($this->ratingsGiven->removeElement($ratingsGiven)) {
+            // set the owning side to null (unless already changed)
+            if ($ratingsGiven->getUserRating() === $this) {
+                $ratingsGiven->setUserRating(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Rating>
+     */
+    public function getRatingsRecieved(): Collection
+    {
+        return $this->ratingsRecieved;
+    }
+
+    public function addRatingsRecieved(Rating $ratingsRecieved): static
+    {
+        if (!$this->ratingsRecieved->contains($ratingsRecieved)) {
+            $this->ratingsRecieved->add($ratingsRecieved);
+            $ratingsRecieved->setUserRated($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRatingsRecieved(Rating $ratingsRecieved): static
+    {
+        if ($this->ratingsRecieved->removeElement($ratingsRecieved)) {
+            // set the owning side to null (unless already changed)
+            if ($ratingsRecieved->getUserRated() === $this) {
+                $ratingsRecieved->setUserRated(null);
+            }
+        }
 
         return $this;
     }
