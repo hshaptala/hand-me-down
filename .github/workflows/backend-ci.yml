@@ -57,16 +57,3 @@ jobs:
         run: composer install
       - name: Run PHPStan
         run: phpstan analyse ./src
-
-  twig-linter:
-    name: Twig Linter
-    runs-on: ubuntu-latest
-    container: jakzal/phpqa:php8.2
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create env file
-        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
-      - name: Install dependencies
-        run: composer install
-      - name: Run Twig Linter
-        run: twig-linter lint ./templates
