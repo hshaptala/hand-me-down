@@ -2,7 +2,7 @@ name: Backend CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 90-add-ci-cd-frontback ]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
