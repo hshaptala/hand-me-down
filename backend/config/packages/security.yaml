@@ -22,6 +22,7 @@ security:
                token_handler: App\Security\AccessTokenHandler
             json_login:
                 check_path: api_login
+            user_checker: App\Security\UserChecker
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

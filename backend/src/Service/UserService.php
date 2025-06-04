@@ -99,14 +99,17 @@ class UserService
         $banCount = $memberRepository->sumBanCountForUser($user);
 
         // Check
-        if(
-            $currentBans >= self::RESTRICTION_SIMULTANEOUS_BAN_COUNT 
-            ||
-            $banCount >= self::RESTRICTION_BAN_COUNT
-        ){
-            $user->setIsRestricted(true); // Restrict
+        if($currentBans >= self::RESTRICTION_SIMULTANEOUS_BAN_COUNT){
+            // Restrict
+            $user->setIsRestricted(true); 
+            $user->setRestrictReason("Banned in 2 or more communities.");
+        }else if ($banCount >= self::RESTRICTION_BAN_COUNT){
+            // Restrict
+            $user->setIsRestricted(true); 
+            $user->setRestrictReason("Banned 4 or more times.");
         }else{
-            $user->setIsRestricted( false); // Unrestrict
+            // Unrestrict
+            $user->setIsRestricted( false); 
         }
 
         // Save
