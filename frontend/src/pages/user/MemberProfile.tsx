@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { Gift, ArrowLeft } from "lucide-react";
+import { Users, ArrowLeft, MapPin, Lock, Star } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
@@ -15,15 +15,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Item } from "@/models/item";
+import type { Community } from "@/models/community";
 import type { User as UserType } from "@/models/user";
-import {
-  fetchUserDonations,
-  fetchUserReceipts,
-  fetchUserReservations,
-} from "@/service/item.service";
+import { fetchUserCommunities } from "@/service/community.service";
 import { fetchUser } from "@/service/user.service";
+
+// Helper function to render star rating
+const renderStars = (rating: number): React.JSX.Element[] => {
+  const stars: React.JSX.Element[] = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+  
+  // Add full stars
+  for (let i = 0; i < fullStars; i++) {
+    stars.push(
+      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+    );
+  }
+  
+  // Add half star if needed
+  if (hasHalfStar) {
+    stars.push(
+      <div key="half" className="relative">
+        <Star className="h-4 w-4 text-gray-300" />
+        <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+        </div>
+      </div>
+    );
+  }
+  
+  // Add empty stars to make 5 total
+  const emptyStars = 5 - Math.ceil(rating);
+  for (let i = 0; i < emptyStars; i++) {
+    stars.push(
+      <Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />
+    );
+  }
+  
+  return stars;
+};
 
 export default function MemberProfile() {
   const { communityId, userId } = useParams<{
@@ -31,14 +62,10 @@ export default function MemberProfile() {
     userId: string;
   }>();
   const navigate = useNavigate();
-
   const [profileUser, setProfileUser] = useState<UserType | null>(null);
-  const [donations, setDonations] = useState<Item[]>([]);
-  const [receipts, setReceipts] = useState<Item[]>([]);
-  const [reservations, setReservations] = useState<Item[]>([]);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("donations");
 
   useEffect(() => {
     if (!userId || !communityId) {
@@ -55,18 +82,10 @@ export default function MemberProfile() {
         // Fetch user profile
         const userData = await fetchUser(Number(userId));
         setProfileUser(userData);
-
-        // Fetch user's items
-        const [donationsData, receiptsData, reservationsData] =
-          await Promise.all([
-            fetchUserDonations(Number(userId)),
-            fetchUserReceipts(Number(userId)),
-            fetchUserReservations(Number(userId)),
-          ]);
-
-        setDonations(donationsData);
-        setReceipts(receiptsData);
-        setReservations(reservationsData);
+        const [communitiesData] = await Promise.all([
+          fetchUserCommunities(Number(userId)),
+        ]);
+        setUserCommunities(communitiesData);
       } catch (err) {
         console.error("Error loading profile data:", err);
         if (err instanceof Error && err.message.includes("403")) {
@@ -136,35 +155,6 @@ export default function MemberProfile() {
       </Container>
     );
   }
-  const ItemCard = ({ item }: { item: Item }) => (
-    <Card key={item.id} className="overflow-hidden">
-      <div className="aspect-square overflow-hidden">
-        <img
-          src={
-            item.imageUrl
-              ? import.meta.env.VITE_API_BASE_URL + item.imageUrl
-              : "/placeholder.svg"
-          }
-          alt={item.title}
-          className="h-full w-full object-cover"
-        />
-      </div>
-      <CardContent className="p-4">
-        <h3 className="truncate font-semibold">{item.title}</h3>
-        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-          {item.description}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-1">
-          {item.keywords?.slice(0, 2).map((keyword) => (
-            <Badge key={keyword} variant="secondary" className="text-xs">
-              {keyword}
-            </Badge>
-          ))}
-        </div>
-        <div className="mt-3 flex items-center justify-between"></div>
-      </CardContent>
-    </Card>
-  );
 
   return (
     <Container className="py-10">
@@ -188,7 +178,10 @@ export default function MemberProfile() {
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="h-32 w-32">
                     <AvatarImage
-                      src={import.meta.env.VITE_API_BASE_URL + profileUser.avatarUrl || "/placeholder.svg"}
+                      src={
+                        import.meta.env.VITE_API_BASE_URL +
+                          profileUser.avatarUrl || "/placeholder.svg"
+                      }
                       alt={`${profileUser.firstName} ${profileUser.lastName}`}
                     />
                     <AvatarFallback className="text-2xl">
@@ -199,124 +192,126 @@ export default function MemberProfile() {
                   <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-bold">
                       {profileUser.firstName} {profileUser.lastName}
-                    </h2>
-
-                    <p className="text-muted-foreground text-sm">
+                    </h2>                    <p className="text-muted-foreground text-sm">
                       Member since
                       {" " +
                         new Date(profileUser.joinedAt).toLocaleDateString()}
                     </p>
                   </div>
+                  
                   {/* Stats */}
-                  <div className="grid w-full grid-cols-3 gap-4 border-t pt-4 text-center">
-                    <div>
-                      <p className="text-2xl font-bold">{donations.length}</p>
-                      <p className="text-xs text-black">Donated</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{receipts.length}</p>
-                      <p className="text-xs text-black">Received</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">
-                        {reservations.length}
-                      </p>
-                      <p className="text-xs text-black">Reserved</p>
+                  <div className="w-full space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {profileUser.itemsGivenCount}
+                        </div>
+                        <div className="text-muted-foreground text-sm">
+                          Items Given
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {profileUser.itemsReceivedCount}
+                        </div>
+                        <div className="text-muted-foreground text-sm">
+                          Items Received
+                        </div>
+                      </div>                    </div>
+                    <div className="text-center">
+                      <div className="mb-1 flex items-center justify-center gap-1">
+                        {renderStars(profileUser.rating)}
+                      </div>
+                      <div className="text-lg font-bold text-orange-600">
+                        {profileUser.rating.toFixed(1)}
+                      </div>
+                      <div className="text-muted-foreground text-sm">
+                        User Rating
+                      </div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Items Tabs */}
+          </div>{" "}
+          {/* Communities Section */}
           <div className="lg:w-2/3">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Gift className="h-5 w-5" />
-                  Items
+                  <Users className="h-5 w-5" />
+                  Communities
                 </CardTitle>
                 <CardDescription>
-                  View {profileUser.firstName}'s donations, received items, and
-                  current reservations
+                  Communities that {profileUser.firstName} has joined
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="donations">
-                      Donations ({donations.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="received">
-                      Received ({receipts.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="reserved">
-                      Reserved ({reservations.length})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="donations" className="mt-6">
-                    {donations.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <Gift className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                        <h3 className="mb-2 text-lg font-medium">
-                          No donations yet
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {profileUser.firstName} hasn't donated any items yet.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {donations.map((item) => (
-                          <ItemCard key={item.id} item={item} />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="received" className="mt-6">
-                    {receipts.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <Gift className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                        <h3 className="mb-2 text-lg font-medium">
-                          No received items
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {profileUser.firstName} hasn't received any items yet.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {receipts.map((item) => (
-                          <ItemCard key={item.id} item={item} />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="reserved" className="mt-6">
-                    {reservations.length === 0 ? (
-                      <div className="py-8 text-center">
-                        <Gift className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                        <h3 className="mb-2 text-lg font-medium">
-                          No current reservations
-                        </h3>
-                        <p className="text-muted-foreground">
-                          {profileUser.firstName} doesn't have any reserved
-                          items.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {reservations.map((item) => (
-                          <ItemCard key={item.id} item={item} />
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
+                {userCommunities.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <Users className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                    <h3 className="mb-2 text-lg font-medium">
+                      No communities yet
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {profileUser.firstName} hasn't joined any communities yet.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {userCommunities.map((community) => (
+                      <Card key={community.id} className="overflow-hidden">
+                        <div className="relative h-32 w-full overflow-hidden">
+                          <img
+                            src={
+                              import.meta.env.VITE_API_BASE_URL +
+                              community.imageUrl
+                            }
+                            alt={community.name}
+                            className="h-full w-full object-cover"
+                          />
+                          <Badge
+                            className={`absolute top-2 right-2 ${
+                              community.visibility === "Private"
+                                ? "bg-[#424242]"
+                                : "bg-[#2E7D32]"
+                            }`}
+                          >
+                            {community.visibility === "Private" ? (
+                              <>
+                                <Lock className="mr-1 h-3 w-3" /> Private
+                              </>
+                            ) : (
+                              <>
+                                <Users className="mr-1 h-3 w-3" /> Public
+                              </>
+                            )}
+                          </Badge>
+                        </div>
+                        <CardContent className="p-4">
+                          <h3 className="truncate font-semibold">
+                            {community.name}
+                          </h3>
+                          <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
+                            <MapPin className="h-3 w-3" />
+                            <span>{community.location}</span>
+                          </div>
+                          {community.description && (
+                            <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                              {community.description}
+                            </p>
+                          )}
+                          <div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />
+                              <span>{community.memberCount || 0} members</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

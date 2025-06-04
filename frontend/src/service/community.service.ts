@@ -56,6 +56,17 @@ export async function userCommunities(): Promise<Community[]> {
   );
 }
 
+export async function fetchUserCommunities(userId: number): Promise<Community[]> {
+  return requestCache.getOrCreate(
+    `user-communities-${userId}`,
+    async () => {
+      const res = await api.get(`/api/users/${userId}/communities`);
+      return res.data;
+    },
+    15000,
+  );
+}
+
 export async function createCommunity(data: {
   name: string;
   location: string;
