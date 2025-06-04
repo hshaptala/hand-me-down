@@ -66,10 +66,10 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen
     )
     {
-        $items = $itemRepository->findBy([
-            "community" => $community,
-            "status" => ItemStatusEnum::OPEN,
-        ]);
+        $items = $itemRepository->findByExceptRestricted(
+            $community,
+            ItemStatusEnum::OPEN,
+        );
         
         // Generate image urls
         foreach ($items as $item) {
@@ -120,6 +120,9 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen
     )
     {
+        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
+            return new JsonResponse("Item not found",404);
+        }
         // Generate imageUrl
         $item
             ->setImageUrl($urlGen->generate('api_items_image', ['id' => $item->getId()]))
@@ -450,6 +453,9 @@ final class ItemController extends AbstractController
         ItemService $itemService
     )
     {
+        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
+            return new JsonResponse("Item not found",404);
+        }
         $itemService->reserve($user, $item);
         return new JsonResponse("Item reserved successfuly",200);
     }

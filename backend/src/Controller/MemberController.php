@@ -86,10 +86,7 @@ final class MemberController extends AbstractController
         UserService $userService
     )
     {
-        $members = $memberRepository->findBy([
-            'community' => $community,
-            'isBanned' => false
-        ]);
+        $members = $memberRepository->findByExceptRestricted($community,false);
         
         // Generate AvatarUrl
         foreach ($members as $member) {
@@ -138,11 +135,7 @@ final class MemberController extends AbstractController
     )
     {
         // Get the member
-        $member = $memberRepository->findOneBy([
-            "user" => $user,
-            "community" => $community,
-            "isBanned" => false,
-        ]);
+        $member = $memberRepository->findOneByUnlessRestricted($community, $user, false);
         
         // Make sure member exist
         if ($member === null) {
@@ -215,11 +208,10 @@ final class MemberController extends AbstractController
     )
     {
         // Get the member
-        $member = $em->getRepository(Member::class)->findOneBy([
-            "user" => $to,
-            "community" => $community,
-            "isBanned" => false
-        ]);
+        $member = $em
+            ->getRepository(Member::class)
+            ->findOneByUnlessRestricted($community, $to, false)
+        ;
 
         // Make sure member exist
         if ($member === null) {
@@ -431,11 +423,10 @@ final class MemberController extends AbstractController
     )
     {
         // Get the member
-        $member = $em->getRepository(Member::class)->findOneBy([
-            "user" => $to,
-            "community" => $community,
-            "isBanned" => false
-        ]);
+        $member = $em
+            ->getRepository(Member::class)
+            ->findOneByUnlessRestricted($community, $to, false)
+        ;
 
         // Make sure member exist
         if ($member === null) {
