@@ -35,11 +35,12 @@ jobs:
   phpcs:
     name: PHP CodeSniffer
     runs-on: ubuntu-latest
-    container: jakzal/phpqa:php8.2
+    container: jakzal/phpqa:php8.2    
     steps:
       - uses: actions/checkout@v4
       - name: Create env file
-        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local      - name: Install dependencies
+        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
+      - name: Install dependencies
         run: composer install
       - name: Run PHP CodeSniffer
         run: phpcs -v --standard=PSR12 --warning-severity=0 --ignore=./src/Kernel.php ./src
