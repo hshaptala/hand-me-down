@@ -66,10 +66,10 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen
     )
     {
-        $items = $itemRepository->findBy([
-            "community" => $community,
-            "status" => ItemStatusEnum::OPEN,
-        ]);
+        $items = $itemRepository->findByExceptRestricted(
+            $community,
+            ItemStatusEnum::OPEN,
+        );
         
         // Generate image urls
         foreach ($items as $item) {
@@ -119,6 +119,10 @@ final class ItemController extends AbstractController
         #[CurrentUser()] User $user
     )
     {
+        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
+            return new JsonResponse("Item not found",404);
+        }
+
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
                 CommunityVoter::VIEW, 
@@ -474,6 +478,10 @@ final class ItemController extends AbstractController
         ItemService $itemService
     )
     {
+        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
+            return new JsonResponse("Item not found",404);
+        }
+
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
                 CommunityVoter::VIEW, 

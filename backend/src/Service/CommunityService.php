@@ -152,20 +152,20 @@ class CommunityService
         // Member count
         $count = $this->em
             ->getRepository(Member::class)
-            ->count([
-                "community" => $community,
-                "isBanned" => false
-            ])
+            ->countMembersForCommunityExceptRestricted(
+                $community,
+                false
+            )
         ;
         $community->setMemberCount($count);
 
         // Item count
         $count = $this->em
             ->getRepository(Item::class)
-            ->count([
-                "community" => $community,
-                "status" => ItemStatusEnum::OPEN
-            ])
+            ->countItemsForCommunityExceptRestricted(
+                $community,
+                ItemStatusEnum::OPEN
+            )
         ;
         $community->setItemCount($count);
     }
