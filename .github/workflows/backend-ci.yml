@@ -23,8 +23,6 @@ jobs:
     container: jakzal/phpqa:php8.2
     steps:
       - uses: actions/checkout@v4
-      - name: Set working directory
-        run: cd backend
       - name: Create env file
         run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
       - name: Update composer
@@ -40,8 +38,6 @@ jobs:
     container: jakzal/phpqa:php8.2
     steps:
       - uses: actions/checkout@v4
-      - name: Set working directory
-        run: cd backend
       - name: Install dependencies
         run: composer install
       - name: Run PHP CodeSniffer
@@ -53,8 +49,6 @@ jobs:
     container: jakzal/phpqa:php8.2
     steps:
       - uses: actions/checkout@v4
-      - name: Set working directory
-        run: cd backend
       - name: Install dependencies
         run: composer install
       - name: Run PHPStan
@@ -66,8 +60,6 @@ jobs:
     container: jakzal/phpqa:php8.2
     steps:
       - uses: actions/checkout@v4
-      - name: Set working directory
-        run: cd backend
       - name: Install dependencies
         run: composer install
       - name: Run Twig Linter
