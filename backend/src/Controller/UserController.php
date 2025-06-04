@@ -143,7 +143,6 @@ final class UserController extends AbstractController
                 description: 'Full authentication is required to access this resource.',
             ),
         ]
-
     )]
     public function getCommunities(
         CommunityRepository $communityRepository,
@@ -154,7 +153,7 @@ final class UserController extends AbstractController
         $communities = $communityRepository->findAllForUser($user);
         foreach ($communities as $community) {
             $communityService->generateInfo($community);
-            $communityService->generateImageUrl($community);       
+            $communityService->generateImageUrl($community);
         };
         return $communities;
     }
@@ -190,14 +189,14 @@ final class UserController extends AbstractController
         CommunityService $communityService,
     ) {
         // Make sure user is not restricted
-        if($targetUser->isRestricted()){
-            return new JsonResponse("User not found.",404);
+        if ($targetUser->isRestricted()) {
+            return new JsonResponse("User not found.", 404);
         }
         // Get communities for the target user
         $communities = $communityRepository->findAllForUser($targetUser);
         foreach ($communities as $community) {
             $communityService->generateInfo($community);
-            $communityService->generateImageUrl($community);       
+            $communityService->generateImageUrl($community);
         };
         return $communities;
     }
@@ -237,7 +236,7 @@ final class UserController extends AbstractController
     }
 
 
-    // EDIT 
+    // EDIT
 
 
     #[View(serializerGroups: ["user_basic"])]
@@ -286,7 +285,7 @@ final class UserController extends AbstractController
         UserService $userService,
         ValidatorInterface $validator
     ) {
-        // Manually populate DTO 
+        // Manually populate DTO
         $dto = new UserEdit();
         $dto->firstName = $request->request->get('firstName');
         $dto->lastName = $request->request->get('lastName');
@@ -397,7 +396,6 @@ final class UserController extends AbstractController
                 description: 'User not found',
             ),
         ]
-
     )]
     public function userinfo(
         UserService $userService,
@@ -432,7 +430,6 @@ final class UserController extends AbstractController
                 description: 'Full authentication is required to access this resource.',
             ),
         ]
-
     )]
     public function getReservations(
         ItemService $itemService,
@@ -468,7 +465,6 @@ final class UserController extends AbstractController
                 description: 'Full authentication is required to access this resource.',
             ),
         ]
-
     )]
     public function getDonations(
         ItemService $itemService,
@@ -501,7 +497,6 @@ final class UserController extends AbstractController
                 description: 'Full authentication is required to access this resource.',
             ),
         ]
-
     )]
     public function getReceipts(
         ItemService $itemService,

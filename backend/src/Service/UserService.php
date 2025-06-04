@@ -12,7 +12,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class UserService
 {
-
     private const RESTRICTION_BAN_COUNT = 4;
     private const RESTRICTION_SIMULTANEOUS_BAN_COUNT = 2;
 
@@ -20,10 +19,9 @@ class UserService
     private UrlGeneratorInterface $urlGen;
 
     public function __construct(
-        EntityManagerInterface $entityManager, 
+        EntityManagerInterface $entityManager,
         UrlGeneratorInterface $router,
-        )
-    {
+    ) {
         $this->em = $entityManager;
         $this->urlGen = $router;
     }
@@ -35,11 +33,11 @@ class UserService
      */
     public function generateAvatarUrl(User $user)
     {
-        if($user->getAvatar() === null){
+        if ($user->getAvatar() === null) {
             $user
                 ->setAvatarUrl($this->urlGen->generate('api_default_avatar'))
             ;
-        }else{
+        } else {
             $user
                 ->setAvatarUrl($this->urlGen->generate('api_user_avatar', ['id' => $user->getId()]))
             ;
@@ -54,18 +52,18 @@ class UserService
 
         // receipts
         $itemsReceived = $itemRepository->count([
-            "receiver"=> $user,
-            "status"=> ItemStatusEnum::OVER
+            "receiver" => $user,
+            "status" => ItemStatusEnum::OVER
         ]);
 
         // given
         $itemsGiven = $itemRepository->count([
-            "donor"=> $user,
-            "status"=> ItemStatusEnum::OVER
+            "donor" => $user,
+            "status" => ItemStatusEnum::OVER
         ]);
 
         // Community count
-        $communityCount = $memberRepository->count(["user"=>$user]);
+        $communityCount = $memberRepository->count(["user" => $user]);
 
         // rating
         // TODO
@@ -99,17 +97,17 @@ class UserService
         $banCount = $memberRepository->sumBanCountForUser($user);
 
         // Check
-        if($currentBans >= self::RESTRICTION_SIMULTANEOUS_BAN_COUNT){
+        if ($currentBans >= self::RESTRICTION_SIMULTANEOUS_BAN_COUNT) {
             // Restrict
-            $user->setIsRestricted(true); 
+            $user->setIsRestricted(true);
             $user->setRestrictReason("Banned in 2 or more communities.");
-        }else if ($banCount >= self::RESTRICTION_BAN_COUNT){
+        } elseif ($banCount >= self::RESTRICTION_BAN_COUNT) {
             // Restrict
-            $user->setIsRestricted(true); 
+            $user->setIsRestricted(true);
             $user->setRestrictReason("Banned 4 or more times.");
-        }else{
+        } else {
             // Unrestrict
-            $user->setIsRestricted( false); 
+            $user->setIsRestricted(false);
         }
 
         // Save

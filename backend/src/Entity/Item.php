@@ -50,7 +50,7 @@ class Item
 
     #[ORM\Column(type: Types::BLOB)]
     private $image = null;
-    
+
     #[Groups(['item_basic'])]
     private $imageUrl = null;
 

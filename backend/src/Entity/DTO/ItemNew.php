@@ -16,5 +16,4 @@ class ItemNew
 
     #[Groups(["item_new"])]
     public ?string $image = null;
-
 }

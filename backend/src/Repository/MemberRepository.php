@@ -36,7 +36,7 @@ class MemberRepository extends ServiceEntityRepository
     public function findByExceptRestricted(Community $community, bool $isBanned): array
     {
         return $this->createQueryBuilder("m")
-            ->join(User::class,"u", Join::WITH,"m.user = u")
+            ->join(User::class, "u", Join::WITH, "m.user = u")
             ->andWhere("u.isRestricted = 0")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")
@@ -49,7 +49,7 @@ class MemberRepository extends ServiceEntityRepository
     public function findOneByUnlessRestricted(Community $community, User $user, bool $isBanned): Member|null
     {
         return $this->createQueryBuilder("m")
-            ->join(User::class,"u", Join::WITH,"m.user = u")
+            ->join(User::class, "u", Join::WITH, "m.user = u")
             ->andWhere("u.isRestricted = 0")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")
@@ -66,7 +66,7 @@ class MemberRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder("m")
             ->select('COUNT(m.id)')
-            ->join(User::class,"u", Join::WITH,"m.user = u")
+            ->join(User::class, "u", Join::WITH, "m.user = u")
             ->andWhere("u.isRestricted = 0")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")

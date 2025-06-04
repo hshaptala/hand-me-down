@@ -24,7 +24,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/api')]
 final class BanController extends AbstractController
 {
-
     // GET ONE SPECIFIC
 
     #[View(serializerGroups: ["member_ban"])]
@@ -39,7 +38,7 @@ final class BanController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member ban info',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/MemberBan")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/MemberBan")
             ),
             new OA\Response(
                 response: 401,
@@ -54,24 +53,23 @@ final class BanController extends AbstractController
                 description: 'Community or user not found',
             ),
         ]
-    )] 
+    )]
     public function baninfo(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         MemberRepository $memberRepository,
-    )
-    {
+    ) {
         // Get the member
         $member = $memberRepository->findOneBy([
             "user" => $user,
             "community" => $community,
         ]);
-        
+
         // Make sure member exist
         if ($member === null) {
             return throw new NotFoundHttpException("User not found in this community.");
         }
-      
+
         return $member;
     }
 
@@ -91,7 +89,7 @@ final class BanController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of members',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/MemberBan"))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/MemberBan"))
             ),
             new OA\Response(
                 response: 401,
@@ -106,12 +104,11 @@ final class BanController extends AbstractController
                 description: 'Community not found',
             ),
         ]
-    )] 
+    )]
     public function exiles(
         Community $community,
         MemberRepository $memberRepository,
-    )
-    {
+    ) {
         $members = $memberRepository->findBy([
             'community' => $community,
             'isBanned' => true
@@ -138,7 +135,7 @@ final class BanController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/MemberBan")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/MemberBan")
             ),
             new OA\Response(
                 response: 401,
@@ -157,15 +154,14 @@ final class BanController extends AbstractController
                 description: 'Cant ban yourself',
             ),
         ]
-    )] 
+    )]
     public function ban(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         #[CurrentUser()] User $moderator,
         EntityManagerInterface $em,
         UserService $userService
-        ) 
-    {
+    ) {
 
         // Get the member
         $member = $em->getRepository(Member::class)->findOneBy([
@@ -173,34 +169,33 @@ final class BanController extends AbstractController
             "community" => $community,
             "isBanned" => false,
         ]);
-        
+
         // Make sure member exist
         if ($member === null) {
             return throw new NotFoundHttpException("User not found in this community.");
         }
 
         // Make sure the user is not banning themselves
-        if ($moderator === $user)
-        {
+        if ($moderator === $user) {
             return throw new ConflictHttpException("You cannot ban yourself!");
         }
 
         // Make sure they are not banning someone higher ranked than them
 
         // Check for administratorship when banning a moderator
-        if($member->getRole() === CommunityRoleEnum::MODERATOR){
+        if ($member->getRole() === CommunityRoleEnum::MODERATOR) {
             $this->denyAccessUnlessGranted(
-                CommunityVoter::MANAGE_ROLES, 
-                $community, 
+                CommunityVoter::MANAGE_ROLES,
+                $community,
                 message:"You do not have permission to ban this user."
             );
         }
 
         // Check for ownership when banning an administrator
-        if($member->getRole() === CommunityRoleEnum::ADMIN){
+        if ($member->getRole() === CommunityRoleEnum::ADMIN) {
             $this->denyAccessUnlessGranted(
-                CommunityVoter::MANAGE_ADMINS, 
-                $community, 
+                CommunityVoter::MANAGE_ADMINS,
+                $community,
                 message:"You do not have permission to ban this user."
             );
         }
@@ -220,7 +215,7 @@ final class BanController extends AbstractController
 
         // TryRestrict
         $userService->tryRestrictUser($user);
-      
+
         // Return
         return $member;
     }
@@ -241,7 +236,7 @@ final class BanController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/MemberBan")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/MemberBan")
             ),
             new OA\Response(
                 response: 401,
@@ -256,22 +251,21 @@ final class BanController extends AbstractController
                 description: 'Community or User not found',
             ),
         ]
-    )] 
+    )]
     public function unban(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         #[CurrentUser()] User $moderator,
         EntityManagerInterface $em,
         UserService $userService
-        ) 
-    {
+    ) {
         // Get the member
         $member = $em->getRepository(Member::class)->findOneBy([
             "user" => $user,
             "community" => $community,
             "isBanned" => true,
         ]);
-        
+
         // Make sure the banned member exist
         if ($member === null) {
             return throw new NotFoundHttpException("Banned user not found in this community.");
@@ -290,7 +284,7 @@ final class BanController extends AbstractController
 
         // TryRestrict
         $userService->tryRestrictUser($user);
-      
+
         // Return
         return $member;
     }

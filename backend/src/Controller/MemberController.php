@@ -28,7 +28,6 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route(path:"/api")]
 final class MemberController extends AbstractController
 {
-
     // Get Roles
 
     #[View()]
@@ -42,7 +41,7 @@ final class MemberController extends AbstractController
                 description: 'List of strings',
             )
         ]
-    )] 
+    )]
     public function getRoles()
     {
         return CommunityRoleEnum::cases();
@@ -64,7 +63,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of members',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Member"))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Member"))
             ),
             new OA\Response(
                 response: 401,
@@ -79,15 +78,14 @@ final class MemberController extends AbstractController
                 description: 'Community not found',
             ),
         ]
-    )] 
+    )]
     public function members(
         Community $community,
         MemberRepository $memberRepository,
         UserService $userService
-    )
-    {
-        $members = $memberRepository->findByExceptRestricted($community,false);
-        
+    ) {
+        $members = $memberRepository->findByExceptRestricted($community, false);
+
         // Generate AvatarUrl
         foreach ($members as $member) {
             $userService->generateAvatarUrl($member->getUser());
@@ -111,7 +109,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -126,17 +124,16 @@ final class MemberController extends AbstractController
                 description: 'Community or user not found',
             ),
         ]
-    )] 
+    )]
     public function member(
         #[MapEntity(id: 'communityId')] Community $community,
         #[MapEntity(id: 'userId')] User $user,
         UserService $userService,
         MemberRepository $memberRepository
-    )
-    {
+    ) {
         // Get the member
         $member = $memberRepository->findOneByUnlessRestricted($community, $user, false);
-        
+
         // Make sure member exist
         if ($member === null) {
             return throw new NotFoundHttpException("User not found in this community.");
@@ -144,7 +141,7 @@ final class MemberController extends AbstractController
 
         // Generate AvatarUrl
         $userService->generateAvatarUrl($member->getUser());
-      
+
         return $member;
     }
 
@@ -168,7 +165,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -191,22 +188,21 @@ final class MemberController extends AbstractController
                 description: 'Invalid role input',
             ),
         ]
-    )] 
+    )]
     public function edit(
         #[MapEntity(id: 'communityId')] Community $community,
         #[CurrentUser()] User $from,
         #[MapEntity(id: 'userId')] User $to,
-        #[OA\Parameter( 
-           description: "New role", 
-           in: "query", 
-           required: false, 
-           example: "member",
-       )] 
+        #[OA\Parameter(
+            description: "New role",
+            in: "query",
+            required: false,
+            example: "member",
+        )]
         #[MapQueryParameter()] ?string $role,
         EntityManagerInterface $em,
         UserService $userService,
-    )
-    {
+    ) {
         // Get the member
         $member = $em
             ->getRepository(Member::class)
@@ -219,16 +215,15 @@ final class MemberController extends AbstractController
         }
 
         // Make sure the user is not demoting themselves
-        if ($from === $to)
-        {
+        if ($from === $to) {
             return throw new ConflictHttpException("You can not change your own role!");
         }
 
         // Change role
-        if($role !== null){
+        if ($role !== null) {
             // Get Role
             $role = CommunityRoleEnum::tryFrom($role);
-            if($role === null){
+            if ($role === null) {
                 return $this->json([
                     'errors' => [
                         'name' => 'Invalid role',
@@ -237,10 +232,10 @@ final class MemberController extends AbstractController
             }
 
             // Check for ownership when role is admin
-            if($role === CommunityRoleEnum::ADMIN || $member->getRole() === CommunityRoleEnum::ADMIN){
+            if ($role === CommunityRoleEnum::ADMIN || $member->getRole() === CommunityRoleEnum::ADMIN) {
                 $this->denyAccessUnlessGranted(
-                    CommunityVoter::MANAGE_ADMINS, 
-                    $community, 
+                    CommunityVoter::MANAGE_ADMINS,
+                    $community,
                     message:"You do not have permission to promote or demote this user to administrator."
                 );
             }
@@ -308,26 +303,25 @@ final class MemberController extends AbstractController
         ]
     )]    public function join(
         Community $community,
-        #[OA\Parameter( 
-           description: "Password for private communities", 
-           in: "query", 
-           required: false, 
-           example: "secret123" 
-       )] 
+        #[OA\Parameter(
+            description: "Password for private communities",
+            in: "query",
+            required: false,
+            example: "secret123"
+        )]
         #[MapQueryParameter()] ?string $password,
         #[CurrentUser()] User $user,
         CommunityService $communityService
-    )
-    {
+    ) {
         // Get community
-        if (!$community){
+        if (!$community) {
             return throw new UnprocessableEntityHttpException('Invalid community id');
         }
 
         // Join
         $communityService->join($user, $community, $password);
 
-        return new JsonResponse("Successfully joined community",200);
+        return new JsonResponse("Successfully joined community", 200);
     }
 
 
@@ -371,12 +365,11 @@ final class MemberController extends AbstractController
         Community $community,
         #[CurrentUser()] User $user,
         CommunityService $communityService
-    )
-    {
+    ) {
         // Leave
         $communityService->leave($user, $community);
 
-        return new JsonResponse("Successfully left community",200);
+        return new JsonResponse("Successfully left community", 200);
     }
 
 
@@ -398,7 +391,7 @@ final class MemberController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Member object',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Member")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/Member")
             ),
             new OA\Response(
                 response: 401,
@@ -413,15 +406,14 @@ final class MemberController extends AbstractController
                 description: 'Community or user not found',
             ),
         ]
-    )] 
+    )]
     public function giveOwnership(
         #[MapEntity(id: 'communityId')] Community $community,
         #[CurrentUser()] User $from,
         #[MapEntity(id: 'userId')] User $to,
         EntityManagerInterface $em,
         UserService $userService
-    )
-    {
+    ) {
         // Get the member
         $member = $em
             ->getRepository(Member::class)
@@ -441,12 +433,11 @@ final class MemberController extends AbstractController
         $em->persist($member);
         $em->persist(object: $community);
         $em->flush();
-        
+
         // Generate AvatarUrl
         $userService->generateAvatarUrl($member->getUser());
 
         // Return updated member
         return $member;
     }
-
 }

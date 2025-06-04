@@ -22,9 +22,9 @@ class ItemUsersNormalizer implements NormalizerInterface
         $data['donor'] = $data['donor']['id'];
 
         // Receiver
-        if (isset($data['receiver']) && isset($data['receiver']['id'])){
+        if (isset($data['receiver']) && isset($data['receiver']['id'])) {
             $data['receiver'] = $data['receiver']['id'];
-        }else{
+        } else {
             $data['receiver'] = null;
         }
 

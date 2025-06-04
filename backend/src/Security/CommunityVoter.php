@@ -56,7 +56,7 @@ class CommunityVoter extends Voter
         }
 
         // Banned users cannot access the community in any way. They are not really members.
-        if($member->isBanned()){
+        if ($member->isBanned()) {
             return false;
         }
 
