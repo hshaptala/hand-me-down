@@ -219,7 +219,7 @@ export default function Community() {
                   <SelectTrigger className="w-full sm:w-[180px]">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>{" "}
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
@@ -229,7 +229,7 @@ export default function Community() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {itemsLoading ? (
                   // Show loading skeletons while items are loading
@@ -268,7 +268,7 @@ export default function Community() {
                         )}
                         <CardDescription className="mt-2 line-clamp-2">
                           {item.description}
-                        </CardDescription>{" "}
+                        </CardDescription>
                         <div className="mt-4 flex items-center gap-2">
                           <Avatar className="h-6 w-6">
                             <AvatarImage
@@ -289,8 +289,8 @@ export default function Community() {
                           <span className="text-muted-foreground text-sm">
                             {donors[item.id]
                               ? `${donors[item.id].firstName} ${donors[item.id].lastName}`
-                              : "Loading..."}{" "}
-                            •{" "}
+                              : "Loading..."}
+                            •
                             {item.postedAt
                               ? new Date(item.postedAt).toLocaleDateString()
                               : new Date().toLocaleDateString()}
@@ -326,8 +326,8 @@ export default function Community() {
                   </div>
                 )}
               </div>
-            </TabsContent>{" "}
-            {/* Members Tab */}{" "}
+            </TabsContent>
+            {/* Members Tab */}
             <TabsContent value="members" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {membersLoading
@@ -357,10 +357,10 @@ export default function Community() {
                               </Badge>
                             </div>
                           </div>
-                        </CardContent>{" "}
+                        </CardContent>
                         <CardFooter>
                           <Button variant="outline" className="w-full" asChild>
-                            <Link to={`/profile/${member.id}`}>
+                            <Link to={`/communities/${id}/member/${member.id}`}>
                               View Profile
                             </Link>
                           </Button>
@@ -387,13 +387,13 @@ export default function Community() {
                     <p className="text-muted-foreground mt-2">
                       {community.location}
                     </p>
-                  </div>{" "}
+                  </div>
                   <div>
                     <h3 className="text-lg font-medium">
                       Community visibility
                     </h3>
                     <p className="text-muted-foreground mt-2">
-                      This community is{" "}
+                      This community is
                       <Badge
                         className={`${community.visibility === "Private" ? "bg-[#424242]" : "bg-[#2E7D32]"}`}
                       >

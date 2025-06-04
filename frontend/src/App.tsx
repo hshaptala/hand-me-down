@@ -16,6 +16,7 @@ import Item from "./pages/community/item/Item.tsx";
 import Conversation from "./pages/conversations/Conversation.tsx";
 import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
+import MemberProfile from "./pages/user/MemberProfile.tsx";
 import Profile from "./pages/user/UserProfile.tsx";
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="communities/create" element={<CreateCommunity />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="communities/:communityId/member/:userId" element={<MemberProfile />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
