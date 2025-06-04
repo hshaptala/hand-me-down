@@ -189,6 +189,10 @@ final class UserController extends AbstractController
         CommunityRepository $communityRepository,
         CommunityService $communityService,
     ) {
+        // Make sure user is not restricted
+        if($targetUser->isRestricted()){
+            return new JsonResponse("User not found.",404);
+        }
         // Get communities for the target user
         $communities = $communityRepository->findAllForUser($targetUser);
         foreach ($communities as $community) {
