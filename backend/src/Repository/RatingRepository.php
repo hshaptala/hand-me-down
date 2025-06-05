@@ -17,14 +17,13 @@ class RatingRepository extends ServiceEntityRepository
         parent::__construct($registry, Rating::class);
     }
 
-    public function average (User $user): float|null
+    public function average(User $user): float|null
     {
         return $this->createQueryBuilder("r")
             ->select("avg(r.grade)")
             ->andWhere("r.userRated = :user")
             ->setParameter(":user", $user)
             ->getQuery()
-            ->getSingleScalarResult()
-        ;
+            ->getSingleScalarResult();
     }
 }
