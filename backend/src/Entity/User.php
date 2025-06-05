@@ -450,7 +450,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->rating;
     }
 
-    public function setRating(float $rating): static
+    public function setRating(?float $rating): static
     {
         $this->rating = $rating;
 
