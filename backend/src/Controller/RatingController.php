@@ -33,7 +33,7 @@ final class RatingController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Rating sent successfully',
-                // content: new OA\JsonContent(ref: "#/components/schemas/Item")
+                content: new OA\JsonContent(ref: "#/components/schemas/Rating")
             ),
             new OA\Response(
                 response: 401,

@@ -127,6 +127,25 @@ nelmio_api_doc:
                         rating:
                             type: float
                             example: 4.3
+                Rating:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        userRating:
+                            type: integer
+                            description: user id of the one who left the review
+                        userRated:
+                            type: integer
+                            description: user id of the one who received the review
+                        grade:
+                            type: integer
+                            description: Number between 1 and 5
+                            example: 4
+                        message:
+                            type: string
+                        createdAt:
+                            type: string
 
     areas: # to filter documented areas
         path_patterns:
