@@ -6,6 +6,7 @@ use App\Entity\Community;
 use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
 use App\Entity\Member;
+use App\Entity\Rating;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -51,6 +52,7 @@ class UserService
         // Get repository
         $itemRepository = $this->em->getRepository(Item::class);
         $memberRepository = $this->em->getRepository(Member::class);
+        $ratingRepository = $this->em->getRepository(Rating::class);
 
         // receipts
         $itemsReceived = $itemRepository->count([
@@ -68,14 +70,14 @@ class UserService
         $communityCount = $memberRepository->count(["user"=>$user]);
 
         // rating
-        // TODO
+        $rating = $ratingRepository->average($user);
 
         // Set
         $user
             ->setCommunityCount($communityCount)
             ->setItemsGivenCount($itemsGiven)
             ->setItemsReceivedCount($itemsReceived)
-            ->setRating(0.0)
+            ->setRating($rating)
         ;
     }
 
