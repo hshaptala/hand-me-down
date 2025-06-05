@@ -19,7 +19,7 @@ class UserNormalizer implements NormalizerInterface
         $data = $this->normalizer->normalize($data, $format, $context);
 
         // Rating
-        if(!isset($data['rating'])) {
+        if (!isset($data['rating'])) {
             $data['rating'] = null;
         }
 

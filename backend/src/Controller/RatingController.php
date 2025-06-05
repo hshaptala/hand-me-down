@@ -21,13 +21,11 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route("/api")]
 final class RatingController extends AbstractController
 {
-
     // LEAVE A RATING 
-
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route('/ratings', methods:['POST'])]
+    #[Route('/ratings', methods: ['POST'])]
     #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
+    #[Security(name: "Bearer")]
     #[OA\Post(
         tags: ['Ratings'],
         summary: 'Leave a review to another user you have worked with.',
@@ -61,40 +59,40 @@ final class RatingController extends AbstractController
     )]
     public function new(
         #[CurrentUser()] User $from,
-        #[OA\Parameter( 
-            description: "Target user id", 
-            in: "query", 
+        #[OA\Parameter(
+            description: "Target user id",
+            in: "query",
             required: true,
-        )] 
+        )]
         #[MapQueryParameter()] ?int $userId,
-        #[OA\Parameter( 
-            description: "Number between 1 and 5", 
-            in: "query", 
+        #[OA\Parameter(
+            description: "Number between 1 and 5",
+            in: "query",
             required: true,
-        )] 
+        )]
         #[MapQueryParameter()] ?int $rating,
-        #[OA\Parameter( 
-            description: "Message", 
-            in: "query", 
+        #[OA\Parameter(
+            description: "Message",
+            in: "query",
             required: false,
-        )] 
+        )]
         #[MapQueryParameter()] ?string $message,
         EntityManagerInterface $em
     ) {
         // Get user
-        $to = $em->getRepository(User::class)->findOneBy(["id"=>$userId]);
+        $to = $em->getRepository(User::class)->findOneBy(["id" => $userId]);
         // No user given
         if ($to === null) {
             return new JsonResponse("User not found.", 404);
         }
 
         // Leave a rating to yourself
-        if($from === $to) {
+        if ($from === $to) {
             return new JsonResponse("You can't leave a rating to yourself!", 409);
         }
 
         // Rating a restricted user
-        if($to->isRestricted()) {
+        if ($to->isRestricted()) {
             return new JsonResponse("User not found.", 404);
         }
 
@@ -102,8 +100,8 @@ final class RatingController extends AbstractController
         $ratingRepository = $em->getRepository(Rating::class);
         $previousRating = $ratingRepository->findOneBy(
             [
-            "userRating" => $from,
-            "userRated" => $to
+                "userRating" => $from,
+                "userRated" => $to
             ]
         );
         if ($previousRating !== null) {
@@ -115,16 +113,16 @@ final class RatingController extends AbstractController
         $items = array_merge(
             $itemRepository->findBy(
                 [
-                "donor" => $to,
-                "receiver" => $from,
-                "status" => ItemStatusEnum::OVER
+                    "donor" => $to,
+                    "receiver" => $from,
+                    "status" => ItemStatusEnum::OVER
                 ]
             ),
             $itemRepository->findBy(
                 [
-                "donor" => $from,
-                "receiver" => $to,
-                "status" => ItemStatusEnum::OVER
+                    "donor" => $from,
+                    "receiver" => $to,
+                    "status" => ItemStatusEnum::OVER
                 ]
             )
         );
@@ -152,9 +150,9 @@ final class RatingController extends AbstractController
     // LIST A USER'S RATINGS
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path:"/api/users/{id}/ratings", methods: ["GET"])]
+    #[Route(path: "/api/users/{id}/ratings", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
+    #[Security(name: "Bearer")]
     #[OA\Get(
         summary: "Consult a user's ratings.",
         tags: ["Ratings"],
@@ -177,17 +175,17 @@ final class RatingController extends AbstractController
                 description: 'User not found',
             ),
         ]
-    )] 
+    )]
     public function items(
         User $user,
         RatingRepository $ratingRepository,
     ) {
-        if($user->isRestricted()) {
+        if ($user->isRestricted()) {
             return new JsonResponse("User not found.", 404);
         }
 
-        $ratingsGiven = $ratingRepository->findBy(["userRating"=>$user]);
-        $ratingsReceived = $ratingRepository->findBy(["userRated"=>$user]);
+        $ratingsGiven = $ratingRepository->findBy(["userRating" => $user]);
+        $ratingsReceived = $ratingRepository->findBy(["userRated" => $user]);
 
         return [
             "given" => $ratingsGiven,
@@ -199,9 +197,9 @@ final class RatingController extends AbstractController
     // GET a specific one
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path:"/api/ratings/{id}", methods: ["GET"])]
+    #[Route(path: "/api/ratings/{id}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
+    #[Security(name: "Bearer")]
     #[OA\Get(
         summary: "Consult a rating information.",
         tags: ["Ratings"],
@@ -220,7 +218,7 @@ final class RatingController extends AbstractController
                 description: 'Rating not found',
             ),
         ]
-    )] 
+    )]
     public function rating(
         Rating $rating,
     ) {
@@ -231,9 +229,9 @@ final class RatingController extends AbstractController
     // GET one from user ids
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path:"/api/ratings", methods: ["GET"])]
+    #[Route(path: "/api/ratings", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
-    #[Security(name:"Bearer")]
+    #[Security(name: "Bearer")]
     #[OA\Get(
         summary: "Consult a rating information.",
         tags: ["Ratings"],
@@ -252,19 +250,19 @@ final class RatingController extends AbstractController
                 description: 'Rating not found or User not found.',
             ),
         ]
-    )] 
+    )]
     public function ratingFromUserIds(
-        #[OA\Parameter( 
-            description: "Rating sender user id", 
-            in: "query", 
+        #[OA\Parameter(
+            description: "Rating sender user id",
+            in: "query",
             required: true,
-        )] 
+        )]
         #[MapQueryParameter()] ?int $fromId,
-        #[OA\Parameter( 
-            description: "Rating receiver user id", 
-            in: "query", 
+        #[OA\Parameter(
+            description: "Rating receiver user id",
+            in: "query",
             required: true,
-        )] 
+        )]
         #[MapQueryParameter()] ?int $toId,
         EntityManagerInterface $em
     ) {
@@ -273,25 +271,25 @@ final class RatingController extends AbstractController
         $ratingRepository = $em->getRepository(Rating::class);
 
         // Get users
-        $from = $userRepository->findOneBy(["id"=> $fromId]);
-        $to = $userRepository->findOneBy(["id"=> $toId]);
+        $from = $userRepository->findOneBy(["id" => $fromId]);
+        $to = $userRepository->findOneBy(["id" => $toId]);
 
         // Check users
-        if($from === null || $from->isRestricted()) {
+        if ($from === null || $from->isRestricted()) {
             return new JsonResponse("User not found: " . $fromId, 404);
         }
-        if($to === null ||  $to->isRestricted()) {
+        if ($to === null ||  $to->isRestricted()) {
             return new JsonResponse("User not found: " . $toId, 404);
         }
-        
+
         // Get rating
         $rating = $ratingRepository->findOneBy(
             [
-            "userRating" => $from,
-            "userRated" => $to
+                "userRating" => $from,
+                "userRated" => $to
             ]
         );
-        if($rating === null) {
+        if ($rating === null) {
             return new JsonResponse("Rating not found for users: " . $fromId . " and " . $toId, 404);
         }
 
