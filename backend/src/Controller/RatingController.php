@@ -9,10 +9,8 @@ use App\Entity\User;
 use App\Repository\RatingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use JsonException;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
@@ -224,6 +222,76 @@ final class RatingController extends AbstractController
         Rating $rating,
     )
     {
+        return $rating;
+    }
+
+
+    // GET one from user ids
+
+    #[View(serializerGroups: ["rating_basic"])]
+    #[Route(path:"/api/ratings", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name:"Bearer")]
+    #[OA\Get(
+        summary: "Consult a rating information.",
+        tags: ["Ratings"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Rating object.',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Rating")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Rating not found or User not found.',
+            ),
+        ]
+    )] 
+    public function ratingFromUserIds(
+        #[OA\Parameter( 
+           description: "Rating sender user id", 
+           in: "query", 
+           required: true,
+        )] 
+        #[MapQueryParameter()] ?int $fromId,
+        #[OA\Parameter( 
+           description: "Rating receiver user id", 
+           in: "query", 
+           required: true,
+        )] 
+        #[MapQueryParameter()] ?int $toId,
+        EntityManagerInterface $em
+    )
+    {
+        // Get repositories
+        $userRepository = $em->getRepository(User::class);
+        $ratingRepository = $em->getRepository(Rating::class);
+
+        // Get users
+        $from = $userRepository->findOneBy(["id"=> $fromId]);
+        $to = $userRepository->findOneBy(["id"=> $toId]);
+
+        // Check users
+        if($from === null || $from->isRestricted()){
+            return new JsonResponse("User not found: " . $fromId, 404);
+        }
+        if($to === null ||  $to->isRestricted()){
+            return new JsonResponse("User not found: " . $toId, 404);
+        }
+        
+        // Get rating
+        $rating = $ratingRepository->findOneBy([
+            "userRating" => $from,
+            "userRated" => $to
+        ]);
+        if($rating === null){
+            return new JsonResponse("Rating not found for users: " . $fromId . " and " . $toId,404);
+        }
+
         return $rating;
     }
 }
