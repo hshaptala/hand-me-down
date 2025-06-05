@@ -22,7 +22,7 @@ class MemberNormalizer implements NormalizerInterface
         $data['id'] = $data['user']['id'];
         $data['firstName'] = $data['user']['firstName'];
         $data['lastName'] = $data['user']['lastName'];
-        if(isset($data['user']['avatarUrl'])){
+        if (isset($data['user']['avatarUrl'])) {
             $data['avatarUrl'] = $data['user']['avatarUrl'];
         }
 
@@ -30,26 +30,26 @@ class MemberNormalizer implements NormalizerInterface
         unset($data['user']);
 
         // In case ban infos are provided
-        if(isset($data['isBanned'])){
+        if (isset($data['isBanned'])) {
             // Make sure all nullable fields are provided
-            if(!isset($data['banReason'])){
+            if (!isset($data['banReason'])) {
                 $data['banReason'] = null;
             }
-            if(!isset($data['lastBannedAt'])){
+            if (!isset($data['lastBannedAt'])) {
                 $data['lastBannedAt'] = null;
             }
-            if(!isset($data['lastUnbannedAt'])){
+            if (!isset($data['lastUnbannedAt'])) {
                 $data['lastUnbannedAt'] = null;
             }
             // Also serialize other users
-            if(!isset($data['lastBannedBy'])){
+            if (!isset($data['lastBannedBy'])) {
                 $data['lastBannedBy'] = null;
-            }else{
+            } else {
                 $data['lastBannedBy'] = $data['lastBannedBy']['id'];
             }
-            if(!isset($data['lastUnbannedBy'])){
+            if (!isset($data['lastUnbannedBy'])) {
                 $data['lastUnbannedBy'] = null;
-            }else{
+            } else {
                 $data['lastUnbannedBy'] = $data['lastUnbannedBy']['id'];
             }
         }

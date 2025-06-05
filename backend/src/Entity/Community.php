@@ -71,13 +71,13 @@ class Community
      * @var Collection<int, Member>
      */
     #[ORM\OneToMany(
-        targetEntity: Member::class, 
+        targetEntity: Member::class,
         mappedBy: 'community',
         cascade: ['remove'],
         orphanRemoval: true
     )]
     private Collection $members;
-    
+
     #[Groups(['community_basic'])]
     private ?int $itemCount = null;
 
@@ -282,5 +282,4 @@ class Community
 
         return $this;
     }
-    
 }

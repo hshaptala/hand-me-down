@@ -39,7 +39,7 @@ class ItemRepository extends ServiceEntityRepository
     public function findByExceptRestricted(Community $community, ItemStatusEnum $status): array
     {
         return $this->createQueryBuilder("i")
-            ->join(User::class,"u", Join::WITH,"i.donor = u")
+            ->join(User::class, "u", Join::WITH, "i.donor = u")
             ->andWhere("u.isRestricted = 0")
             ->andWhere("i.status = :status")
             ->andWhere("i.community = :community")
@@ -54,7 +54,7 @@ class ItemRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder("i")
             ->select('COUNT(i.id)')
-            ->join(User::class,"u", Join::WITH,"i.donor = u")
+            ->join(User::class, "u", Join::WITH, "i.donor = u")
             ->andWhere("u.isRestricted = 0")
             ->andWhere("i.status = :status")
             ->andWhere("i.community = :community")

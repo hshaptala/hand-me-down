@@ -10,7 +10,6 @@ use Symfony\Component\Security\Core\User\UserCheckerInterface;
 
 class UserChecker implements UserCheckerInterface
 {
-
     public function checkPreAuth(UserInterface $user): void
     {
     }
@@ -20,7 +19,7 @@ class UserChecker implements UserCheckerInterface
         if (!$user instanceof User) {
             return;
         }
-        
+
         if ($user->isRestricted()) {
             throw new CustomUserMessageAccountStatusException(
                 'Your account has been restricted.' .

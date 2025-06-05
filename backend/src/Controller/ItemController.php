@@ -26,10 +26,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-
 final class ItemController extends AbstractController
 {
-   
     // LIST
 
     #[View(serializerGroups: ["item_basic"])]
@@ -44,7 +42,7 @@ final class ItemController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of items',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Item"))
             ),
             new OA\Response(
                 response: 401,
@@ -59,18 +57,17 @@ final class ItemController extends AbstractController
                 description: 'Community not found',
             ),
         ]
-    )] 
+    )]
     public function items(
         Community $community,
         ItemRepository $itemRepository,
         UrlGeneratorInterface $urlGen
-    )
-    {
+    ) {
         $items = $itemRepository->findByExceptRestricted(
             $community,
             ItemStatusEnum::OPEN,
         );
-        
+
         // Generate image urls
         foreach ($items as $item) {
             $item
@@ -83,7 +80,7 @@ final class ItemController extends AbstractController
 
 
 
-    // GET 
+    // GET
 
 
     #[View(serializerGroups: ["item_basic"])]
@@ -112,29 +109,28 @@ final class ItemController extends AbstractController
                 description: 'Community not found',
             ),
         ]
-    )] 
+    )]
     public function item(
         Item $item,
         UrlGeneratorInterface $urlGen,
         #[CurrentUser()] User $user
-    )
-    {
-        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
-            return new JsonResponse("Item not found",404);
+    ) {
+        if ($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()) {
+            return new JsonResponse("Item not found", 404);
         }
 
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to access this item."
         );
 
-        if(
+        if (
             $item->getStatus() !== ItemStatusEnum::OPEN &&
             $user !== $item->getDonor() &&
             $user !== $item->getReceiver()
-        ){
+        ) {
             return new JsonResponse("You do not have permission to access this item.", 403);
         }
 
@@ -145,7 +141,7 @@ final class ItemController extends AbstractController
         return $item;
     }
 
-    
+
 
 
 
@@ -203,7 +199,7 @@ final class ItemController extends AbstractController
             ),
         ]
     )]
-    public function new (
+    public function new(
         Community $community,
         Request $request,
         #[MapRequestPayload(serializationContext: ["groups" => ["item_new"]])] ItemNew $dto,
@@ -211,8 +207,7 @@ final class ItemController extends AbstractController
         UrlGeneratorInterface $urlGen,
         ItemService $itemService,
         #[CurrentUser()] User $user
-    )
-    {
+    ) {
         // Check Post Limit
         $itemService->checkPostLimit($user);
 
@@ -231,7 +226,7 @@ final class ItemController extends AbstractController
         // Create new entity
         $item = new Item();
         $item
-            ->setCommunity($community)        
+            ->setCommunity($community)
             ->setDonor($user)
             ->setPostedAt(new \DateTimeImmutable())
             ->setTitle($dto->title)
@@ -270,13 +265,13 @@ final class ItemController extends AbstractController
         // Return image
         return new Response(stream_get_contents($imageContent), 200, [
             'Content-Type' => 'image/png',
-            'Content-Disposition' => 'inline; filename="'. $item->getTitle() .'.png"',
+            'Content-Disposition' => 'inline; filename="' . $item->getTitle() . '.png"',
         ]);
     }
 
 
 
-    // DELETE 
+    // DELETE
 
 
     #[View(serializerGroups: ["item_basic"])]
@@ -308,29 +303,28 @@ final class ItemController extends AbstractController
                 description: "You can't delete an item after it is reserved.",
             ),
         ]
-    )] 
+    )]
     public function delete(
         Item $item,
         #[CurrentUser()] User $user,
         EntityManagerInterface $em
-    )
-    {
+    ) {
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to access this item."
         );
 
         // Check Item status
-        if($item->getStatus() !== ItemStatusEnum::OPEN){
+        if ($item->getStatus() !== ItemStatusEnum::OPEN) {
             return throw new ConflictHttpException("You can't delete an item after it is reserved.");
         }
 
         // Save and return
         $em->remove($item);
         $em->flush();
-        return new JsonResponse("Successfully deleted item",200);
+        return new JsonResponse("Successfully deleted item", 200);
     }
 
 
@@ -386,33 +380,32 @@ final class ItemController extends AbstractController
                 description: "You can't delete an item after it is reserved.",
             ),
         ]
-    )]    
+    )]
     public function edit(
         Item $item,
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
         UrlGeneratorInterface $urlGen,
-    )
-    {
+    ) {
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to access this item."
         );
 
         // Check permission
-        if($item->getDonor() !== $user){
-            return new JsonResponse("You do not have permission to edit this item.",403);
+        if ($item->getDonor() !== $user) {
+            return new JsonResponse("You do not have permission to edit this item.", 403);
         }
 
         // Check Item status
-        if($item->getStatus() !== ItemStatusEnum::OPEN){
+        if ($item->getStatus() !== ItemStatusEnum::OPEN) {
             return throw new ConflictHttpException("You can't edit an item after it is reserved.");
         }
 
-        // Manually populate DTO 
+        // Manually populate DTO
         $dto = new ItemEdit();
         $dto->title = $request->request->get('title');
         $dto->description = $request->request->get('description');
@@ -471,29 +464,28 @@ final class ItemController extends AbstractController
                 description: 'You cannot reserve your own item or one that is already reserved.',
             ),
         ]
-    )]    
+    )]
     public function reserve(
         Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
-    )
-    {
-        if($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()){
-            return new JsonResponse("Item not found",404);
+    ) {
+        if ($item->getStatus() === ItemStatusEnum::OPEN && $item->getDonor()->isRestricted()) {
+            return new JsonResponse("Item not found", 404);
         }
 
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to reserve this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to reserve this item."
         );
 
         // Reserve
         $itemService->reserve($user, $item);
-        
+
         // Return
-        return new JsonResponse("Item reserved successfuly",200);
+        return new JsonResponse("Item reserved successfuly", 200);
     }
 
 
@@ -530,25 +522,24 @@ final class ItemController extends AbstractController
                 description: 'Item is not reserved',
             ),
         ]
-    )]    
+    )]
     public function cancel(
         Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
-    )
-    {
+    ) {
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to access this item."
         );
 
         // Cancel
         $itemService->cancel($user, $item);
 
         // Return
-        return new JsonResponse("Reservation canceled successfuly",200);
+        return new JsonResponse("Reservation canceled successfuly", 200);
     }
 
 
@@ -585,25 +576,23 @@ final class ItemController extends AbstractController
                 description: 'Item is not reserved',
             ),
         ]
-    )]    
+    )]
     public function confirm(
         Item $item,
         #[CurrentUser()] User $user,
         ItemService $itemService
-    )
-    {
+    ) {
         // Make sure user is in the community
         $this->denyAccessUnlessGranted(
-                CommunityVoter::VIEW, 
-                $item->getCommunity(), 
-                message:"You do not have permission to access this item."
+            CommunityVoter::VIEW,
+            $item->getCommunity(),
+            message:"You do not have permission to access this item."
         );
 
         // Confirm
         $itemService->confirm($user, $item);
 
         // Return
-        return new JsonResponse("Reservation ended successfuly",200);
+        return new JsonResponse("Reservation ended successfuly", 200);
     }
-
 }

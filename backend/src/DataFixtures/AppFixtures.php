@@ -18,7 +18,6 @@ use Symfony\Component\Security\Core\Validator\Constraints\UserPassword;
 
 class AppFixtures extends Fixture
 {
-
     private $params;
     private $userPasswordHasher;
     private $communityPasswordHasher;
@@ -26,8 +25,7 @@ class AppFixtures extends Fixture
     public function __construct(
         ParameterBagInterface $parameterBag,
         PasswordHasherFactoryInterface $hasherFactory
-        )
-    {   
+    ) {
         $this->params = $parameterBag;
         $this->userPasswordHasher = $hasherFactory->getPasswordHasher(User::class);
         $this->communityPasswordHasher = $hasherFactory->getPasswordHasher(Community::class);
@@ -109,7 +107,7 @@ class AppFixtures extends Fixture
             ->setJoinedAt(new \DateTimeImmutable())
         ;
         $manager->persist($user_6);
- 
+
         // ===== COMMUNITIES =====
 
         // Thomas more
@@ -120,7 +118,7 @@ class AppFixtures extends Fixture
             ->setCreatedAt(new \DateTimeImmutable())
             ->setLocation("Belgium, Geel")
             ->setVisibility(VisibilityEnum::PRIVATE)
-            ->setPassword($this->communityPasswordHasher->hash( "password"))
+            ->setPassword($this->communityPasswordHasher->hash("password"))
             ->setImage(file_get_contents($folderPath . 'thomasmore.png'))
             ->setOwner($user_secondary)
         ;
@@ -300,7 +298,7 @@ class AppFixtures extends Fixture
             ->setKeywords(['orange','food'])
         ;
         $manager->persist($item_orange);
-    
+
         $item_coffeecup = new Item();
         $item_coffeecup
             ->setCommunity($community_thomasmore)

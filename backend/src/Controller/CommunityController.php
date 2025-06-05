@@ -28,8 +28,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class CommunityController extends AbstractController
 {
-
-
     // LIST
 
 
@@ -42,15 +40,14 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of communities',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: "#/components/schemas/Community"))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Community"))
             )
         ]
     )]
     public function communities(
-        CommunityRepository $communityRepository, 
+        CommunityRepository $communityRepository,
         CommunityService $communityService
-        )
-    {
+    ) {
         $communities = $communityRepository->findAll();
         foreach ($communities as $community) {
             $communityService->generateInfo($community);
@@ -116,15 +113,14 @@ final class CommunityController extends AbstractController
             )
         ]
     )]
-    public function new (
+    public function new(
         Request $request,
         #[MapRequestPayload(serializationContext: ["groups" => ["community_new"]])] CommunityNew $dto,
         EntityManagerInterface $em,
         PasswordHasherFactoryInterface $hasherFactory,
         #[CurrentUser()] User $user,
         CommunityService $communityService
-    )
-    {
+    ) {
         // Check community join limit
         $communityService->checkJoinLimit($user);
 
@@ -160,12 +156,12 @@ final class CommunityController extends AbstractController
             ->setVisibility(VisibilityEnum::tryFrom($dto->visibility))
             ->setImage(stream_get_contents($stream))
         ;
-        
+
         // Password and visibility
         if ($community->getVisibility() === VisibilityEnum::PRIVATE) {
-            if ($dto->password === null){
+            if ($dto->password === null) {
                 return new JsonResponse(['error' => 'A private community needs a password'], 400);
-            }else{
+            } else {
                 $community->setPassword($passwordHasher->hash($dto->password));
             }
         }
@@ -213,7 +209,7 @@ final class CommunityController extends AbstractController
         // Return image
         return new Response(stream_get_contents($imageContent), 200, [
             'Content-Type' => 'image/png',
-            'Content-Disposition' => 'inline; filename="'. $community->getName() .'.png"',
+            'Content-Disposition' => 'inline; filename="' . $community->getName() . '.png"',
         ]);
     }
 
@@ -257,13 +253,12 @@ final class CommunityController extends AbstractController
         Community $community,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
-    )
-    {
+    ) {
         // Delete
         $em->remove($community);
         $em->flush();
         // Return
-        return new JsonResponse("Successfully deleted community",200);
+        return new JsonResponse("Successfully deleted community", 200);
     }
 
 
@@ -325,7 +320,7 @@ final class CommunityController extends AbstractController
                 description: 'Invalid password or name',
             )
         ]
-    )]    
+    )]
     public function edit(
         Community $community,
         Request $request,
@@ -334,9 +329,8 @@ final class CommunityController extends AbstractController
         CommunityService $communityService,
         PasswordHasherFactoryInterface $hasherFactory,
         ValidatorInterface $validator
-    )
-    {
-        // Manually populate DTO 
+    ) {
+        // Manually populate DTO
         $dto = new CommunityEdit();
         $dto->name = $request->request->get('name');
         $dto->location = $request->request->get('location');
@@ -387,7 +381,7 @@ final class CommunityController extends AbstractController
 
 
 
-    // GET 
+    // GET
 
     #[View(serializerGroups: ["community_basic"])]
     #[Route(path:"/api/communities/{id}", methods: ["GET"])]
@@ -407,10 +401,9 @@ final class CommunityController extends AbstractController
         ]
     )]
     public function community(
-        Community $community, 
+        Community $community,
         CommunityService $communityService
-        )
-    {
+    ) {
         $communityService->generateInfo($community);
         $communityService->generateImageUrl($community);
         return $community;

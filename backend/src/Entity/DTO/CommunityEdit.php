@@ -65,11 +65,11 @@ class CommunityEdit
         // If it is a private communtiy
         if ($community->getVisibility() === VisibilityEnum::PRIVATE) {
             // If a password was given: change it
-            if ($this->password !== null && strlen($this->password) > 0){
-                $community->setPassword($passwordHasher->hash($this->password));  
+            if ($this->password !== null && strlen($this->password) > 0) {
+                $community->setPassword($passwordHasher->hash($this->password));
             }
             // If the community still has no password: throw error
-            if ($community->getPassword() === null || strlen($community->getPassword()) == 0){
+            if ($community->getPassword() === null || strlen($community->getPassword()) == 0) {
                 throw new UnprocessableEntityHttpException('A private community needs a password');
             }
         }
