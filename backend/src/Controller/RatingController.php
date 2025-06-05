@@ -62,74 +62,79 @@ final class RatingController extends AbstractController
     public function new(
         #[CurrentUser()] User $from,
         #[OA\Parameter( 
-           description: "Target user id", 
-           in: "query", 
-           required: true,
+            description: "Target user id", 
+            in: "query", 
+            required: true,
         )] 
         #[MapQueryParameter()] ?int $userId,
         #[OA\Parameter( 
-           description: "Number between 1 and 5", 
-           in: "query", 
-           required: true,
+            description: "Number between 1 and 5", 
+            in: "query", 
+            required: true,
         )] 
         #[MapQueryParameter()] ?int $rating,
         #[OA\Parameter( 
-           description: "Message", 
-           in: "query", 
-           required: false,
+            description: "Message", 
+            in: "query", 
+            required: false,
         )] 
         #[MapQueryParameter()] ?string $message,
         EntityManagerInterface $em
-    )
-    {
+    ) {
         // Get user
         $to = $em->getRepository(User::class)->findOneBy(["id"=>$userId]);
         // No user given
-        if ($to === null){
-            return new JsonResponse("User not found.",404);
+        if ($to === null) {
+            return new JsonResponse("User not found.", 404);
         }
 
         // Leave a rating to yourself
-        if($from === $to){
-            return new JsonResponse("You can't leave a rating to yourself!",409);
+        if($from === $to) {
+            return new JsonResponse("You can't leave a rating to yourself!", 409);
         }
 
         // Rating a restricted user
-        if($to->isRestricted()){
-            return new JsonResponse("User not found.",404);
+        if($to->isRestricted()) {
+            return new JsonResponse("User not found.", 404);
         }
 
         // Rate two times the same person
         $ratingRepository = $em->getRepository(Rating::class);
-        $previousRating = $ratingRepository->findOneBy([
+        $previousRating = $ratingRepository->findOneBy(
+            [
             "userRating" => $from,
             "userRated" => $to
-        ]);
-        if ($previousRating !== null){
-            return new JsonResponse("You have already left a rating for this user.",409);
+            ]
+        );
+        if ($previousRating !== null) {
+            return new JsonResponse("You have already left a rating for this user.", 409);
         }
 
         // Leave a rating to someone you've not exchanged with
         $itemRepository = $em->getRepository(Item::class);
         $items = array_merge(
-            $itemRepository->findBy([
+            $itemRepository->findBy(
+                [
                 "donor" => $to,
                 "receiver" => $from,
                 "status" => ItemStatusEnum::OVER
-            ]),
-            $itemRepository->findBy([
+                ]
+            ),
+            $itemRepository->findBy(
+                [
                 "donor" => $from,
                 "receiver" => $to,
                 "status" => ItemStatusEnum::OVER
-            ])
+                ]
+            )
         );
-        if (count($items) == 0){
-            return new JsonResponse("You have never donated nor received an item from this user.",403);
+        if (count($items) == 0) {
+            return new JsonResponse("You have never donated nor received an item from this user.", 403);
         }
 
         // Wrong rating value
-        if ($rating < 1 || $rating > 5){
-            return new JsonResponse("Rating must be between 1 and 5.",422);
+        if ($rating < 1 || $rating > 5) {
+            return new JsonResponse("Rating must be between 1 and 5.", 422);
         }
 
         $newRating = new Rating();
@@ -138,8 +143,7 @@ final class RatingController extends AbstractController
             ->setUserRated($to)
             ->setGrade($rating)
             ->setMessage($message)
-            ->setCreatedAt(new \DateTimeImmutable())
-        ;
+            ->setCreatedAt(new \DateTimeImmutable());
         $em->persist($newRating);
         $em->flush();
         return $newRating;
@@ -158,7 +162,7 @@ final class RatingController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of ratings received and given.',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/UserRatings")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/UserRatings")
             ),
             new OA\Response(
                 response: 401,
@@ -177,10 +181,9 @@ final class RatingController extends AbstractController
     public function items(
         User $user,
         RatingRepository $ratingRepository,
-    )
-    {
-        if($user->isRestricted()){
-            return new JsonResponse("User not found.",404);
+    ) {
+        if($user->isRestricted()) {
+            return new JsonResponse("User not found.", 404);
         }
 
         $ratingsGiven = $ratingRepository->findBy(["userRating"=>$user]);
@@ -206,7 +209,7 @@ final class RatingController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Rating object.',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Rating")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/Rating")
             ),
             new OA\Response(
                 response: 401,
@@ -220,8 +223,7 @@ final class RatingController extends AbstractController
     )] 
     public function rating(
         Rating $rating,
-    )
-    {
+    ) {
         return $rating;
     }
 
@@ -239,7 +241,7 @@ final class RatingController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Rating object.',
-                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Rating")
+                content: new OA\JsonContent(type: 'object', ref: "#/components/schemas/Rating")
             ),
             new OA\Response(
                 response: 401,
@@ -253,20 +255,19 @@ final class RatingController extends AbstractController
     )] 
     public function ratingFromUserIds(
         #[OA\Parameter( 
-           description: "Rating sender user id", 
-           in: "query", 
-           required: true,
+            description: "Rating sender user id", 
+            in: "query", 
+            required: true,
         )] 
         #[MapQueryParameter()] ?int $fromId,
         #[OA\Parameter( 
-           description: "Rating receiver user id", 
-           in: "query", 
-           required: true,
+            description: "Rating receiver user id", 
+            in: "query", 
+            required: true,
         )] 
         #[MapQueryParameter()] ?int $toId,
         EntityManagerInterface $em
-    )
-    {
+    ) {
         // Get repositories
         $userRepository = $em->getRepository(User::class);
         $ratingRepository = $em->getRepository(Rating::class);
@@ -276,20 +277,22 @@ final class RatingController extends AbstractController
         $to = $userRepository->findOneBy(["id"=> $toId]);
 
         // Check users
-        if($from === null || $from->isRestricted()){
+        if($from === null || $from->isRestricted()) {
             return new JsonResponse("User not found: " . $fromId, 404);
         }
-        if($to === null ||  $to->isRestricted()){
+        if($to === null ||  $to->isRestricted()) {
             return new JsonResponse("User not found: " . $toId, 404);
         }
         
         // Get rating
-        $rating = $ratingRepository->findOneBy([
+        $rating = $ratingRepository->findOneBy(
+            [
             "userRating" => $from,
             "userRated" => $to
-        ]);
-        if($rating === null){
-            return new JsonResponse("Rating not found for users: " . $fromId . " and " . $toId,404);
+            ]
+        );
+        if($rating === null) {
+            return new JsonResponse("Rating not found for users: " . $fromId . " and " . $toId, 404);
         }
 
         return $rating;
