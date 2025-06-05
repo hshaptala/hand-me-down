@@ -6,6 +6,7 @@ use App\Entity\Enum\ItemStatusEnum;
 use App\Entity\Item;
 use App\Entity\Rating;
 use App\Entity\User;
+use App\Repository\RatingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
 use JsonException;
@@ -22,6 +23,9 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route("/api")]
 final class RatingController extends AbstractController
 {
+
+    // LEAVE A RATING 
+
     #[View(serializerGroups: ["rating_basic"])]
     #[Route('/ratings', methods:['POST'])]
     #[IsGranted("ROLE_USER")]
@@ -141,5 +145,52 @@ final class RatingController extends AbstractController
         $em->persist($newRating);
         $em->flush();
         return $newRating;
+    }
+
+    // LIST A USER'S RATINGS
+
+    #[View(serializerGroups: ["rating_basic"])]
+    #[Route(path:"/api/users/{id}/ratings", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name:"Bearer")]
+    #[OA\Get(
+        summary: "Consult a user's ratings.",
+        tags: ["Ratings"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'List of ratings received and given.',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/UserRatings")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 403,
+                description: 'Permission denied.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'User not found',
+            ),
+        ]
+    )] 
+    public function items(
+        User $user,
+        RatingRepository $ratingRepository,
+    )
+    {
+        if($user->isRestricted()){
+            return new JsonResponse("User not found.",404);
+        }
+
+        $ratingsGiven = $ratingRepository->findBy(["userRating"=>$user]);
+        $ratingsReceived = $ratingRepository->findBy(["userRated"=>$user]);
+
+        return [
+            "given" => $ratingsGiven,
+            "received" => $ratingsReceived
+        ];
     }
 }

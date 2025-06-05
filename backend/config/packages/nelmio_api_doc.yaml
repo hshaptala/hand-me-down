@@ -146,6 +146,19 @@ nelmio_api_doc:
                             type: string
                         createdAt:
                             type: string
+                UserRatings:
+                    type: object
+                    properties:
+                        given:
+                            type: array
+                            items: 
+                                type: object
+                                $ref: "#/components/schemas/Rating"
+                        received:
+                            type: array
+                            items: 
+                                type: object
+                                $ref: "#/components/schemas/Rating"
 
     areas: # to filter documented areas
         path_patterns:
