@@ -193,4 +193,37 @@ final class RatingController extends AbstractController
             "received" => $ratingsReceived
         ];
     }
+
+
+    // GET a specific one
+
+    #[View(serializerGroups: ["rating_basic"])]
+    #[Route(path:"/api/ratings/{id}", methods: ["GET"])]
+    #[IsGranted("ROLE_USER")]
+    #[Security(name:"Bearer")]
+    #[OA\Get(
+        summary: "Consult a rating information.",
+        tags: ["Ratings"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Rating object.',
+                content: new OA\JsonContent( type: 'object', ref: "#/components/schemas/Rating")
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Full authentication is required to access this resource.',
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Rating not found',
+            ),
+        ]
+    )] 
+    public function rating(
+        Rating $rating,
+    )
+    {
+        return $rating;
+    }
 }
