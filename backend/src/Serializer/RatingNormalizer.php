@@ -24,7 +24,7 @@ class RatingNormalizer implements NormalizerInterface
 
         // userRated
         $data['userRated'] = $data['userRated']['id'];
-        
+
         // Message
         if (!isset($data['message'])) {
             $data['message'] = null;

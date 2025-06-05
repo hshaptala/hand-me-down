@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 #[Route("/api")]
 final class RatingController extends AbstractController
 {
-    // LEAVE A RATING 
+    // LEAVE A RATING
     #[View(serializerGroups: ["rating_basic"])]
     #[Route('/ratings', methods: ['POST'])]
     #[IsGranted("ROLE_USER")]
