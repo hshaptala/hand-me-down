@@ -2,21 +2,27 @@
 
 namespace App\Controller;
 
+use App\Entity\Enum\ItemStatusEnum;
+use App\Entity\Item;
+use App\Entity\Rating;
 use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
+use JsonException;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 #[Route("/api")]
 final class RatingController extends AbstractController
 {
-    #[View()]
+    #[View(serializerGroups: ["rating_basic"])]
     #[Route('/ratings', methods:['POST'])]
     #[IsGranted("ROLE_USER")]
     #[Security(name:"Bearer")]
@@ -43,18 +49,22 @@ final class RatingController extends AbstractController
             ),
             new OA\Response(
                 response: 409,
-                description: 'Already left a rating for this user',
+                description: 'Already left a rating for this user, or rating yourself.',
+            ),
+            new OA\Response(
+                response: 422,
+                description: 'Rating must be between 1 and 5.',
             ),
         ]
     )]
     public function new(
-        #[CurrentUser()] User $user,
+        #[CurrentUser()] User $from,
         #[OA\Parameter( 
            description: "Target user id", 
            in: "query", 
            required: true,
         )] 
-        #[MapQueryParameter()] ?User $to,
+        #[MapQueryParameter()] ?int $userId,
         #[OA\Parameter( 
            description: "Number between 1 and 5", 
            in: "query", 
@@ -66,9 +76,70 @@ final class RatingController extends AbstractController
            in: "query", 
            required: false,
         )] 
-        #[MapQueryParameter()] ?int $message,
+        #[MapQueryParameter()] ?string $message,
+        EntityManagerInterface $em
     )
     {
-        
+        // Get user
+        $to = $em->getRepository(User::class)->findOneBy(["id"=>$userId]);
+        // No user given
+        if ($to === null){
+            return new JsonResponse("User not found.",404);
+        }
+
+        // Leave a rating to yourself
+        if($from === $to){
+            return new JsonResponse("You can't leave a rating to yourself!",409);
+        }
+
+        // Rating a restricted user
+        if($to->isRestricted()){
+            return new JsonResponse("User not found.",404);
+        }
+
+        // Rate two times the same person
+        $ratingRepository = $em->getRepository(Rating::class);
+        $previousRating = $ratingRepository->findOneBy([
+            "userRating" => $from,
+            "userRated" => $to
+        ]);
+        if ($previousRating !== null){
+            return new JsonResponse("You have already left a rating for this user.",409);
+        }
+
+        // Leave a rating to someone you've not exchanged with
+        $itemRepository = $em->getRepository(Item::class);
+        $items = array_merge(
+            $itemRepository->findBy([
+                "donor" => $to,
+                "receiver" => $from,
+                "status" => ItemStatusEnum::OVER
+            ]),
+            $itemRepository->findBy([
+                "donor" => $from,
+                "receiver" => $to,
+                "status" => ItemStatusEnum::OVER
+            ])
+        );
+        if (count($items) == 0){
+            return new JsonResponse("You have never donated nor received an item from this user.",403);
+        }
+
+        // Wrong rating value
+        if ($rating < 1 || $rating > 5){
+            return new JsonResponse("Rating must be between 1 and 5.",422);
+        }
+
+        $newRating = new Rating();
+        $newRating
+            ->setUserRating($from)
+            ->setUserRated($to)
+            ->setGrade($rating)
+            ->setMessage($message)
+            ->setCreatedAt(new \DateTimeImmutable())
+        ;
+        $em->persist($newRating);
+        $em->flush();
+        return $newRating;
     }
 }
