@@ -35,12 +35,11 @@ class ItemRepository extends ServiceEntityRepository
             ->setParameter('end', $todayEnd);
 
         return (int) $qb->getQuery()->getSingleScalarResult();
-    }
-    public function findByExceptRestricted(Community $community, ItemStatusEnum $status): array
+    }    public function findByExceptRestricted(Community $community, ItemStatusEnum $status): array
     {
         return $this->createQueryBuilder("i")
             ->join(User::class, "u", Join::WITH, "i.donor = u")
-            ->andWhere("u.isRestricted = 0")
+            ->andWhere("u.isRestricted = false")
             ->andWhere("i.status = :status")
             ->andWhere("i.community = :community")
             ->setParameter(":community", $community)
@@ -48,14 +47,12 @@ class ItemRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()
         ;
-    }
-
-    public function countItemsForCommunityExceptRestricted(Community $community, ItemStatusEnum $status): int
+    }    public function countItemsForCommunityExceptRestricted(Community $community, ItemStatusEnum $status): int
     {
         return (int) $this->createQueryBuilder("i")
             ->select('COUNT(i.id)')
             ->join(User::class, "u", Join::WITH, "i.donor = u")
-            ->andWhere("u.isRestricted = 0")
+            ->andWhere("u.isRestricted = false")
             ->andWhere("i.status = :status")
             ->andWhere("i.community = :community")
             ->setParameter(":community", $community)
