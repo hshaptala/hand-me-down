@@ -27,8 +27,8 @@ class MemberRepository extends ServiceEntityRepository
             ->andWhere('m.user = :user')
             ->setParameter('user', $user)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;        return $result !== null && $result["banCount"] !== null ? $result["banCount"] : 0 ;
+            ->getOneOrNullResult();
+        return $result !== null && $result["banCount"] !== null ? $result["banCount"] : 0;
     }
 
     public function findByExceptRestricted(Community $community, bool $isBanned): array
@@ -45,7 +45,8 @@ class MemberRepository extends ServiceEntityRepository
         ;
     }
 
-    public function findOneByUnlessRestricted(Community $community, User $user, bool $isBanned): Member|null    {
+    public function findOneByUnlessRestricted(Community $community, User $user, bool $isBanned): Member|null
+    {
         return $this->createQueryBuilder("m")
             ->join(User::class, "u", Join::WITH, "m.user = u")
             ->andWhere("u.isRestricted = false")
@@ -56,9 +57,9 @@ class MemberRepository extends ServiceEntityRepository
             ->setParameter(":community", $community)
             ->setParameter(":isBanned", $isBanned)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }    public function countMembersForCommunityExceptRestricted(Community $community, bool $isBanned): int
+            ->getOneOrNullResult();
+    }
+    public function countMembersForCommunityExceptRestricted(Community $community, bool $isBanned): int
     {
         return (int) $this->createQueryBuilder("m")
             ->select('COUNT(m.id)')
@@ -69,7 +70,6 @@ class MemberRepository extends ServiceEntityRepository
             ->setParameter(":community", $community)
             ->setParameter(":isBanned", $isBanned)
             ->getQuery()
-            ->getSingleScalarResult()
-        ;
+            ->getSingleScalarResult();
     }
 }
