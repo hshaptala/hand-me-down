@@ -1,8 +1,8 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,14 @@ export default function RegisterPage() {
     confirmPassword: "",
     agreeTerms: false,
   });
-  const { signUp } = useAuth();
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
