@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-import { ArrowLeft, MapPin, Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Check } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
+import ItemActionDialog from "@/components/item/ItemActionDialog";
 import Container from "@/components/layout/Container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,43 +19,159 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChatProvider, useChat } from "@/context/ChatContext";
+import type { Item } from "@/models/item";
+import { fetchItem } from "@/service/item.service";
 
 function ConversationContent({ id }: { id: string }) {
-  const { setCurrentConversation, conversations, loading } = useChat();
+  const { setCurrentConversation, conversations, loading, currentUser } =
+    useChat();
+  const [itemData, setItemData] = useState<Item | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    isOpen: boolean;
+    action: "reserve" | "cancel" | "confirm" | null;
+  }>({ isOpen: false, action: null });
 
-  // Set the current conversation when the component mounts
   useEffect(() => {
     setCurrentConversation(id);
 
-    // Clean up when the component unmounts
     return () => {
       setCurrentConversation(null);
     };
   }, [id, setCurrentConversation]);
 
-  // Find the current conversation details
   const conversation = conversations.find((c) => c.id === id);
+  const refreshItemData = useCallback(async () => {
+    if (!conversation?.item) return;
 
-  if (loading) {
+    try {
+      const updatedItem = await fetchItem(Number(conversation.item.id));
+      setItemData(updatedItem);
+    } catch (error) {
+      console.error("Error refreshing item data:", error);
+    }
+  }, [conversation?.item]);
+  useEffect(() => {
+    if (conversation?.item) {
+      refreshItemData();
+    }
+  }, [conversation?.item, refreshItemData]);
+  const renderActionButtons = () => {
+    if (!conversation?.item || !currentUser) return null;
+
+    const currentStatus = itemData?.status || conversation.item.status;
+
+    const otherParticipant = conversation.participants.find(
+      (p) => p.id !== currentUser.id,
+    );
+    const hasOtherParticipant = !!otherParticipant;
+
+    const handleDialogClose = () => {
+      setDialogState({ isOpen: false, action: null });
+    };
+    const handleDialogSuccess = async () => {
+      await refreshItemData();
+      handleDialogClose();
+    };
+
     return (
-      <div className="flex h-[400px] items-center justify-center">
-        Loading...
+      <>
+        {/* Reserve Button */}
+        {currentStatus === "Open" && hasOtherParticipant && (
+          <div className="w-full">
+            <Button
+              className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+              onClick={() =>
+                setDialogState({ isOpen: true, action: "reserve" })
+              }
+            >
+              Reserve Item
+            </Button>
+          </div>
+        )}
+        {/* Cancel Reservation Button */}
+        {currentStatus === "Reserved" && (
+          <div className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setDialogState({ isOpen: true, action: "cancel" })}
+            >
+              Cancel Reservation
+            </Button>
+          </div>
+        )}
+        {/* Confirm Exchange Button */}
+        {currentStatus === "Reserved" && (
+          <div className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() =>
+                setDialogState({ isOpen: true, action: "confirm" })
+              }
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Confirm Exchange
+            </Button>
+          </div>
+        )}
+        {/* Status indicator for completed exchanges */}
+        {currentStatus === "Exchanged" && (
+          <div className="w-full">
+            <Button disabled className="w-full" variant="outline">
+              <Check className="mr-2 h-4 w-4" />
+              Exchange Completed
+            </Button>
+          </div>
+        )}
+        {/* Dialog for all actions */}
+        {dialogState.action && (
+          <ItemActionDialog
+            isOpen={dialogState.isOpen}
+            onClose={handleDialogClose}
+            action={dialogState.action}
+            itemId={Number(conversation.item.id)}
+            itemTitle={conversation.item.title}
+            onSuccess={handleDialogSuccess}
+          />
+        )}
+      </>
+    );
+  };
+
+  if (!conversation || loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-[#2E7D32]"></div>
+          <p className="text-muted-foreground">Loading conversation...</p>
+        </div>
       </div>
     );
   }
 
-  if (!conversation) {
-    return (
-      <div className="flex h-[400px] items-center justify-center">
-        Conversation not found
-      </div>
-    );
-  }
+  const otherParticipants = conversation.participants
+    ? conversation.participants.filter((p) => p.id !== currentUser?.id)
+    : [];
 
-  // Get the other participant (assuming 1-on-1 conversations)
   const otherParticipant =
-    conversation.participants.find((p) => p.id !== "currentUserId") ||
-    conversation.participants[0];
+    otherParticipants.length > 0 ? otherParticipants[0] : null;
+
+  if (!otherParticipant) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p>No other participants found in this conversation</p>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Total participants: {conversation.participants?.length || 0}
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Current user ID: {currentUser?.id}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Container className="py-6">
@@ -102,8 +219,7 @@ function ConversationContent({ id }: { id: string }) {
             <CardFooter className="p-0">
               <MessageInput />
             </CardFooter>
-          </Card>
-
+          </Card>{" "}
           {/* Item Details */}
           {conversation.item && (
             <Card>
@@ -116,7 +232,10 @@ function ConversationContent({ id }: { id: string }) {
               <CardContent className="space-y-4">
                 <div className="aspect-square w-full overflow-hidden rounded-md">
                   <img
-                    src={conversation.item.image || "/placeholder.svg"}
+                    src={
+                      import.meta.env.VITE_API_BASE_URL +
+                        conversation.item.image || "/placeholder.svg"
+                    }
                     alt={conversation.item.title}
                     className="h-full w-full object-cover"
                   />
@@ -125,31 +244,32 @@ function ConversationContent({ id }: { id: string }) {
                   <h3 className="text-xl font-bold">
                     {conversation.item.title}
                   </h3>
-                  <Badge className="bg-primary mt-1">Available</Badge>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Item description would go here.
-                  </p>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <h4 className="text-sm font-medium">Community</h4>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="text-muted-foreground h-4 w-4" />
-                    <span>Community Name</span>
-                  </div>
+                  <Badge className="mt-1 bg-[#2E7D32]">
+                    {itemData?.status || conversation.item.status}
+                  </Badge>
+                  {conversation.item.description && (
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      {conversation.item.description}
+                    </p>
+                  )}
+                  {conversation.item.keywords &&
+                    conversation.item.keywords.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {conversation.item.keywords.map((keyword, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {keyword}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
-                <div className="w-full">
-                  <Button className="bg-primary hover:bg-primary/90 w-full">
-                    Reserve Item
-                  </Button>
-                </div>
-                <div className="w-full">
-                  <Button variant="outline" className="w-full">
-                    <Check className="mr-2 h-4 w-4" />
-                    Confirm Exchange
-                  </Button>
-                </div>
+                {renderActionButtons()}
               </CardFooter>
             </Card>
           )}
@@ -159,10 +279,16 @@ function ConversationContent({ id }: { id: string }) {
   );
 }
 
-export default function ChatPage({ params }: { params: { id: string } }) {
+export default function ChatPage() {
+  const { id } = useParams<{ id: string }>();
+
+  if (!id) {
+    return <div>Invalid conversation ID</div>;
+  }
+
   return (
     <ChatProvider>
-      <ConversationContent id={params.id} />
+      <ConversationContent id={id} />
     </ChatProvider>
   );
 }

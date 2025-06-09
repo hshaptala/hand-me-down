@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MemberCardSkeleton, ItemCardSkeleton } from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -23,12 +25,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAllCategories } from "@/models/categories";
 import type { Community } from "@/models/community";
-//import type { Item } from "@/models/item";
+import type { Item } from "@/models/item";
 import type { Member } from "@/models/member";
+import type { User } from "@/models/user";
 import { fetchCommunity } from "@/service/community.service";
-//import { fetchItems } from "@/service/item.service";
+import { fetchItems } from "@/service/item.service";
 import { fetchMembers } from "@/service/member.service";
+import { fetchUser } from "@/service/user.service";
 
 export default function Community() {
   const { id } = useParams<{ id: string }>();
@@ -36,20 +41,107 @@ export default function Community() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [donors, setDonors] = useState<Record<number, User>>({});
   const [loading, setLoading] = useState(true);
+  const [itemsLoading, setItemsLoading] = useState(false);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const categories = getAllCategories();
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesSearch =
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory =
+        categoryFilter === "all" ||
+        (item.keywords && item.keywords.includes(categoryFilter));
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [items, searchQuery, categoryFilter]);
   useEffect(() => {
     if (!id) return;
 
-    Promise.all([fetchCommunity(Number(id)), fetchMembers(Number(id))]).then(
-      ([communityData, membersData]) => {
+    const loadCommunityData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // fetch communities
+        const communityData = await fetchCommunity(Number(id));
         setCommunity(communityData);
-        setMembers(membersData);
         setLoading(false);
-      },
-    );
+
+        // fetch items
+        setItemsLoading(true);
+        const itemsData = await fetchItems(Number(id));
+        setItems(itemsData);
+
+        // fetch donor information for each item
+        const donorPromises = itemsData.map(async (item) => {
+          try {
+            const donor = await fetchUser(item.donor);
+            return { itemId: item.id, donor };
+          } catch (error) {
+            console.error(`Error fetching donor for item ${item.id}:`, error);
+            return null;
+          }
+        });
+
+        const donorResults = await Promise.all(donorPromises);
+        const donorMap: Record<number, User> = {};
+        donorResults.forEach((result) => {
+          if (result) {
+            donorMap[result.itemId] = result.donor;
+          }
+        });
+        setDonors(donorMap);
+        setItemsLoading(false);
+
+        setMembersLoading(true);
+        const membersData = await fetchMembers(Number(id));
+        setMembers(membersData);
+      } catch (err) {
+        console.error("Error loading community data:", err);
+        setError("Failed to load community data");
+        setLoading(false);
+      } finally {
+        setMembersLoading(false);
+        setItemsLoading(false);
+      }
+    };
+
+    loadCommunityData();
   }, [id]);
 
-  if (loading || !community) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-[#2E7D32]"></div>
+          <p className="text-muted-foreground">Loading community...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !community) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <p className="mb-4 text-red-500">{error || "Community not found"}</p>
+          <button
+            onClick={() => window.history.back()}
+            className="rounded bg-[#2E7D32] px-4 py-2 text-white hover:bg-[#1B5E20]"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -83,18 +175,6 @@ export default function Community() {
             </div>
           </div>
         </div>
-        {/* {community.isAdmin && (
-          <Button
-            variant="outline"
-            className="absolute top-6 right-6 border-white/20 bg-white/10 text-white hover:bg-white/20"
-            asChild
-          >
-            <Link to={`/communities/${community.id}/manage`}>
-              <Settings className="mr-2 h-4 w-4" />
-              Manage Community
-            </Link>
-          </Button>
-        )} */}
       </div>
 
       {/* Community Content */}
@@ -120,7 +200,6 @@ export default function Community() {
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="about">About</TabsTrigger>
             </TabsList>
-
             {/* Items Tab */}
             <TabsContent value="items" className="mt-6">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row">
@@ -143,29 +222,35 @@ export default function Community() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {/* {community.categories?.map((category) => (
+                    {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
-                    ))} */}
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {/* {filteredItems.length > 0 ? (
+                {itemsLoading ? (
+                  // Show loading skeletons while items are loading
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <ItemCardSkeleton key={index} />
+                  ))
+                ) : filteredItems.length > 0 ? (
                   filteredItems.map((item) => (
                     <Card key={item.id}>
                       <CardHeader className="p-0">
                         <div className="relative h-48 w-full overflow-hidden">
                           <img
-                            src={item.image || "/placeholder.svg"}
+                            src={
+                              import.meta.env.VITE_API_BASE_URL + item.imageUrl
+                            }
                             alt={item.title}
                             className="h-full w-full object-cover"
                           />
                           <Badge
                             className={`absolute top-4 right-4 ${
-                              item.status === "Available"
+                              item.status === "Open"
                                 ? "bg-[#2E7D32]"
                                 : "bg-[#1976D2]"
                             }`}
@@ -176,44 +261,56 @@ export default function Community() {
                       </CardHeader>
                       <CardContent className="p-6">
                         <CardTitle>{item.title}</CardTitle>
-                        <Badge variant="outline" className="mt-1">
-                          {item.category}
-                        </Badge>
+                        {item.keywords && item.keywords.length > 0 && (
+                          <Badge variant="outline" className="mt-1">
+                            {item.keywords[0]}
+                          </Badge>
+                        )}
                         <CardDescription className="mt-2 line-clamp-2">
                           {item.description}
                         </CardDescription>
                         <div className="mt-4 flex items-center gap-2">
                           <Avatar className="h-6 w-6">
                             <AvatarImage
-                              src={item.donor.avatar || "/placeholder.svg"}
-                              alt={item.donor.name}
+                              src={
+                                donors[item.id]?.avatarUrl
+                                  ? import.meta.env.VITE_API_BASE_URL +
+                                    donors[item.id].avatarUrl
+                                  : "/placeholder.svg"
+                              }
+                              alt="Donor"
                             />
                             <AvatarFallback>
-                              {item.donor.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
+                              {donors[item.id]
+                                ? `${donors[item.id].firstName[0]}${donors[item.id].lastName[0]}`
+                                : "U"}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-muted-foreground text-sm">
-                            {item.donor.name} • {item.postedDate}
+                            {donors[item.id]
+                              ? `${donors[item.id].firstName} ${donors[item.id].lastName}`
+                              : "Loading..."}
+                            •
+                            {item.postedAt
+                              ? new Date(item.postedAt).toLocaleDateString()
+                              : new Date().toLocaleDateString()}
                           </span>
                         </div>
                       </CardContent>
                       <CardFooter>
                         <Button
                           className={`w-full ${
-                            item.status === "Available"
+                            item.status === "Open"
                               ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
                               : "bg-muted hover:bg-muted/80"
                           }`}
-                          disabled={item.status !== "Available"}
+                          disabled={item.status !== "Open"}
                           asChild
                         >
                           <Link
                             to={`/communities/${community.id}/items/${item.id}`}
                           >
-                            {item.status === "Available"
+                            {item.status === "Open"
                               ? "Reserve Item"
                               : "View Item"}
                           </Link>
@@ -227,48 +324,51 @@ export default function Community() {
                       No items found matching your search criteria
                     </p>
                   </div>
-                )} */}
+                )}
               </div>
             </TabsContent>
-
             {/* Members Tab */}
             <TabsContent value="members" className="mt-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {members.map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage
-                            src={member.user.avatarUrl || "/placeholder.svg"}
-                            alt={
-                              member.user.firstName + " " + member.user.lastName
-                            }
-                          />
-                          <AvatarFallback>
-                            {`${member.user.firstName[0] ?? ""}${member.user.lastName ? member.user.lastName[0] : ""}`}
-                          </AvatarFallback>
-                        </Avatar>{" "}
-                        <div>
-                          <h3 className="font-medium">
-                            {member.user.firstName + " " + member.user.lastName}
-                          </h3>
-                          <Badge variant="outline" className="mt-1">
-                            {member.role}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" className="w-full" asChild>
-                        <Link to={`/profile/${member.id}`}>View Profile</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                {membersLoading
+                  ? // Show loading skeletons
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <MemberCardSkeleton key={index} />
+                    ))
+                  : members.map((member) => (
+                      <Card key={member.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-4">
+                            <Avatar>
+                              <AvatarImage
+                                src={member.avatarUrl || "/placeholder.svg"}
+                                alt={`${member.firstName} ${member.lastName}`}
+                              />
+                              <AvatarFallback>
+                                {`${member.firstName[0] ?? ""}${member.lastName ? member.lastName[0] : ""}`}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <h3 className="font-medium">
+                                {`${member.firstName} ${member.lastName}`}
+                              </h3>
+                              <Badge variant="outline" className="mt-1">
+                                {member.role}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button variant="outline" className="w-full" asChild>
+                            <Link to={`/communities/${id}/member/${member.id}`}>
+                              View Profile
+                            </Link>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
               </div>
             </TabsContent>
-
             {/* About Tab */}
             <TabsContent value="about" className="mt-6">
               <Card>
@@ -282,30 +382,29 @@ export default function Community() {
                       {community.description}
                     </p>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-medium">Location</h3>
                     <p className="text-muted-foreground mt-2">
                       {community.location}
                     </p>
                   </div>
-
                   <div>
                     <h3 className="text-lg font-medium">
                       Community visibility
                     </h3>
                     <p className="text-muted-foreground mt-2">
-                      {community.visibility === "Private" ? (
-                        <>
-                          This is a private community. You need an invitation or
-                          password to join.
-                        </>
-                      ) : (
-                        <>
-                          This is a public community. Anyone can join and
-                          participate.
-                        </>
-                      )}
+                      This community is
+                      <Badge
+                        className={`${community.visibility === "Private" ? "bg-[#424242]" : "bg-[#2E7D32]"}`}
+                      >
+                        {community.visibility}
+                      </Badge>
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium">Members</h3>
+                    <p className="text-muted-foreground mt-2">
+                      {members.length} members
                     </p>
                   </div>
                 </CardContent>

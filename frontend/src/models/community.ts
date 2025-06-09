@@ -8,4 +8,6 @@ export type Community = {
   creator_id?: number;
   visibility: "Public" | "Private";
   imageUrl: string;
+  memberCount?: number;
+  itemCount?: number;
 };

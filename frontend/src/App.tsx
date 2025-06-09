@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { ToastProvider } from "./components/ui/toast-provider";
 import { AuthProvider } from "./context/AuthContext.tsx";
-import Layout from "./layout.tsx";
+import Layout from "./Layout.tsx";
 import About from "./pages/About.tsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.tsx";
 import Login from "./pages/auth/Login.tsx";
@@ -13,35 +14,95 @@ import Community from "./pages/community/Community.tsx";
 import CreateCommunity from "./pages/community/CreateCommunity.tsx";
 import CreateItem from "./pages/community/item/CreateItem.tsx";
 import Item from "./pages/community/item/Item.tsx";
+import Conversation from "./pages/conversations/Conversation.tsx";
 import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
+import MemberProfile from "./pages/user/MemberProfile.tsx";
 import Profile from "./pages/user/UserProfile.tsx";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ToastProvider />
         <Routes>
           <Route path="/" element={<Layout />}>
+            {/* Public routes */}
             <Route index element={<Home />} />
             <Route path="communities" element={<Communities />} />
-            <Route path="communities/:id" element={<Community />} />
-            <Route path="conversations" element={<ConversationsPage />} />
-            <Route path="communities/:id/items/:itemId" element={<Item />} />
-            <Route
-              path="communities/:id/items/create"
-              element={<CreateItem />}
-            />
             <Route path="about" element={<About />} />
-            <Route path="communities/create" element={<CreateCommunity />} />
-            <Route path="profile" element={<Profile />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
+
+            {/* Protected routes */}
+            <Route
+              path="communities/:id"
+              element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="conversations"
+              element={
+                <ProtectedRoute>
+                  <ConversationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="conversations/:id"
+              element={
+                <ProtectedRoute>
+                  <Conversation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/items/:itemId"
+              element={
+                <ProtectedRoute>
+                  <Item />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/items/create"
+              element={
+                <ProtectedRoute>
+                  <CreateItem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/create"
+              element={
+                <ProtectedRoute>
+                  <CreateCommunity />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:communityId/member/:userId"
+              element={
+                <ProtectedRoute>
+                  <MemberProfile />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
+        <ToastProvider />
       </AuthProvider>
     </BrowserRouter>
   );

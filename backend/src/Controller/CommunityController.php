@@ -10,11 +10,9 @@ use App\Entity\Enum\VisibilityEnum;
 use App\Entity\Member;
 use App\Entity\User;
 use App\Repository\CommunityRepository;
-use App\Security\CommunityVoter;
 use App\Service\CommunityService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations\View;
-use Nelmio\ApiDocBundle\Attribute\Model;
 use Nelmio\ApiDocBundle\Attribute\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,16 +21,13 @@ use Symfony\Component\Routing\Attribute\Route;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class CommunityController extends AbstractController
 {
-
-
     // LIST
 
 
@@ -45,18 +40,18 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of communities',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Community::class, groups: ['community_basic'])))
+                content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: "#/components/schemas/Community"))
             )
         ]
     )]
-    public function communities(CommunityRepository $communityRepository, UrlGeneratorInterface $urlGen)
-    {
+    public function communities(
+        CommunityRepository $communityRepository,
+        CommunityService $communityService
+    ) {
         $communities = $communityRepository->findAll();
         foreach ($communities as $community) {
-            $community
-                ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-                ->setMemberCount(count($community->getMembers()))
-            ;
+            $communityService->generateInfo($community);
+            $communityService->generateImageUrl($community);
         };
         return $communities;
     }
@@ -98,7 +93,7 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Community created successfully',
-                content: new OA\JsonContent(ref: new Model(type: Community::class, groups: ['community_basic']))
+                content: new OA\JsonContent(ref:  "#/components/schemas/Community")
             ),
             new OA\Response(
                 response: 400,
@@ -118,21 +113,14 @@ final class CommunityController extends AbstractController
             )
         ]
     )]
-    public function new (
+    public function new(
         Request $request,
         #[MapRequestPayload(serializationContext: ["groups" => ["community_new"]])] CommunityNew $dto,
         EntityManagerInterface $em,
-        UrlGeneratorInterface $urlGen,
         PasswordHasherFactoryInterface $hasherFactory,
         #[CurrentUser()] User $user,
         CommunityService $communityService
-    )
-    {
-        // Check User
-        if ($user === null){ 
-           throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
+    ) {
         // Check community join limit
         $communityService->checkJoinLimit($user);
 
@@ -160,7 +148,7 @@ final class CommunityController extends AbstractController
         // Create new entity
         $community = new Community();
         $community
-            ->setCreator($user)
+            ->setOwner($user)
             ->setCreatedAt(new \DateTimeImmutable())
             ->setName($dto->name)
             ->setDescription($dto->description)
@@ -168,12 +156,12 @@ final class CommunityController extends AbstractController
             ->setVisibility(VisibilityEnum::tryFrom($dto->visibility))
             ->setImage(stream_get_contents($stream))
         ;
-        
+
         // Password and visibility
         if ($community->getVisibility() === VisibilityEnum::PRIVATE) {
-            if ($dto->password === null){
+            if ($dto->password === null) {
                 return new JsonResponse(['error' => 'A private community needs a password'], 400);
-            }else{
+            } else {
                 $community->setPassword($passwordHasher->hash($dto->password));
             }
         }
@@ -194,10 +182,8 @@ final class CommunityController extends AbstractController
         $em ->flush();
 
         // Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(1)
-        ;
+        $communityService->generateImageUrl($community);
+        $community->setMemberCount(1);
 
         // Return new community
         return $community;
@@ -223,7 +209,7 @@ final class CommunityController extends AbstractController
         // Return image
         return new Response(stream_get_contents($imageContent), 200, [
             'Content-Type' => 'image/png',
-            'Content-Disposition' => 'inline; filename="'. $community->getName() .'.png"',
+            'Content-Disposition' => 'inline; filename="' . $community->getName() . '.png"',
         ]);
     }
 
@@ -267,21 +253,12 @@ final class CommunityController extends AbstractController
         Community $community,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
-    )
-    {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
-        // Check permission
-        $this->denyAccessUnlessGranted(CommunityVoter::DELETE, $community, message:"You do not have permission to delete this community.");
-
+    ) {
         // Delete
         $em->remove($community);
         $em->flush();
-
-        return new JsonResponse("Successfully deleted community",200);
+        // Return
+        return new JsonResponse("Successfully deleted community", 200);
     }
 
 
@@ -324,7 +301,7 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'Community changed successfully',
-                content: new OA\JsonContent(ref: new Model(type: Community::class, groups: ['community_basic']))
+                content: new OA\JsonContent(ref:  "#/components/schemas/Community")
             ),
             new OA\Response(
                 response: 401,
@@ -343,31 +320,36 @@ final class CommunityController extends AbstractController
                 description: 'Invalid password or name',
             )
         ]
-    )]    
+    )]
     public function edit(
         Community $community,
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser()] User $user,
-        UrlGeneratorInterface $urlGen,
+        CommunityService $communityService,
         PasswordHasherFactoryInterface $hasherFactory,
-    )
-    {
-        // Check User
-        if ($user === null){ 
-           return throw new HttpException(Response::HTTP_UNAUTHORIZED, "Full authentication is required to access this resource."); 
-        }
-
-        // Check permission
-        $this->denyAccessUnlessGranted(CommunityVoter::EDIT, $community, message:"You do not have permission to edit this community.");
-
-        // Manually populate DTO 
+        ValidatorInterface $validator
+    ) {
+        // Manually populate DTO
         $dto = new CommunityEdit();
         $dto->name = $request->request->get('name');
         $dto->location = $request->request->get('location');
         $dto->description = $request->request->get('description');
         $dto->password = $request->request->get('password');
         $dto->visibility = $request->request->get('visibility');
+
+        // Check password
+        $violations = $validator->validate($dto);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = [
+                    'field' => $violation->getPropertyPath(),
+                    'message' => $violation->getMessage(),
+                ];
+            }
+            return new JsonResponse(['errors' => $errors], 422);
+        }
 
         // Check name uniqness
         $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
@@ -391,17 +373,15 @@ final class CommunityController extends AbstractController
         $em->flush();
 
         // Set values for return
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(count($community->getMembers()))
-        ;
+        $communityService->generateInfo($community);
+        $communityService->generateImageUrl($community);
 
         return $community;
     }
 
 
 
-    // GET 
+    // GET
 
     #[View(serializerGroups: ["community_basic"])]
     #[Route(path:"/api/communities/{id}", methods: ["GET"])]
@@ -412,7 +392,7 @@ final class CommunityController extends AbstractController
             new OA\Response(
                 response: 200,
                 description: 'List of communities',
-                content: new OA\JsonContent( type: 'array', items: new OA\Items(ref: new Model(type: Community::class, groups: ['community_basic'])))
+                content: new OA\JsonContent(ref:  "#/components/schemas/Community")
             ),
             new OA\Response(
                 response: 404,
@@ -421,14 +401,11 @@ final class CommunityController extends AbstractController
         ]
     )]
     public function community(
-        Community $community, 
-        UrlGeneratorInterface $urlGen
-        )
-    {
-        $community
-            ->setImageUrl($urlGen->generate('api_communities_image', ['id' => $community->getId()]))
-            ->setMemberCount(count($community->getMembers()))
-        ;
+        Community $community,
+        CommunityService $communityService
+    ) {
+        $communityService->generateInfo($community);
+        $communityService->generateImageUrl($community);
         return $community;
     }
 }

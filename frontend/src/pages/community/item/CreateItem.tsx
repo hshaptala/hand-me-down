@@ -1,7 +1,8 @@
 import { useState } from "react";
 
 import { Upload } from "lucide-react";
-//import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,22 +18,27 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getAllCategories } from "@/models/categories";
+import { createItem } from "@/service/item.service";
 
 export default function CreateItem() {
-  //const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
+    keywords: [] as string[],
     image: null as File | null,
   });
-
-  // TODO: Fetch real community categories if needed
-
+  const [loading, setLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  // Categories that will be converted to keywords
+  const categories = getAllCategories();
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -41,7 +47,8 @@ export default function CreateItem() {
   };
 
   const handleCategoryChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, category: value }));
+    // Convert category to keywords array
+    setFormData((prev) => ({ ...prev, keywords: [value] }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,10 +57,61 @@ export default function CreateItem() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    // Handle item creation logic here
-    console.log(formData);
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        setFormData((prev) => ({ ...prev, image: file }));
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!id) {
+      toast.error("Community ID is missing");
+      return;
+    }
+
+    if (!formData.image) {
+      toast.error("Please select an item image.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createItem(Number(id), {
+        title: formData.title,
+        description: formData.description,
+        keywords: formData.keywords,
+        image: formData.image,
+      });
+
+      toast.success("Item posted successfully!");
+      navigate(`/communities/${id}`);
+    } catch (error) {
+      console.error("Error creating item:", error);
+      toast.error("Failed to post item. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,7 +144,6 @@ export default function CreateItem() {
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -98,12 +155,11 @@ export default function CreateItem() {
                   required
                   rows={4}
                 />
-              </div>
-
+              </div>{" "}
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={formData.category}
+                  value={formData.keywords[0] || ""}
                   onValueChange={handleCategoryChange}
                   required
                 >
@@ -111,18 +167,26 @@ export default function CreateItem() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* {community.categories.map((category) => (
+                    {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
-                    ))} */}
+                    ))}
                   </SelectContent>
                 </Select>
-              </div>
-
+              </div>{" "}
               <div className="space-y-2">
-                <Label>Item Image (Optional)</Label>
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6">
+                <Label>Item Image *</Label>
+                <div
+                  className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 ${
+                    dragActive
+                      ? "border-[#2E7D32] bg-green-50"
+                      : "border-gray-300"
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   {formData.image ? (
                     <div className="flex flex-col items-center">
                       <img
@@ -157,6 +221,7 @@ export default function CreateItem() {
                         accept="image/*"
                         className="hidden"
                         onChange={handleImageChange}
+                        required
                       />
                       <Button
                         variant="outline"
@@ -172,16 +237,26 @@ export default function CreateItem() {
                   )}
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  Adding an image helps others understand what you're offering
+                  Adding an image is required to help others understand what
+                  you're offering
                 </p>
               </div>
-            </CardContent>
+            </CardContent>{" "}
             <CardFooter className="flex justify-between">
-              <Button variant="outline" type="button">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => navigate(`/communities/${id}`)}
+                disabled={loading}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-[#2E7D32] hover:bg-[#1B5E20]">
-                Post Item
+              <Button
+                type="submit"
+                className="bg-[#2E7D32] hover:bg-[#1B5E20]"
+                disabled={loading}
+              >
+                {loading ? "Posting..." : "Post Item"}
               </Button>
             </CardFooter>
           </Card>

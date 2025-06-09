@@ -1,18 +1,30 @@
-import api, { getBearerAuthHeaders } from "@/config/axios.config";
+import api from "@/config/axios.config";
 import type { Member } from "@/models/member";
+import { requestCache } from "@/utils/request-cache";
 
 export async function fetchMembers(communityId: number): Promise<Member[]> {
-  const headers = await getBearerAuthHeaders("application/json");
-  const res = await api.get(`/api/communities/${communityId}/members`, { headers });
-  return res.data;
+  return requestCache.getOrCreate(
+    `fetch-members-${communityId}`,
+    async () => {
+      const res = await api.get(`/api/communities/${communityId}/members`);
+      return res.data;
+    },
+    60000,
+  );
 }
 
 export async function fetchMember(
   communityId: number,
   memberId: number,
 ): Promise<Member> {
-  const res = await api.get(
-    `/api/communities/${communityId}/members/${memberId}`,
+  return requestCache.getOrCreate(
+    `fetch-member-${communityId}-${memberId}`,
+    async () => {
+      const res = await api.get(
+        `/api/communities/${communityId}/members/${memberId}`,
+      );
+      return res.data;
+    },
+    60000,
   );
-  return res.data;
 }

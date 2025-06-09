@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import { Search, Book, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CommunityCardSkeleton } from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -46,7 +47,8 @@ export default function Communities() {
   const [visibilityFilter, setvisibilityFilter] = useState("all");
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [joinLoading, setJoinLoading] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(
     null,
@@ -54,49 +56,61 @@ export default function Communities() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    fetchCommunities().then((data) => {
-      setCommunities(data);
-    });
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [communitiesData, joinedData] = await Promise.all([
+          fetchCommunities(),
+          user ? userCommunities() : Promise.resolve([]),
+        ]);
+        setCommunities(communitiesData);
+        setJoinedCommunities(joinedData);
+      } catch (error) {
+        console.error("Error loading communities:", error);
+        toast.error("Failed to load communities");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Fetch user's joined communities if authenticated
-    if (user) {
-      userCommunities().then((data) => {
-        setJoinedCommunities(data);
-      });
-    }
+    loadData();
   }, [user]);
-  const handleJoinCommunity = async (community: Community) => {
-    if (!user) {
-      toast.error("Please log in to join communities");
-      return;
-    }
 
-    if (!community.id) {
-      toast.error("Invalid community");
-      return;
-    }
+  const handleJoinCommunity = useCallback(
+    async (community: Community) => {
+      if (!user) {
+        toast.error("Please log in to join communities");
+        return;
+      }
 
-    if (community.visibility === "Private") {
-      setSelectedCommunity(community);
-      setShowPasswordDialog(true);
-      return;
-    }
+      if (!community.id) {
+        toast.error("Invalid community");
+        return;
+      }
 
-    setLoading(true);
-    try {
-      await joinCommunity(community.id);
-      // Update joined communities list
-      const updatedJoinedCommunities = await userCommunities();
-      setJoinedCommunities(updatedJoinedCommunities);
-      toast.success(`Successfully joined ${community.name}!`);
-    } catch (error) {
-      console.error("Error joining community:", error);
-      toast.error("Failed to join community. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleJoinPrivateCommunity = async () => {
+      if (community.visibility === "Private") {
+        setSelectedCommunity(community);
+        setShowPasswordDialog(true);
+        return;
+      }
+
+      setJoinLoading(true);
+      try {
+        await joinCommunity(community.id);
+        const updatedJoinedCommunities = await userCommunities();
+        setJoinedCommunities(updatedJoinedCommunities);
+        toast.success(`Successfully joined ${community.name}!`);
+      } catch (error) {
+        console.error("Error joining community:", error);
+        toast.error("Failed to join community. Please try again.");
+      } finally {
+        setJoinLoading(false);
+      }
+    },
+    [user],
+  );
+
+  const handleJoinPrivateCommunity = useCallback(async () => {
     if (!selectedCommunity || !password.trim()) {
       toast.error("Please enter a password");
       return;
@@ -107,10 +121,9 @@ export default function Communities() {
       return;
     }
 
-    setLoading(true);
+    setJoinLoading(true);
     try {
       await joinCommunity(selectedCommunity.id, password);
-      // Update joined communities list
       const updatedJoinedCommunities = await userCommunities();
       setJoinedCommunities(updatedJoinedCommunities);
       toast.success(`Successfully joined ${selectedCommunity.name}!`);
@@ -123,25 +136,93 @@ export default function Communities() {
         "Failed to join community. Please check your password and try again.",
       );
     } finally {
-      setLoading(false);
+      setJoinLoading(false);
     }
-  };
-  const isJoined = (communityId: number | undefined) => {
-    if (!communityId) return false;
-    return joinedCommunities.some((c) => c.id === communityId);
-  };
+  }, [selectedCommunity, password]);
+  const isJoined = useCallback(
+    (communityId: number | undefined) => {
+      if (!communityId) return false;
+      return joinedCommunities.some((c) => c.id === communityId);
+    },
+    [joinedCommunities],
+  );
 
   // Filter communities based on search query and visibility filter
-  const filteredCommunities = communities.filter(
-    (community) =>
-      (community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (community.description
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ??
-          false) ||
-        community.location.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (visibilityFilter === "all" || community.visibility === visibilityFilter),
-  );
+  const filteredCommunities = useMemo(() => {
+    return communities.filter((community) => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        community.name.toLowerCase().includes(searchLower) ||
+        (community.description?.toLowerCase().includes(searchLower) ?? false) ||
+        community.location.toLowerCase().includes(searchLower);
+
+      const matchesVisibility =
+        visibilityFilter === "all" || community.visibility === visibilityFilter;
+
+      return matchesSearch && matchesVisibility;
+    });
+  }, [communities, searchQuery, visibilityFilter]);
+  if (loading) {
+    return (
+      <Container className="py-10">
+        <div className="flex flex-col space-y-6">
+          <div className="flex flex-col space-y-2">
+            <h1 className="text-3xl font-bold">Communities</h1>
+            <p className="text-muted-foreground">
+              Join existing communities or create your own to start sharing
+              items
+            </p>
+          </div>
+
+          <div className="flex justify-between">
+            <Button asChild className="bg-[#2E7D32] hover:bg-[#1B5E20]">
+              <Link to="/communities/create">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Community
+              </Link>
+            </Button>
+          </div>
+
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All Communities</TabsTrigger>
+              <TabsTrigger value="joined">My Communities</TabsTrigger>
+            </TabsList>
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  placeholder="Search communities..."
+                  className="pl-10"
+                  disabled
+                />
+              </div>
+              <Select disabled>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter by visibility" />
+                </SelectTrigger>
+              </Select>
+            </div>
+            <TabsContent value="all" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <CommunityCardSkeleton key={index} />
+                ))}
+              </div>
+            </TabsContent>
+            <TabsContent value="joined" className="mt-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <CommunityCardSkeleton key={index} />
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-10">
@@ -192,7 +273,7 @@ export default function Communities() {
                 <SelectValue placeholder="Filter by visibility" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All types</SelectItem>
+                <SelectItem value="all">All types</SelectItem>
                 <SelectItem value="Public">Public</SelectItem>
                 <SelectItem value="Private">Private</SelectItem>
               </SelectContent>
@@ -202,12 +283,13 @@ export default function Communities() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredCommunities.length > 0 ? (
                 filteredCommunities.map((community) => (
-                  <Card key={community.id}>
+                  <Card key={community.id} className="flex h-full flex-col">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
                           src={
-                            import.meta.env.VITE_API_BASE_URL + community.imageUrl
+                            import.meta.env.VITE_API_BASE_URL +
+                            community.imageUrl
                           }
                           alt={community.name}
                           className="h-full w-full object-cover"
@@ -230,18 +312,28 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
+                    </CardHeader>{" "}
+                    <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
-                      <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
+                      <CardDescription className="mt-2">
                         {community.description}
-                      </CardDescription>{" "}
+                      </CardDescription>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex flex-col gap-3 p-6 pt-0">
+                      <div className="text-muted-foreground flex w-full items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{community.memberCount || 0} members</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Book className="h-3 w-3" />
+                          <span>{community.itemCount || 0} items</span>
+                        </div>
+                      </div>
                       {isJoined(community.id) ? (
                         <Button
                           className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
@@ -259,9 +351,9 @@ export default function Communities() {
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                           }`}
                           onClick={() => handleJoinCommunity(community)}
-                          disabled={loading}
+                          disabled={joinLoading}
                         >
-                          {loading
+                          {joinLoading
                             ? "Joining..."
                             : community.visibility === "Private"
                               ? "Request to Join"
@@ -280,14 +372,16 @@ export default function Communities() {
           </TabsContent>
           <TabsContent value="joined" className="mt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {" "}
               {joinedCommunities.length > 0 ? (
                 joinedCommunities.map((community) => (
-                  <Card key={community.id}>
+                  <Card key={community.id} className="flex h-full flex-col">
                     <CardHeader className="p-0">
                       <div className="relative h-48 w-full overflow-hidden">
                         <img
                           src={
-                            import.meta.env.VITE_API_BASE_URL + community.imageUrl
+                            import.meta.env.VITE_API_BASE_URL +
+                            community.imageUrl
                           }
                           alt={community.name}
                           className="h-full w-full object-cover"
@@ -310,19 +404,28 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
+                    </CardHeader>{" "}
+                    <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3" />
                         <span>{community.location}</span>
                       </div>
-                      <CardDescription className="mt-2 line-clamp-3 h-[4.5rem]">
+                      <CardDescription className="mt-2">
                         {community.description}
                       </CardDescription>
                     </CardContent>
-                    <CardFooter>
-                      {" "}
+                    <CardFooter className="flex flex-col gap-3 p-6 pt-0">
+                      <div className="text-muted-foreground flex w-full items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{community.memberCount || 0} members</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Plus className="h-3 w-3" />
+                          <span>{community.itemCount || 0} items</span>
+                        </div>
+                      </div>
                       <Button
                         className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
                         asChild
@@ -391,9 +494,9 @@ export default function Communities() {
             <Button
               type="button"
               onClick={handleJoinPrivateCommunity}
-              disabled={loading || !password.trim()}
+              disabled={joinLoading || !password.trim()}
             >
-              {loading ? "Joining..." : "Join Community"}
+              {joinLoading ? "Joining..." : "Join Community"}
             </Button>
           </DialogFooter>
         </DialogContent>

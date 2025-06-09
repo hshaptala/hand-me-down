@@ -9,6 +9,157 @@ nelmio_api_doc:
                 Bearer: 
                     type: http 
                     scheme: bearer
+            schemas:
+                Item:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                        title: 
+                            type: string
+                        description:
+                            type: string
+                        donor:
+                            type: integer
+                            description: user id
+                        receiver:
+                            type: integer
+                            description: user id
+                        status:
+                            type: string
+                            description: "[Open, Reserved, Over]"
+                        keywords:
+                            type: array
+                            items:
+                                type: string
+                        imageUrl: 
+                            type: string
+                            description: /images/items/1.png
+                Member:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                            description: user id
+                        firstName: 
+                            type: string
+                            description: user's first name
+                        lastName: 
+                            type: string
+                            description: user's last name
+                        role: 
+                            type: string
+                            description: member's role in the community
+                        imageUrl: 
+                            type: string
+                            description: /images/users/1.png
+                MemberBan:
+                    type: object
+                    properties:
+                        id: 
+                            type: integer
+                            description: user id
+                        firstName: 
+                            type: string
+                            description: user's first name
+                        lastName: 
+                            type: string
+                            description: user's last name
+                        isBanned:
+                            type: boolean
+                        banCount:
+                            type: integer
+                        banReason:
+                            type: string
+                        lastBannedAt:
+                            type: string
+                        lastBannedBy: 
+                            type: integer
+                            description: user id
+                        lastUnbannedAt:
+                            type: string
+                        lastUnbannedBy: 
+                            type: integer
+                            description: user id
+                Community:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        name:
+                            type: string
+                        location:
+                            type: string
+                        description:
+                            type: string
+                        visibility:
+                            type: string
+                        imageUrl: 
+                            type: string
+                            description: /images/communities/1.png
+                        memberCount:
+                            type: integer
+                        itemCount:
+                            type: integer
+                        owner:
+                            type: integer
+                            description: owner user id
+                UserProfile:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        firstName:
+                            type: string
+                        lastName:
+                            type: string
+                        avatarUrl: 
+                            type: string
+                            description: /images/users/1.png
+                        joinedAt: 
+                            type: string
+                        communityCount:
+                            type: integer
+                        itemsReceivedCount:
+                            type: integer
+                        itemsGivenCount:
+                            type: integer
+                        rating:
+                            type: float
+                            example: 4.3
+                Rating:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                        userRating:
+                            type: integer
+                            description: user id of the one who left the review
+                        userRated:
+                            type: integer
+                            description: user id of the one who received the review
+                        grade:
+                            type: integer
+                            description: Number between 1 and 5
+                            example: 4
+                        message:
+                            type: string
+                        createdAt:
+                            type: string
+                UserRatings:
+                    type: object
+                    properties:
+                        given:
+                            type: array
+                            items: 
+                                type: object
+                                $ref: "#/components/schemas/Rating"
+                        received:
+                            type: array
+                            items: 
+                                type: object
+                                $ref: "#/components/schemas/Rating"
+
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc

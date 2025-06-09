@@ -63,19 +63,23 @@ class Community
     #[Groups(['community_basic'])]
     private int $memberCount = 0;
 
-    #[ORM\ManyToOne(inversedBy: 'communitiesCreated')]
-    private ?User $creator = null;
+    #[ORM\ManyToOne(inversedBy: 'communitiesOwned')]
+    #[Groups(['community_basic'])]
+    private ?User $owner = null;
 
     /**
      * @var Collection<int, Member>
      */
     #[ORM\OneToMany(
-        targetEntity: Member::class, 
+        targetEntity: Member::class,
         mappedBy: 'community',
         cascade: ['remove'],
         orphanRemoval: true
     )]
     private Collection $members;
+
+    #[Groups(['community_basic'])]
+    private ?int $itemCount = null;
 
     public function __construct()
     {
@@ -225,14 +229,14 @@ class Community
         return $this->memberCount;
     }
 
-    public function getCreator(): ?User
+    public function getOwner(): ?User
     {
-        return $this->creator;
+        return $this->owner;
     }
 
-    public function setCreator(?User $creator): static
+    public function setOwner(?User $owner): static
     {
-        $this->creator = $creator;
+        $this->owner = $owner;
 
         return $this;
     }
@@ -266,5 +270,16 @@ class Community
 
         return $this;
     }
-    
+
+    public function getItemCount(): ?int
+    {
+        return $this->itemCount;
+    }
+
+    public function setItemCount(int $itemCount): static
+    {
+        $this->itemCount = $itemCount;
+
+        return $this;
+    }
 }

@@ -1,0 +1,59 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, fix-psr ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+defaults:
+  run:
+    working-directory: ./backend
+
+jobs:
+  security-check:
+    name: Security Checker
+    runs-on: ubuntu-latest
+    container: jakzal/phpqa:php8.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create env file
+        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
+      - name: Update composer
+        run: composer update
+      - name: Install dependencies
+        run: composer install
+      - name: Run security checker
+        run: local-php-security-checker --path=./composer.lock
+
+  phpcs:
+    name: PHP CodeSniffer
+    runs-on: ubuntu-latest
+    container: jakzal/phpqa:php8.2    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create env file
+        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
+      - name: Install dependencies
+        run: composer install
+      - name: Run PHP CodeSniffer
+        run: phpcs -v --standard=PSR12 --warning-severity=0 --ignore=./src/Kernel.php ./src
+
+  phpstan:
+    name: PHPStan Analysis
+    runs-on: ubuntu-latest
+    container: jakzal/phpqa:php8.2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create env file
+        run: echo 'DATABASE_URL="mysql://user:pass@localhost/database"' > .env.local
+      - name: Install dependencies
+        run: composer install
+      - name: Run PHPStan
+        run: phpstan analyse ./src

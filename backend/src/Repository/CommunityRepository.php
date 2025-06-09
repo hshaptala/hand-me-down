@@ -24,9 +24,10 @@ class CommunityRepository extends ServiceEntityRepository
     public function findAllForUser(User $user): array
     {
         return $this->createQueryBuilder('c')
-            ->join('c.members','m')
+            ->join('c.members', 'm')
             ->join('m.user', 'u')
             ->andWhere('u.id = :id')
+            ->andWhere('m.isBanned = false')
             ->setParameter('id', $user->getId())
             ->getQuery()
             ->getResult()

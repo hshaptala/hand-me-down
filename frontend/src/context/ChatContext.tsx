@@ -13,6 +13,8 @@ import type {
   MessageWithUser,
 } from "@/lib/database.types";
 import { getSupabase, getCurrentUser } from "@/lib/supabase";
+import { fetchItem } from "@/service/item.service";
+import { fetchUserBySupabaseId } from "@/service/user.service";
 
 interface ChatContextType {
   conversations: ConversationWithDetails[];
@@ -33,7 +35,6 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-// Export the context for the hook
 export { ChatContext };
 
 interface ChatProviderProps {
@@ -97,7 +98,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
       const conversationIds = participations.map((p) => p.conversation_id);
 
-      // Get the actual conversations
       const { data: conversationsData, error: conversationsError } =
         await supabase
           .from("conversations")
@@ -110,27 +110,72 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         setLoading(false);
         return;
       }
+      const enhancedConversations = await Promise.all(
+        conversationsData.map(async (conv) => {
+          const { data: participantsData } = await supabase
+            .from("conversation_participants")
+            .select("user_id")
+            .eq("conversation_id", conv.id);
 
-      // Enhance conversations with additional data (mock data for now)
-      // In a real app, you would fetch this data from your database
-      const enhancedConversations = conversationsData.map((conv) => ({
-        ...conv,
-        participants: [
-          {
-            id: "1",
-            name: "John Doe",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-        ],
-        unreadCount: 0,
-        item: conv.item_id
-          ? {
-              id: conv.item_id,
-              title: "Item Title",
-              image: "/placeholder.svg?height=60&width=60",
+          const participants = await Promise.all(
+            (participantsData || []).map(async (p) => {
+              try {
+                const user = await fetchUserBySupabaseId(p.user_id);
+                return {
+                  id: p.user_id,
+                  name: `${user.firstName} ${user.lastName}`,
+                  avatar:
+                    user.avatarUrl || "/placeholder.svg?height=40&width=40",
+                };
+              } catch (error) {
+                console.error("Error fetching user:", error);
+                return {
+                  id: p.user_id,
+                  name: "Unknown User",
+                  avatar: "/placeholder.svg?height=40&width=40",
+                };
+              }
+            }),
+          );
+          let itemData:
+            | {
+                id: string;
+                title: string;
+                image: string;
+                description?: string;
+                status?: string;
+                keywords?: string[];
+              }
+            | undefined = undefined;
+          if (conv.item_id) {
+            try {
+              const fetchedItem = await fetchItem(conv.item_id);
+              itemData = {
+                id: fetchedItem.id.toString(),
+                title: fetchedItem.title,
+                image:
+                  fetchedItem.imageUrl || "/placeholder.svg?height=60&width=60",
+                description: fetchedItem.description,
+                status: fetchedItem.status,
+                keywords: fetchedItem.keywords,
+              };
+            } catch (error) {
+              console.error("Error fetching item:", error);
+              itemData = {
+                id: conv.item_id.toString(),
+                title: "Item Title",
+                image: "/placeholder.svg?height=60&width=60",
+              };
             }
-          : undefined,
-      }));
+          }
+
+          return {
+            ...conv,
+            participants,
+            item: itemData,
+          };
+        }),
+      );
 
       setConversations(enhancedConversations);
       setLoading(false);
@@ -138,7 +183,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
     fetchConversations();
 
-    // Set up realtime subscription for new conversations
     const supabase = getSupabase();
     const conversationsSubscription = supabase
       .channel("public:conversations")
@@ -150,33 +194,73 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           table: "conversations",
         },
         (payload) => {
-          // Check if the current user is a participant
           supabase
             .from("conversation_participants")
             .select("*")
             .eq("conversation_id", payload.new.id)
             .eq("user_id", currentUser.id)
-            .then(({ data }) => {
+            .then(async ({ data }) => {
               if (data && data.length > 0) {
+                const { data: participantsData } = await supabase
+                  .from("conversation_participants")
+                  .select("user_id")
+                  .eq("conversation_id", payload.new.id);
+
+                const participants = await Promise.all(
+                  (participantsData || []).map(async (p) => {
+                    try {
+                      const user = await fetchUserBySupabaseId(p.user_id);
+                      return {
+                        id: p.user_id,
+                        name: `${user.firstName} ${user.lastName}`,
+                        avatar:
+                          user.avatarUrl ||
+                          "/placeholder.svg?height=40&width=40",
+                      };
+                    } catch (error) {
+                      console.error("Error fetching user:", error);
+                      return {
+                        id: p.user_id,
+                        name: "Unknown User",
+                        avatar: "/placeholder.svg?height=40&width=40",
+                      };
+                    }
+                  }),
+                );
+
+                let itemData:
+                  | { id: number; title: string; image: string }
+                  | undefined = undefined;
+                if (payload.new.item_id) {
+                  try {
+                    const fetchedItem = await fetchItem(payload.new.item_id);
+                    itemData = {
+                      id: fetchedItem.id,
+                      title: fetchedItem.title,
+                      image:
+                        import.meta.env.VITE_API_BASE_URL +
+                        fetchedItem.imageUrl,
+                    };
+                  } catch (error) {
+                    console.error(
+                      "Error fetching item for new conversation:",
+                      error,
+                    );
+                    itemData = {
+                      id: payload.new.item_id,
+                      title: "Item Title",
+                      image: "/placeholder.svg?height=60&width=60",
+                    };
+                  }
+                }
+
                 // Add the new conversation to the list
                 setConversations((prev) => [
                   {
                     ...(payload.new as ConversationWithDetails),
-                    participants: [
-                      {
-                        id: "1",
-                        name: "John Doe",
-                        avatar: "/placeholder.svg?height=40&width=40",
-                      },
-                    ],
+                    participants,
                     unreadCount: 0,
-                    item: payload.new.item_id
-                      ? {
-                          id: payload.new.item_id,
-                          title: "Item Title",
-                          image: "/placeholder.svg?height=60&width=60",
-                        }
-                      : undefined,
+                    item: itemData,
                   } as ConversationWithDetails,
                   ...prev,
                 ]);
@@ -210,19 +294,37 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         setLoading(false);
         return;
       }
+      const enhancedMessages = await Promise.all(
+        data.map(async (msg) => {
+          let userName = "Unknown User";
+          let userAvatar = "/placeholder.svg?height=40&width=40";
 
-      // Enhance messages with user data (mock data for now)
-      const enhancedMessages = data.map((msg) => ({
-        ...msg,
-        user: {
-          id: msg.sender_id,
-          name: msg.sender_id === currentUser.id ? "You" : "Other User",
-          avatar: "/placeholder.svg?height=40&width=40",
-        },
-      }));
+          if (msg.sender_id === currentUser.id) {
+            userName = "You";
+          } else {
+            try {
+              const user = await fetchUserBySupabaseId(msg.sender_id);
+              userName = `${user.firstName} ${user.lastName}`;
+              userAvatar =
+                user.avatarUrl || "/placeholder.svg?height=40&width=40";
+            } catch (error) {
+              console.error("Error fetching user for message:", error);
+            }
+          }
+
+          return {
+            ...msg,
+            user: {
+              id: msg.sender_id,
+              name: userName,
+              avatar: userAvatar,
+            },
+          };
+        }),
+      );
 
       setMessages(enhancedMessages);
-      setLoading(false); // Mark messages as read if there are any unread messages
+      setLoading(false);
       if (data.some((msg) => !msg.read && msg.sender_id !== currentUser.id)) {
         const supabase = getSupabase();
         supabase
@@ -241,7 +343,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
     fetchMessages();
 
-    // Set up realtime subscription for new messages
     const supabase = getSupabase();
     const messagesSubscription = supabase
       .channel(`messages:${currentConversation}`)
@@ -253,9 +354,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           table: "messages",
           filter: `conversation_id=eq.${currentConversation}`,
         },
-        (payload) => {
-          // Add the new message to the list
-          // Type cast to ensure we have all required fields
+        async (payload) => {
           const messageData = payload.new as {
             id: string;
             conversation_id: string;
@@ -265,27 +364,38 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             read: boolean;
           };
 
+          let userName = "Unknown User";
+          let userAvatar = "/placeholder.svg?height=40&width=40";
+
+          if (messageData.sender_id === currentUser?.id) {
+            userName = "You";
+          } else {
+            try {
+              const user = await fetchUserBySupabaseId(messageData.sender_id);
+              userName = `${user.firstName} ${user.lastName}`;
+              userAvatar =
+                user.avatarUrl || "/placeholder.svg?height=40&width=40";
+            } catch (error) {
+              console.error("Error fetching user for message:", error);
+            }
+          }
+
           const newMessage: MessageWithUser = {
             ...messageData,
             user: {
               id: messageData.sender_id,
-              name:
-                messageData.sender_id === currentUser?.id
-                  ? "You"
-                  : "Other User",
-              avatar: "/placeholder.svg?height=40&width=40",
+              name: userName,
+              avatar: userAvatar,
             },
           };
 
           setMessages((prev) => [...prev, newMessage]);
-
-          // If the message is from another user, mark it as read
           if (payload.new.sender_id !== currentUser.id) {
             markMessageAsRead(payload.new.id);
           }
         },
       )
-      .subscribe(); // Set up realtime subscription for typing indicators
+      .subscribe();
     const typingSubscription = supabase
       .channel(`typing:${currentConversation}`)
       .on(
@@ -297,7 +407,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           filter: `conversation_id=eq.${currentConversation}`,
         },
         (payload) => {
-          // Need to type cast the payload since it might not have the right type information
           const typingStatus = payload.new as {
             user_id: string;
             is_typing: boolean;
@@ -337,10 +446,8 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       console.error("Error sending message:", error);
     }
 
-    // Update typing status to false after sending a message
     await setUserTyping(false);
   };
-
   // Create a new conversation
   const createConversation = async (
     participantIds: string[],
@@ -350,12 +457,10 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
     const supabase = getSupabase();
 
-    // Make sure the current user is included in participants
     if (!participantIds.includes(currentUser.id)) {
       participantIds.push(currentUser.id);
     }
 
-    // Create the conversation
     const { data: conversation, error: conversationError } = await supabase
       .from("conversations")
       .insert({ item_id: itemId })
@@ -421,7 +526,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
 
     const supabase = getSupabase();
 
-    // Check if a typing status record exists
     const { data } = await supabase
       .from("typing_status")
       .select("*")
@@ -430,7 +534,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       .single();
 
     if (data) {
-      // Update existing record
       await supabase
         .from("typing_status")
         .update({
@@ -439,7 +542,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         })
         .eq("id", data.id);
     } else {
-      // Insert new record
       await supabase.from("typing_status").insert({
         conversation_id: currentConversation,
         user_id: currentUser.id,

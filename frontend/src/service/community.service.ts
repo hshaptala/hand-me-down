@@ -1,38 +1,70 @@
-import api, { getBearerAuthHeaders } from "@/config/axios.config";
+import api from "@/config/axios.config";
 import type { Community } from "@/models/community";
+import { requestCache } from "@/utils/request-cache";
 
 export async function fetchCommunities(): Promise<Community[]> {
-  const res = await api.get("/api/communities");
-  return res.data;
+  return requestCache.getOrCreate(
+    "fetch-communities",
+    async () => {
+      const res = await api.get("/api/communities");
+      return res.data;
+    },
+    30000,
+  );
 }
 
 export async function fetchCommunity(id: number): Promise<Community> {
-  const res = await api.get(`/api/communities/${id}`);
-  return res.data;
+  return requestCache.getOrCreate(
+    `fetch-community-${id}`,
+    async () => {
+      const res = await api.get(`/api/communities/${id}`);
+      return res.data;
+    },
+    60000,
+  );
 }
 
 export async function joinCommunity(
   id: number,
   password?: string,
 ): Promise<Community> {
-  const headers = await getBearerAuthHeaders("application/json");
-  const res = await api.post(
-    `/api/communities/${id}/join`,
-    { password },
-    { headers },
-  );
+  const url = `/api/communities/${id}/join`;
+  const params = password ? { password } : {};
+
+  const res = await api.post(url, {}, { params });
+  requestCache.clearRequest("user-communities");
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest(`fetch-community-${id}`);
   return res.data;
 }
 
 export async function leaveCommunity(id: number): Promise<void> {
-  const headers = await getBearerAuthHeaders("application/json");
-  await api.post(`/api/communities/${id}/leave`, {}, { headers });
+  await api.post(`/api/communities/${id}/leave`);
+  requestCache.clearRequest("user-communities");
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest(`fetch-community-${id}`);
 }
 
 export async function userCommunities(): Promise<Community[]> {
-  const headers = await getBearerAuthHeaders("application/json");
-  const res = await api.get("/api/users/communities", { headers });
-  return res.data;
+  return requestCache.getOrCreate(
+    "user-communities",
+    async () => {
+      const res = await api.get("/api/users/communities");
+      return res.data;
+    },
+    15000,
+  );
+}
+
+export async function fetchUserCommunities(userId: number): Promise<Community[]> {
+  return requestCache.getOrCreate(
+    `user-communities-${userId}`,
+    async () => {
+      const res = await api.get(`/api/users/${userId}/communities`);
+      return res.data;
+    },
+    15000,
+  );
 }
 
 export async function createCommunity(data: {
@@ -51,10 +83,14 @@ export async function createCommunity(data: {
   formData.append("visibility", data.visibility);
   if (data.image) formData.append("image", data.image);
 
-  const headers = await getBearerAuthHeaders("multipart/form-data");
-
   const res = await api.post("/api/communities", formData, {
-    headers,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
+
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest("user-communities");
+
   return res.data;
 }
