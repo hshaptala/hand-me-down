@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import { ArrowLeft, Check } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
+import ItemActionDialog from "@/components/item/ItemActionDialog";
 import Container from "@/components/layout/Container";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +19,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChatProvider, useChat } from "@/context/ChatContext";
+import type { Item } from "@/models/item";
+import { fetchItem } from "@/service/item.service";
 
 function ConversationContent({ id }: { id: string }) {
   const { setCurrentConversation, conversations, loading, currentUser } =
     useChat();
+  const [itemData, setItemData] = useState<Item | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    isOpen: boolean;
+    action: "reserve" | "cancel" | "confirm" | null;
+  }>({ isOpen: false, action: null });
 
   useEffect(() => {
     setCurrentConversation(id);
@@ -32,6 +40,104 @@ function ConversationContent({ id }: { id: string }) {
   }, [id, setCurrentConversation]);
 
   const conversation = conversations.find((c) => c.id === id);
+  const refreshItemData = useCallback(async () => {
+    if (!conversation?.item) return;
+
+    try {
+      const updatedItem = await fetchItem(Number(conversation.item.id));
+      setItemData(updatedItem);
+    } catch (error) {
+      console.error("Error refreshing item data:", error);
+    }
+  }, [conversation?.item]);
+  useEffect(() => {
+    if (conversation?.item) {
+      refreshItemData();
+    }
+  }, [conversation?.item, refreshItemData]);
+  const renderActionButtons = () => {
+    if (!conversation?.item || !currentUser) return null;
+
+    const currentStatus = itemData?.status || conversation.item.status;
+
+    const otherParticipant = conversation.participants.find(
+      (p) => p.id !== currentUser.id,
+    );
+    const hasOtherParticipant = !!otherParticipant;
+
+    const handleDialogClose = () => {
+      setDialogState({ isOpen: false, action: null });
+    };
+    const handleDialogSuccess = async () => {
+      await refreshItemData();
+      handleDialogClose();
+    };
+
+    return (
+      <>
+        {/* Reserve Button */}
+        {currentStatus === "Open" && hasOtherParticipant && (
+          <div className="w-full">
+            <Button
+              className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+              onClick={() =>
+                setDialogState({ isOpen: true, action: "reserve" })
+              }
+            >
+              Reserve Item
+            </Button>
+          </div>
+        )}
+        {/* Cancel Reservation Button */}
+        {currentStatus === "Reserved" && (
+          <div className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setDialogState({ isOpen: true, action: "cancel" })}
+            >
+              Cancel Reservation
+            </Button>
+          </div>
+        )}
+        {/* Confirm Exchange Button */}
+        {currentStatus === "Reserved" && (
+          <div className="w-full">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() =>
+                setDialogState({ isOpen: true, action: "confirm" })
+              }
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Confirm Exchange
+            </Button>
+          </div>
+        )}
+        {/* Status indicator for completed exchanges */}
+        {currentStatus === "Exchanged" && (
+          <div className="w-full">
+            <Button disabled className="w-full" variant="outline">
+              <Check className="mr-2 h-4 w-4" />
+              Exchange Completed
+            </Button>
+          </div>
+        )}
+        {/* Dialog for all actions */}
+        {dialogState.action && (
+          <ItemActionDialog
+            isOpen={dialogState.isOpen}
+            onClose={handleDialogClose}
+            action={dialogState.action}
+            itemId={Number(conversation.item.id)}
+            itemTitle={conversation.item.title}
+            onSuccess={handleDialogSuccess}
+          />
+        )}
+      </>
+    );
+  };
 
   if (!conversation || loading) {
     return (
@@ -113,8 +219,7 @@ function ConversationContent({ id }: { id: string }) {
             <CardFooter className="p-0">
               <MessageInput />
             </CardFooter>
-          </Card>
-
+          </Card>{" "}
           {/* Item Details */}
           {conversation.item && (
             <Card>
@@ -140,7 +245,7 @@ function ConversationContent({ id }: { id: string }) {
                     {conversation.item.title}
                   </h3>
                   <Badge className="mt-1 bg-[#2E7D32]">
-                    {conversation.item.status}
+                    {itemData?.status || conversation.item.status}
                   </Badge>
                   {conversation.item.description && (
                     <p className="text-muted-foreground mt-2 text-sm">
@@ -164,17 +269,7 @@ function ConversationContent({ id }: { id: string }) {
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
-                <div className="w-full">
-                  <Button className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]">
-                    Reserve Item
-                  </Button>
-                </div>
-                <div className="w-full">
-                  <Button variant="outline" className="w-full">
-                    <Check className="mr-2 h-4 w-4" />
-                    Confirm Exchange
-                  </Button>
-                </div>
+                {renderActionButtons()}
               </CardFooter>
             </Card>
           )}
