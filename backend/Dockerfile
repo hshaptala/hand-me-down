@@ -13,9 +13,9 @@ RUN install-php-extensions \
 
 ENV SERVER_NAME=:80
 ENV APP_RUNTIME=Runtime\\FrankenPhpSymfony\\Runtime
-ENV APP_ENV=prod
 ENV FRANKENPHP_CONFIG="worker ./public/index.php"
 
 COPY . /app/
 COPY --from=composer /app/vendor /app/vendor
-COPY .env /app/.env
+
+RUN setcap -r /usr/local/bin/frankenphp
