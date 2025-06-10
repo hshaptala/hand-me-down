@@ -27,17 +27,15 @@ class MemberRepository extends ServiceEntityRepository
             ->andWhere('m.user = :user')
             ->setParameter('user', $user)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
-
-        return $result !== null && $result["banCount"] !== null ? $result["banCount"] : 0 ;
+            ->getOneOrNullResult();
+        return $result !== null && $result["banCount"] !== null ? $result["banCount"] : 0;
     }
 
     public function findByExceptRestricted(Community $community, bool $isBanned): array
     {
         return $this->createQueryBuilder("m")
             ->join(User::class, "u", Join::WITH, "m.user = u")
-            ->andWhere("u.isRestricted = 0")
+            ->andWhere("u.isRestricted = false")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")
             ->setParameter(":community", $community)
@@ -46,11 +44,12 @@ class MemberRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
+
     public function findOneByUnlessRestricted(Community $community, User $user, bool $isBanned): Member|null
     {
         return $this->createQueryBuilder("m")
             ->join(User::class, "u", Join::WITH, "m.user = u")
-            ->andWhere("u.isRestricted = 0")
+            ->andWhere("u.isRestricted = false")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")
             ->andWhere("u = :user")
@@ -58,22 +57,19 @@ class MemberRepository extends ServiceEntityRepository
             ->setParameter(":community", $community)
             ->setParameter(":isBanned", $isBanned)
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
+            ->getOneOrNullResult();
     }
-
     public function countMembersForCommunityExceptRestricted(Community $community, bool $isBanned): int
     {
         return (int) $this->createQueryBuilder("m")
             ->select('COUNT(m.id)')
             ->join(User::class, "u", Join::WITH, "m.user = u")
-            ->andWhere("u.isRestricted = 0")
+            ->andWhere("u.isRestricted = false")
             ->andWhere("m.isBanned = :isBanned")
             ->andWhere("m.community = :community")
             ->setParameter(":community", $community)
             ->setParameter(":isBanned", $isBanned)
             ->getQuery()
-            ->getSingleScalarResult()
-        ;
+            ->getSingleScalarResult();
     }
 }

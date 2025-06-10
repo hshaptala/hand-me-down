@@ -27,7 +27,7 @@ class CommunityRepository extends ServiceEntityRepository
             ->join('c.members', 'm')
             ->join('m.user', 'u')
             ->andWhere('u.id = :id')
-            ->andWhere('m.isBanned = 0')
+            ->andWhere('m.isBanned = false')
             ->setParameter('id', $user->getId())
             ->getQuery()
             ->getResult()

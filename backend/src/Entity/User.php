@@ -106,7 +106,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user_info'])]
     private ?float $rating = null;
 
-    #[ORM\Column(options: ["default" => false])]
+    #[ORM\Column(options: ["default" => false], nullable: true)]
     private ?bool $isRestricted = false;
 
     #[ORM\Column(length: 255, nullable: true)]
