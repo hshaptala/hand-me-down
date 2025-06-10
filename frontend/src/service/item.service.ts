@@ -42,7 +42,6 @@ export async function createItem(
   return res.data;
 }
 
-// Functions to fetch items for a specific user (for member profile viewing)
 export async function fetchUserDonations(userId: number): Promise<Item[]> {
   const res = await api.get(`/api/users/${userId}/items/donations`);
   return res.data;
@@ -58,17 +57,23 @@ export async function fetchUserReservations(userId: number): Promise<Item[]> {
   return res.data;
 }
 
-/*export async function reserveItem(itemId: number): Promise<Item> {
-  const res = await api.get(`/api/items/${itemId}`);
+export async function reserveItem(
+  itemId: number,
+): Promise<{ message: string }> {
+  const res = await api.post(`/api/items/${itemId}/reserve`);
   return res.data;
 }
 
-export async function cancelReserveItem(itemId: number): Promise<Item> {
-  const res = await api.get(`/api/items/${itemId}`);
+export async function cancelReserveItem(
+  itemId: number,
+): Promise<{ message: string }> {
+  const res = await api.post(`/api/items/${itemId}/cancel`);
   return res.data;
 }
 
-export async function confirmReceiveItem(itemId: number): Promise<Item> {
-  const res = await api.get(`/api/items/${itemId}`);
+export async function confirmReceiveItem(
+  itemId: number,
+): Promise<{ message: string }> {
+  const res = await api.post(`/api/items/${itemId}/confirm`);
   return res.data;
-}*/
+}
