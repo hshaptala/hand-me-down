@@ -210,14 +210,14 @@ export default function About() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:gap-4 sm:flex-row">
-              <Button asChild size="lg" variant="secondary">
+              <Button asChild size="lg" variant="secondary" className="bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]">
                 <Link to="/register">Create an Account</Link>
               </Button>
               <Button
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white text-white hover:bg-white/10"
+                className="text-[#424242]"
               >
                 <Link to="/communities">Explore Communities</Link>
               </Button>

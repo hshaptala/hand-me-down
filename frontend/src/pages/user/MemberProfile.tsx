@@ -220,10 +220,10 @@ export default function MemberProfile() {
                       </div>                    </div>
                     <div className="text-center">
                       <div className="mb-1 flex items-center justify-center gap-1">
-                        {renderStars(profileUser.rating)}
+                        {profileUser.rating !== null && renderStars(profileUser.rating)}
                       </div>
                       <div className="text-lg font-bold text-orange-600">
-                        {profileUser.rating.toFixed(1)}
+                        {profileUser.rating !== null ? profileUser.rating.toFixed(1) : "--"}
                       </div>
                       <div className="text-muted-foreground text-sm">
                         User Rating
