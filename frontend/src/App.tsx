@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import { ToastProvider } from "./components/ui/toast-provider";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import Layout from "./Layout.tsx";
@@ -25,24 +26,80 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Layout />}>
+            {/* Public routes */}
             <Route index element={<Home />} />
             <Route path="communities" element={<Communities />} />
-            <Route path="communities/:id" element={<Community />} />
-            <Route path="conversations" element={<ConversationsPage />} />
-            <Route path="conversations/:id" element={<Conversation />} />
-            <Route path="communities/:id/items/:itemId" element={<Item />} />
-            <Route
-              path="communities/:id/items/create"
-              element={<CreateItem />}
-            />
             <Route path="about" element={<About />} />
-            <Route path="communities/create" element={<CreateCommunity />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="communities/:communityId/member/:userId" element={<MemberProfile />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="reset-password" element={<ResetPassword />} />{" "}
+            <Route path="reset-password" element={<ResetPassword />} />
+
+            {/* Protected routes */}
+            <Route
+              path="communities/:id"
+              element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="conversations"
+              element={
+                <ProtectedRoute>
+                  <ConversationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="conversations/:id"
+              element={
+                <ProtectedRoute>
+                  <Conversation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/items/:itemId"
+              element={
+                <ProtectedRoute>
+                  <Item />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/items/create"
+              element={
+                <ProtectedRoute>
+                  <CreateItem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/create"
+              element={
+                <ProtectedRoute>
+                  <CreateCommunity />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:communityId/member/:userId"
+              element={
+                <ProtectedRoute>
+                  <MemberProfile />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
         <ToastProvider />
