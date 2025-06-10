@@ -196,7 +196,7 @@ export default function UserProfile() {
                   <span>Settings</span>
                 </Link>
                 <button
-                  className="flex w-full items-center gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
+                  className="flex w-full items-center cursor-pointer gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
                   onClick={signOut}
                 >
                   <LogOut className="h-4 w-4" />
