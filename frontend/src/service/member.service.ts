@@ -91,7 +91,7 @@ export async function fetchRoles(): Promise<string[]> {
     "fetch-roles",
     async () => {
       const res = await api.get("/api/members/roles");
-      return res.data.map((role: { value: string }) => role.value);
+      return res.data;
     },
     300000,
   );

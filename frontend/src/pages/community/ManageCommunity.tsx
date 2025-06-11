@@ -138,8 +138,6 @@ export default function ManageCommunity() {
             setCurrentUserMember(null);
           }
         }
-
-        // Fetch roles
         const rolesData = await fetchRoles();
         setRoles(rolesData);
 
@@ -605,7 +603,7 @@ export default function ManageCommunity() {
                       <SelectTrigger className="w-[180px]">
                         <Filter className="mr-2 h-4 w-4" />
                         <SelectValue placeholder="Filter" />
-                      </SelectTrigger>
+                      </SelectTrigger>{" "}
                       <SelectContent>
                         <SelectItem value="all">All Roles</SelectItem>
                         {roles.map((role) => (
@@ -661,7 +659,7 @@ export default function ManageCommunity() {
                               >
                                 <SelectTrigger className="w-32">
                                   <SelectValue />
-                                </SelectTrigger>
+                                </SelectTrigger>{" "}
                                 <SelectContent>
                                   {getAvailableRoles().map((role) => (
                                     <SelectItem key={role} value={role}>
