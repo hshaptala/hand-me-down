@@ -94,3 +94,45 @@ export async function createCommunity(data: {
 
   return res.data;
 }
+
+export async function updateCommunity(
+  id: number,
+  data: {
+    name?: string;
+    location?: string;
+    description?: string;
+    password?: string;
+    visibility?: "Public" | "Private";
+    image?: File;
+  }
+): Promise<Community> {
+  const formData = new FormData();
+  formData.append("_method", "PATCH");
+  
+  if (data.name) formData.append("name", data.name);
+  if (data.location) formData.append("location", data.location);
+  if (data.description) formData.append("description", data.description);
+  if (data.password) formData.append("password", data.password);
+  if (data.visibility) formData.append("visibility", data.visibility);
+  if (data.image) formData.append("image", data.image);
+
+  const res = await api.post(`/api/communities/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  requestCache.clearRequest(`fetch-community-${id}`);
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest("user-communities");
+
+  return res.data;
+}
+
+export async function deleteCommunity(id: number): Promise<void> {
+  await api.delete(`/api/communities/${id}`);
+  
+  requestCache.clearRequest(`fetch-community-${id}`);
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest("user-communities");
+}

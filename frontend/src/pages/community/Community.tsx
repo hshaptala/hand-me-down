@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Users,
+  Lock,
+  MapPin,
+  Filter,
+  Settings,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
@@ -25,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/AuthContext";
 import { getAllCategories } from "@/models/categories";
 import type { Community } from "@/models/community";
 import type { Item } from "@/models/item";
@@ -32,17 +41,24 @@ import type { Member } from "@/models/member";
 import type { User } from "@/models/user";
 import { fetchCommunity } from "@/service/community.service";
 import { fetchItems } from "@/service/item.service";
-import { fetchMembers } from "@/service/member.service";
-import { fetchUser } from "@/service/user.service";
+import { fetchMembers, fetchMember } from "@/service/member.service";
+import { fetchUser, fetchUserBySupabaseId } from "@/service/user.service";
 
 export default function Community() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [donors, setDonors] = useState<Record<number, User>>({});
+  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
+    null,
+  );
+  const [currentBackendUser, setCurrentBackendUser] = useState<User | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -99,10 +115,23 @@ export default function Community() {
         });
         setDonors(donorMap);
         setItemsLoading(false);
-
         setMembersLoading(true);
         const membersData = await fetchMembers(Number(id));
         setMembers(membersData);
+
+        if (user) {
+          try {
+            const backendUser = await fetchUserBySupabaseId(user.id);
+            setCurrentBackendUser(backendUser);
+
+            const currentMember = await fetchMember(Number(id), backendUser.id);
+            setCurrentUserMember(currentMember);
+          } catch (error) {
+            console.error("Error fetching current user membership:", error);
+            setCurrentUserMember(null);
+            setCurrentBackendUser(null);
+          }
+        }
       } catch (err) {
         console.error("Error loading community data:", err);
         setError("Failed to load community data");
@@ -112,9 +141,26 @@ export default function Community() {
         setItemsLoading(false);
       }
     };
-
     loadCommunityData();
-  }, [id]);
+  }, [id, user]);
+
+  // Helper functions for role checking
+  const getCurrentUserRole = (): string => {
+    return currentUserMember?.role || "member";
+  };
+
+  const isOwner = (): boolean => {
+    if (!community || !currentBackendUser) return false;
+    return currentBackendUser.id === community.owner;
+  };
+
+  const canManageCommunity = (): boolean => {
+    const role = getCurrentUserRole();
+    const owner = isOwner();
+
+    // Can manage if owner, administrator, or moderator
+    return owner || role === "administrator" || role === "moderator";
+  };
 
   if (loading) {
     return (
@@ -172,9 +218,21 @@ export default function Community() {
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4" />
               <span>{community.location}</span>
-            </div>
+            </div>{" "}
           </div>
         </div>
+        {canManageCommunity() && (
+          <Button
+            variant="outline"
+            className="absolute top-6 right-6 border-white/20 bg-white/10 text-white hover:bg-white/20"
+            asChild
+          >
+            <Link to={`/communities/${community.id}/manage`}>
+              <Settings className="mr-2 h-4 w-4" />
+              Manage Community
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Community Content */}
@@ -273,10 +331,9 @@ export default function Community() {
                           <Avatar className="h-6 w-6">
                             <AvatarImage
                               src={
-                                donors[item.id]?.avatarUrl
-                                  ? import.meta.env.VITE_API_BASE_URL +
-                                    donors[item.id].avatarUrl
-                                  : "/placeholder.svg"
+                                import.meta.env.VITE_API_BASE_URL +
+                                  donors[item.id].avatarUrl ||
+                                "/placeholder.svg"
                               }
                               alt="Donor"
                             />
