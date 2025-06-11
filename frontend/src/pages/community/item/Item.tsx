@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import { StartConversation } from "@/components/chat/StartConversation";
@@ -15,17 +15,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
 import type { Item } from "@/models/item";
 import type { User } from "@/models/user";
 import { fetchItem } from "@/service/item.service";
-import { fetchUser } from "@/service/user.service";
+import { fetchUser, fetchUserBySupabaseId } from "@/service/user.service";
 
 export default function Item() {
   const params = useParams<{ id: string; itemId: string }>();
+  const { user } = useAuth();
   const [item, setItem] = useState<Item | null>(null);
   const [donor, setDonor] = useState<User | null>(null);
+  const [currentBackendUser, setCurrentBackendUser] = useState<User | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     if (!params.id || !params.itemId) return;
 
@@ -37,6 +43,16 @@ export default function Item() {
         // Fetch donor information
         const donorData = await fetchUser(itemData.donor);
         setDonor(donorData);
+
+        // Fetch current user information
+        if (user) {
+          try {
+            const backendUser = await fetchUserBySupabaseId(user.id);
+            setCurrentBackendUser(backendUser);
+          } catch (error) {
+            console.error("Error fetching current user:", error);
+          }
+        }
       } catch (error) {
         console.error("Error loading item or donor data:", error);
       } finally {
@@ -45,7 +61,12 @@ export default function Item() {
     };
 
     loadItemAndDonor();
-  }, [params.id, params.itemId]);
+  }, [params.id, params.itemId, user]);
+  // Check if current user is the owner of the item
+  const isOwner = (): boolean => {
+    if (!item || !currentBackendUser) return false;
+    return currentBackendUser.id === item.donor;
+  };
 
   if (loading || !item) {
     return (
@@ -61,6 +82,7 @@ export default function Item() {
   return (
     <ChatProvider>
       <Container className="py-10">
+        {" "}
         <div className="flex flex-col space-y-6">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="h-8 w-8">
@@ -142,24 +164,43 @@ export default function Item() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            {/* Contact Donor */}
+            </div>{" "}
+            {/* Contact Donor or Edit Item section */}
             <div>
               <Card>
                 <CardHeader>
-                  <CardTitle>Contact Donor</CardTitle>
+                  <CardTitle>
+                    {isOwner() ? "Edit Your Item" : "Contact Donor"}
+                  </CardTitle>
                   <CardDescription>
-                    Start a conversation to arrange pickup details
+                    {isOwner()
+                      ? "Update your item details or manage your listing"
+                      : "Start a conversation to arrange pickup details"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {donor?.supabaseUserId && (
-                    <StartConversation
-                      recipientId={donor.supabaseUserId}
-                      recipientName={`${donor.firstName} ${donor.lastName}`}
-                      itemId={item.id.toString()}
-                      itemTitle={item.title}
-                    />
+                  {isOwner() ? (
+                    <Button
+                      className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
+                      asChild
+                      disabled={item.status !== "Open"}
+                    >
+                      <Link
+                        to={`/communities/${params.id}/items/${item.id}/edit`}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Item
+                      </Link>
+                    </Button>
+                  ) : (
+                    donor?.supabaseUserId && (
+                      <StartConversation
+                        recipientId={donor.supabaseUserId}
+                        recipientName={`${donor.firstName} ${donor.lastName}`}
+                        itemId={item.id.toString()}
+                        itemTitle={item.title}
+                      />
+                    )
                   )}
                 </CardContent>
               </Card>

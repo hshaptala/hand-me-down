@@ -13,6 +13,7 @@ import Communities from "./pages/community/Communities.tsx";
 import Community from "./pages/community/Community.tsx";
 import CreateCommunity from "./pages/community/CreateCommunity.tsx";
 import CreateItem from "./pages/community/item/CreateItem.tsx";
+import EditItem from "./pages/community/item/EditItem.tsx";
 import Item from "./pages/community/item/Item.tsx";
 import ManageCommunity from "./pages/community/ManageCommunity.tsx";
 import Conversation from "./pages/conversations/Conversation.tsx";
@@ -75,12 +76,19 @@ function App() {
                   <Item />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            />            <Route
               path="communities/:id/items/create"
               element={
                 <ProtectedRoute>
                   <CreateItem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/items/:itemId/edit"
+              element={
+                <ProtectedRoute>
+                  <EditItem />
                 </ProtectedRoute>
               }
             />

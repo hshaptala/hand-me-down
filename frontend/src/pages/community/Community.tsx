@@ -353,7 +353,7 @@ export default function Community() {
                               : new Date().toLocaleDateString()}
                           </span>
                         </div>
-                      </CardContent>
+                      </CardContent>{" "}
                       <CardFooter>
                         <Button
                           className={`w-full ${
@@ -367,9 +367,14 @@ export default function Community() {
                           <Link
                             to={`/communities/${community.id}/items/${item.id}`}
                           >
-                            {item.status === "Open"
-                              ? "Reserve Item"
-                              : "View Item"}
+                            {/* Show different button text based on ownership */}
+                            {donors[item.id] &&
+                            currentBackendUser &&
+                            donors[item.id].id === currentBackendUser.id
+                              ? "View Item"
+                              : item.status === "Open"
+                                ? "Reserve Item"
+                                : "View Item"}
                           </Link>
                         </Button>
                       </CardFooter>
