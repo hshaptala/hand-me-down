@@ -273,10 +273,9 @@ export default function Community() {
                           <Avatar className="h-6 w-6">
                             <AvatarImage
                               src={
-                                donors[item.id]?.avatarUrl
-                                  ? import.meta.env.VITE_API_BASE_URL +
-                                    donors[item.id].avatarUrl
-                                  : "/placeholder.svg"
+                                import.meta.env.VITE_API_BASE_URL +
+                                  donors[item.id].avatarUrl ||
+                                "/placeholder.svg"
                               }
                               alt="Donor"
                             />

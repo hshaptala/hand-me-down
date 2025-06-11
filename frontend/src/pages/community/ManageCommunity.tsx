@@ -591,7 +591,7 @@ export default function ManageCommunity() {
                         </Button>
                       )}
                     </div>
-                    <Button onClick={handleSaveCommunity} disabled={saving}>
+                    <Button className="bg-[#2E7D32] hover:bg-[#1B5E20]" onClick={handleSaveCommunity} disabled={saving}>
                       <Save className="mr-2 h-4 w-4" />
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
@@ -658,7 +658,7 @@ export default function ManageCommunity() {
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
                                 <AvatarImage
-                                  src={member.avatarUrl || "/placeholder.svg"}
+                                  src={import.meta.env.VITE_API_BASE_URL + member.avatarUrl || "/placeholder.svg"}
                                   alt={`${member.firstName} ${member.lastName}`}
                                 />
                                 <AvatarFallback>
