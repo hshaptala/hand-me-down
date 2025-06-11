@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
@@ -204,20 +203,6 @@ export default function UserProfile() {
                 >
                   <Gift className="h-4 w-4" />
                   <span>My Items</span>
-                </Link>
-                <Link
-                  to="/my-communities"
-                  className="flex items-center gap-2 text-sm transition-colors hover:text-[#2E7D32]"
-                >
-                  <MapPin className="h-4 w-4" />
-                  <span>My Communities</span>
-                </Link>
-                <Link
-                  to="/settings"
-                  className="flex items-center gap-2 text-sm transition-colors hover:text-[#2E7D32]"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
                 </Link>
                 <button
                   className="flex w-full items-center cursor-pointer gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
@@ -418,118 +403,6 @@ export default function UserProfile() {
                     <Button className="bg-[#2E7D32] hover:bg-[#1B5E20]">
                       Update Password
                     </Button>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">
-                      Notification Preferences
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-messages">New Messages</Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications when you get new messages
-                          </p>
-                        </div>
-                        <Switch id="notify-messages" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-items">
-                            Item Reservations
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications when your items are reserved
-                          </p>
-                        </div>
-                        <Switch id="notify-items" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-communities">
-                            Community Updates
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications about new items in your
-                            communities
-                          </p>
-                        </div>
-                        <Switch id="notify-communities" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Privacy & Security</CardTitle>
-                  <CardDescription>
-                    Manage your privacy and security settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Profile Visibility</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="profile-visibility">
-                            Public Profile
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Allow others to see your profile information
-                          </p>
-                        </div>
-                        <Switch id="profile-visibility" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="activity-visibility">
-                            Activity History
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Show your donation and receiving history to others
-                          </p>
-                        </div>
-                        <Switch id="activity-visibility" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Shield className="text-muted-foreground h-5 w-5" />
-                      <h3 className="text-lg font-medium">Account Security</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="two-factor">
-                            Two-Factor Authentication
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Add an extra layer of security to your account
-                          </p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          Enable
-                        </Button>
-                      </div>
-                      <div className="pt-2">
-                        <Button
-                          variant="destructive"
-                          className="w-full sm:w-auto"
-                        >
-                          Delete Account
-                        </Button>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
