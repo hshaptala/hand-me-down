@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import {
   Gift,
@@ -33,6 +33,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import supabase from "@/lib/supabase";
+import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
+import * as UserAPIModels from "@/models/user";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -48,9 +50,12 @@ export default function UserProfile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { user, signOut } = useAuth();
+  const avatarUploadRef = useRef<HTMLInputElement>(null) ;
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Load user data
   useEffect(() => {
+
     if (user) {
       const metadata = user.user_metadata || {};
       setFormData({
@@ -60,6 +65,7 @@ export default function UserProfile() {
         bio: metadata.bio || "",
         location: metadata.location || "",
       });
+      fetchAvatar(user.id);
     }
   }, [user]);
 
@@ -100,6 +106,28 @@ export default function UserProfile() {
     }
   };
 
+  const fetchAvatar = async(userId: string)=>{
+    const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
+    setAvatarUrl(u.avatarUrl ? u.avatarUrl + "?" + new Date().getTime() : null);
+  }
+
+  const openAvatarSelector = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!avatarUploadRef || !avatarUploadRef.current) return;
+    avatarUploadRef.current.click();
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Get file
+    const files = e.target.files;
+    if (!files) return;
+    const file = files[0];
+    
+    // Send it to the api
+    await uploadAvatar(file);
+    if (user !== null) fetchAvatar(user.id);
+  }
+  
   return (
     <Container className="py-10">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -111,25 +139,21 @@ export default function UserProfile() {
                 <div className="relative">
                   <Avatar className="h-24 w-24">
                     <AvatarImage
-                      src="/placeholder.svg?height=96&width=96"
+                      src={avatarUrl !== null ? import.meta.env.VITE_API_BASE_URL + avatarUrl : "/placeholder.svg?height=96&width=96"}
                       alt={formData.firstName}
                     />
-                    <AvatarFallback>
-                      {formData.firstName && formData.lastName
-                        ? `${formData.firstName[0]}${formData.lastName[0]}`
-                        : "U"}
-                    </AvatarFallback>
                   </Avatar>
-                  <Button
-                    size="sm"
-                    className="absolute right-0 bottom-0 h-8 w-8 rounded-full bg-[#2E7D32] p-0"
-                    onClick={() =>
-                      alert("Upload photo functionality would go here")
-                    }
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span className="sr-only">Upload photo</span>
-                  </Button>
+                  <form>
+                    <Button
+                      size="sm"
+                      className="absolute right-0 bottom-0 h-8 w-8 rounded-full bg-[#2E7D32] p-0"
+                      onClick={openAvatarSelector}
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="sr-only">Upload photo</span>
+                    </Button>
+                    <input ref={avatarUploadRef} type='file' hidden onChange={handleAvatarUpload}/>
+                  </form>
                 </div>
                 <div className="space-y-1 text-center">
                   <h2 className="text-2xl font-bold">{`${formData.firstName} ${formData.lastName}`}</h2>
