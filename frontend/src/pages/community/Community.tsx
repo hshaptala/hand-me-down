@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 
-import { Search, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Users,
+  Lock,
+  MapPin,
+  Filter,
+  Settings,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
@@ -175,6 +183,16 @@ export default function Community() {
             </div>
           </div>
         </div>
+        <Button
+          variant="outline"
+          className="absolute top-6 right-6 border-white/20 bg-white/10 text-white hover:bg-white/20"
+          asChild
+        >
+          <Link to={`/communities/${community.id}/manage`}>
+            <Settings className="mr-2 h-4 w-4" />
+            Manage Community
+          </Link>
+        </Button>
       </div>
 
       {/* Community Content */}

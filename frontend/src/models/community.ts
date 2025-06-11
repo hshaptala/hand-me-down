@@ -6,7 +6,7 @@ export type Community = {
   password?: string;
   created_at?: string;
   creator_id?: number;
-  owner_id?: number;
+  owner?: number;
   visibility: "Public" | "Private";
   imageUrl: string;
   memberCount?: number;

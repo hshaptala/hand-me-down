@@ -86,8 +86,10 @@ export default function ManageCommunity() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [bannedMembers, setBannedMembers] = useState<Member[]>([]);
-  const [memberUsers, setMemberUsers] = useState<Record<number, User>>({});
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
+  const [memberUsers, setMemberUsers] = useState<Record<number, User>>({});  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
+    null,
+  );
+  const [currentBackendUser, setCurrentBackendUser] = useState<User | null>(
     null,
   );
   const [roles, setRoles] = useState<string[]>([]);
@@ -116,10 +118,9 @@ export default function ManageCommunity() {
 
     const loadData = async () => {
       try {
-        setLoading(true);
-
-        // Fetch community data
+        setLoading(true);        // Fetch community data
         const communityData = await fetchCommunity(Number(id));
+        console.log("Community data:", communityData);
         setCommunity(communityData);
         setFormData({
           name: communityData.name,
@@ -147,16 +148,17 @@ export default function ManageCommunity() {
             }
           }),
         );
-        setMemberUsers(userDataMap);
-
-        if (user) {
+        setMemberUsers(userDataMap);        if (user) {
           try {
             const backendUser = await fetchUserBySupabaseId(user.id);
+            console.log("Backend user:", backendUser);
+            setCurrentBackendUser(backendUser);
             const currentMember = await fetchMember(Number(id), backendUser.id);
             setCurrentUserMember(currentMember);
           } catch (error) {
             console.error("Error fetching current user membership:", error);
             setCurrentUserMember(null);
+            setCurrentBackendUser(null);
           }
         }
         const rolesData = await fetchRoles();
@@ -181,10 +183,9 @@ export default function ManageCommunity() {
   }, [id, user, navigate]);
   const getCurrentUserRole = (): string => {
     return currentUserMember?.role || "member";
-  };
-  const isOwner = (): boolean => {
-    if (!community || !currentUserMember) return false;
-    return currentUserMember.id === community.owner_id;
+  };  const isOwner = (): boolean => {
+    if (!community || !currentBackendUser) return false;
+    return currentBackendUser.id === community.owner;
   };
   const canAccessTab = (tab: TabType): boolean => {
     const role = getCurrentUserRole();
@@ -199,35 +200,43 @@ export default function ManageCommunity() {
       default:
         return false;
     }
-  };
-  const canManageRole = (memberRole: string): boolean => {
+  };  const canManageRole = (member: Member): boolean => {
+    // Can't manage your own role
+    if (currentBackendUser && member.id === currentBackendUser.id) {
+      return false;
+    }
+
     const currentRole = getCurrentUserRole();
     const owner = isOwner();
 
     if (owner) return true;
 
     if (currentRole === "administrator") {
-      return memberRole === "moderator" || memberRole === "member";
+      return member.role === "moderator" || member.role === "member";
     }
 
     if (currentRole === "moderator") {
-      return memberRole === "member";
+      return member.role === "member";
     }
 
     return false;
   };
+  const canBanMember = (member: Member): boolean => {
+    // Can't ban yourself
+    if (currentBackendUser && member.id === currentBackendUser.id) {
+      return false;
+    }
 
-  const canBanMember = (memberRole: string): boolean => {
     const currentRole = getCurrentUserRole();
     const owner = isOwner();
     if (owner) return true;
 
     if (currentRole === "administrator") {
-      return memberRole === "moderator" || memberRole === "member";
+      return member.role === "moderator" || member.role === "member";
     }
 
     if (currentRole === "moderator") {
-      return memberRole === "member";
+      return member.role === "member";
     }
 
     return false;
@@ -670,9 +679,8 @@ export default function ManageCommunity() {
                                 {member.firstName} {member.lastName}
                               </span>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            {member.role && canManageRole(member.role) ? (
+                          </TableCell>                          <TableCell>
+                            {member.role && canManageRole(member) ? (
                               <Select
                                 value={member.role || "member"}
                                 onValueChange={(newRole) =>
@@ -734,10 +742,9 @@ export default function ManageCommunity() {
                                   memberUsers[member.id].joinedAt,
                                 ).toLocaleDateString()
                               : "--"}
-                          </TableCell>
-                          <TableCell>
+                          </TableCell>                          <TableCell>
                             <div className="flex items-center gap-2">
-                              {member.role && canBanMember(member.role) && (
+                              {canBanMember(member) && (
                                 <Button
                                   variant="destructive"
                                   size="sm"
@@ -745,8 +752,7 @@ export default function ManageCommunity() {
                                 >
                                   <Ban className="h-4 w-4" />
                                 </Button>
-                              )}
-                              {isOwner() && member.role === "administrator" && (
+                              )}                              {isOwner() && currentBackendUser && member.id !== currentBackendUser.id && (
                                 <Button
                                   variant="outline"
                                   size="sm"
