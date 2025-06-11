@@ -257,7 +257,9 @@ final class UserController extends AbstractController
                         new OA\Property(property: 'avatar', type: 'string', format: 'binary'),
                         new OA\Property(property: 'firstName', type: 'string', description: 'first name'),
                         new OA\Property(property: 'lastName', type: 'string', description: 'last name'),
-                        new OA\Property(property: 'password', type: 'string', description: 'password'),
+                        new OA\Property(property: 'currentPassword', type: 'string', description: 'current password'),
+                        new OA\Property(property: 'newPassword', type: 'string', description: 'new password'),
+                        new OA\Property(property: 'confirmPassword', type: 'string', description: 'confirm new password'),
                     ]
                 )
             )
@@ -286,10 +288,12 @@ final class UserController extends AbstractController
         ValidatorInterface $validator
     ) {
         // Manually populate DTO
-        $dto = new UserEdit();
+        $dto = new UserEdit($user, $userPasswordHasher);
         $dto->firstName = $request->request->get('firstName');
         $dto->lastName = $request->request->get('lastName');
-        $dto->password = $request->request->get('password');
+        $dto->newPassword = $request->request->get('newPassword');
+        $dto->confirmPassword = $request->request->get('confirmPassword');
+        $dto->currentPassword = $request->request->get('currentPassword');
 
         // Check password
         $violations = $validator->validate($dto);
@@ -305,8 +309,8 @@ final class UserController extends AbstractController
         }
 
         // Edit
-        $dto->update($user, $userPasswordHasher);
-        $dto->updateAvatar($request, $user);
+        $dto->update();
+        $dto->updateAvatar($request);
 
         // Save
         $em->persist($user);
