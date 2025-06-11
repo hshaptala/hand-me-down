@@ -86,7 +86,8 @@ export default function ManageCommunity() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [bannedMembers, setBannedMembers] = useState<Member[]>([]);
-  const [memberUsers, setMemberUsers] = useState<Record<number, User>>({});  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
+  const [memberUsers, setMemberUsers] = useState<Record<number, User>>({});
+  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
     null,
   );
   const [currentBackendUser, setCurrentBackendUser] = useState<User | null>(
@@ -118,7 +119,7 @@ export default function ManageCommunity() {
 
     const loadData = async () => {
       try {
-        setLoading(true);        // Fetch community data
+        setLoading(true); // Fetch community data
         const communityData = await fetchCommunity(Number(id));
         console.log("Community data:", communityData);
         setCommunity(communityData);
@@ -132,12 +133,10 @@ export default function ManageCommunity() {
         const membersData = await fetchMembers(Number(id));
         setMembers(membersData);
 
-        // Fetch user data for each member to get statistics
         const userDataMap: Record<number, User> = {};
         await Promise.all(
           membersData.map(async (member) => {
             try {
-              // The member.id is actually the user ID due to backend normalization
               const userData = await fetchUser(member.id);
               userDataMap[member.id] = userData;
             } catch (error) {
@@ -148,7 +147,8 @@ export default function ManageCommunity() {
             }
           }),
         );
-        setMemberUsers(userDataMap);        if (user) {
+        setMemberUsers(userDataMap);
+        if (user) {
           try {
             const backendUser = await fetchUserBySupabaseId(user.id);
             console.log("Backend user:", backendUser);
@@ -181,9 +181,25 @@ export default function ManageCommunity() {
 
     loadData();
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    if (currentUserMember && activeTab === "general") {
+      const role = currentUserMember?.role || "member";
+      const owner =
+        community && currentBackendUser
+          ? currentBackendUser.id === community.owner
+          : false;
+
+      if (role === "moderator" && !owner) {
+        setActiveTab("users");
+      }
+    }
+  }, [currentUserMember, activeTab, community, currentBackendUser]);
+
   const getCurrentUserRole = (): string => {
     return currentUserMember?.role || "member";
-  };  const isOwner = (): boolean => {
+  };
+  const isOwner = (): boolean => {
     if (!community || !currentBackendUser) return false;
     return currentBackendUser.id === community.owner;
   };
@@ -200,7 +216,8 @@ export default function ManageCommunity() {
       default:
         return false;
     }
-  };  const canManageRole = (member: Member): boolean => {
+  };
+  const canManageRole = (member: Member): boolean => {
     // Can't manage your own role
     if (currentBackendUser && member.id === currentBackendUser.id) {
       return false;
@@ -452,19 +469,19 @@ export default function ManageCommunity() {
         <div className="flex gap-6">
           {/* Sidebar */}
           <div className="w-64 space-y-2">
-            <div className="space-y-1">
-              <h3 className="px-3 py-2 text-lg font-medium">Settings</h3>
-              <Button
-                variant={activeTab === "general" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-                onClick={() => setActiveTab("general")}
-                disabled={!canAccessTab("general")}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                General
-              </Button>
-            </div>
-
+            {canAccessTab("general") && (
+              <div className="space-y-1">
+                <h3 className="px-3 py-2 text-lg font-medium">Settings</h3>
+                <Button
+                  variant={activeTab === "general" ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab("general")}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  General
+                </Button>
+              </div>
+            )}
             <div className="space-y-1">
               <h3 className="px-3 py-2 text-lg font-medium">Manage</h3>
               <Button
@@ -487,7 +504,6 @@ export default function ManageCommunity() {
               </Button>
             </div>
           </div>
-
           {/* Main Content */}
           <div className="flex-1">
             {activeTab === "general" && (
@@ -600,7 +616,11 @@ export default function ManageCommunity() {
                         </Button>
                       )}
                     </div>
-                    <Button className="bg-[#2E7D32] hover:bg-[#1B5E20]" onClick={handleSaveCommunity} disabled={saving}>
+                    <Button
+                      className="bg-[#2E7D32] hover:bg-[#1B5E20]"
+                      onClick={handleSaveCommunity}
+                      disabled={saving}
+                    >
                       <Save className="mr-2 h-4 w-4" />
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
@@ -630,7 +650,6 @@ export default function ManageCommunity() {
                       />
                     </div>
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
-                      {" "}
                       <SelectTrigger className="w-[180px]">
                         <Filter className="mr-2 h-4 w-4" />
                         <SelectValue placeholder="Filter" />
@@ -667,7 +686,10 @@ export default function ManageCommunity() {
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
                                 <AvatarImage
-                                  src={import.meta.env.VITE_API_BASE_URL + member.avatarUrl || "/placeholder.svg"}
+                                  src={
+                                    import.meta.env.VITE_API_BASE_URL +
+                                      member.avatarUrl || "/placeholder.svg"
+                                  }
                                   alt={`${member.firstName} ${member.lastName}`}
                                 />
                                 <AvatarFallback>
@@ -679,7 +701,8 @@ export default function ManageCommunity() {
                                 {member.firstName} {member.lastName}
                               </span>
                             </div>
-                          </TableCell>                          <TableCell>
+                          </TableCell>
+                          <TableCell>
                             {member.role && canManageRole(member) ? (
                               <Select
                                 value={member.role || "member"}
@@ -687,7 +710,6 @@ export default function ManageCommunity() {
                                   handleRoleChange(member.id, newRole)
                                 }
                               >
-                                {" "}
                                 <SelectTrigger className="w-32">
                                   <SelectValue />
                                 </SelectTrigger>
@@ -705,7 +727,7 @@ export default function ManageCommunity() {
                                 {member.role
                                   ? member.role.charAt(0).toUpperCase() +
                                     member.role.slice(1)
-                                  : "Unknown"}{" "}
+                                  : "Unknown"}
                               </Badge>
                             )}
                           </TableCell>
@@ -714,7 +736,7 @@ export default function ManageCommunity() {
                               <span>
                                 {memberUsers[member.id]?.rating?.toFixed(1) ||
                                   "--"}
-                              </span>{" "}
+                              </span>
                               <span className="text-yellow-500">⭐</span>
                             </div>
                           </TableCell>
@@ -722,7 +744,7 @@ export default function ManageCommunity() {
                             <div className="flex items-center gap-1">
                               <span>
                                 {memberUsers[member.id]?.itemsGivenCount || 0}
-                              </span>{" "}
+                              </span>
                               <span className="text-green-600">⬆</span>
                             </div>
                           </TableCell>
@@ -731,7 +753,7 @@ export default function ManageCommunity() {
                               <span>
                                 {memberUsers[member.id]?.itemsReceivedCount ||
                                   0}
-                              </span>{" "}
+                              </span>
                               <span className="text-blue-600">⬇</span>
                             </div>
                           </TableCell>
@@ -742,7 +764,8 @@ export default function ManageCommunity() {
                                   memberUsers[member.id].joinedAt,
                                 ).toLocaleDateString()
                               : "--"}
-                          </TableCell>                          <TableCell>
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-2">
                               {canBanMember(member) && (
                                 <Button
@@ -752,18 +775,21 @@ export default function ManageCommunity() {
                                 >
                                   <Ban className="h-4 w-4" />
                                 </Button>
-                              )}                              {isOwner() && currentBackendUser && member.id !== currentBackendUser.id && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedMemberForTransfer(member);
-                                    setTransferDialogOpen(true);
-                                  }}
-                                >
-                                  Make Owner
-                                </Button>
                               )}
+                              {isOwner() &&
+                                currentBackendUser &&
+                                member.id !== currentBackendUser.id && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedMemberForTransfer(member);
+                                      setTransferDialogOpen(true);
+                                    }}
+                                  >
+                                    Make Owner
+                                  </Button>
+                                )}
                             </div>
                           </TableCell>
                         </TableRow>
