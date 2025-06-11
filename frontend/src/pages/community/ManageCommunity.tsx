@@ -100,7 +100,6 @@ export default function ManageCommunity() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Form states
   const [formData, setFormData] = useState({
     name: "",
     location: "",
@@ -126,15 +125,12 @@ export default function ManageCommunity() {
           description: communityData.description || "",
           visibility: communityData.visibility,
           password: "",
-        }); // Fetch members
+        });
         const membersData = await fetchMembers(Number(id));
-        setMembers(membersData); // Find current user's membership using proper API flow
+        setMembers(membersData);
         if (user) {
           try {
-            // Step 1: Get current user's backend user data
             const backendUser = await fetchUserBySupabaseId(user.id);
-
-            // Step 2: Get current user's membership and role
             const currentMember = await fetchMember(Number(id), backendUser.id);
             setCurrentUserMember(currentMember);
           } catch (error) {
@@ -147,12 +143,10 @@ export default function ManageCommunity() {
         const rolesData = await fetchRoles();
         setRoles(rolesData);
 
-        // Fetch banned members if user has permission
         try {
           const bannedData = await fetchBannedMembers(Number(id));
           setBannedMembers(bannedData);
         } catch (error) {
-          // User might not have permission, that's ok
           console.log("No permission to fetch banned members", error);
         }
       } catch (error) {
@@ -171,7 +165,6 @@ export default function ManageCommunity() {
   };
   const isOwner = (): boolean => {
     if (!community || !currentUserMember) return false;
-    // Check if current user is the owner of the community
     return currentUserMember.id === community.owner_id;
   };
   const canAccessTab = (tab: TabType): boolean => {
@@ -180,11 +173,9 @@ export default function ManageCommunity() {
 
     switch (tab) {
       case "general":
-        // Only admins and owners can access general tab
         return role === "administrator" || owner;
       case "users":
       case "bans":
-        // Moderators, admins, and owners can access users and bans tabs
         return role === "moderator" || role === "administrator" || owner;
       default:
         return false;
@@ -194,15 +185,12 @@ export default function ManageCommunity() {
     const currentRole = getCurrentUserRole();
     const owner = isOwner();
 
-    // Owner can manage everyone
     if (owner) return true;
 
-    // Admin can manage moderators and members, but not other admins
     if (currentRole === "administrator") {
       return memberRole === "moderator" || memberRole === "member";
     }
 
-    // Moderators can only ban members (not change roles)
     if (currentRole === "moderator") {
       return memberRole === "member";
     }
@@ -213,16 +201,12 @@ export default function ManageCommunity() {
   const canBanMember = (memberRole: string): boolean => {
     const currentRole = getCurrentUserRole();
     const owner = isOwner();
-
-    // Owner can ban anyone
     if (owner) return true;
 
-    // Admin can ban moderators and members
     if (currentRole === "administrator") {
       return memberRole === "moderator" || memberRole === "member";
     }
 
-    // Moderators can only ban members
     if (currentRole === "moderator") {
       return memberRole === "member";
     }
@@ -242,7 +226,6 @@ export default function ManageCommunity() {
       return ["member", "moderator"];
     }
 
-    // Moderators can't change roles, only ban
     return [];
   };
   const handleSaveCommunity = async () => {
@@ -344,7 +327,6 @@ export default function ManageCommunity() {
     try {
       await unbanMember(Number(id), memberId);
 
-      // Refresh data
       const [membersData, bannedData] = await Promise.all([
         fetchMembers(Number(id)),
         fetchBannedMembers(Number(id)),
@@ -365,11 +347,9 @@ export default function ManageCommunity() {
     try {
       await transferOwnership(Number(id), memberId);
 
-      // Refresh community data to get updated owner_id
       const updatedCommunity = await fetchCommunity(Number(id));
       setCommunity(updatedCommunity);
 
-      // Refresh members data
       const membersData = await fetchMembers(Number(id));
       setMembers(membersData);
 
@@ -670,7 +650,7 @@ export default function ManageCommunity() {
                                 {member.firstName} {member.lastName}
                               </span>
                             </div>
-                          </TableCell>{" "}
+                          </TableCell>
                           <TableCell>
                             {member.role && canManageRole(member.role) ? (
                               <Select
@@ -719,7 +699,7 @@ export default function ManageCommunity() {
                             </div>
                           </TableCell>
                           <TableCell>0 times</TableCell>
-                          <TableCell>20/06/2024</TableCell>{" "}
+                          <TableCell>20/06/2024</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {member.role && canBanMember(member.role) && (
@@ -863,7 +843,7 @@ export default function ManageCommunity() {
             )}
           </div>
         </div>
-      </div>{" "}
+      </div>
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
@@ -894,9 +874,9 @@ export default function ManageCommunity() {
           <DialogHeader>
             <DialogTitle>Transfer Ownership</DialogTitle>
             <DialogDescription>
-              Are you sure you want to transfer ownership to{" "}
+              Are you sure you want to transfer ownership to
               <strong>
-                {selectedMemberForTransfer?.firstName}{" "}
+                {selectedMemberForTransfer?.firstName}
                 {selectedMemberForTransfer?.lastName}
               </strong>
               ? You will become an administrator and they will become the owner
