@@ -341,7 +341,7 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <Avatar>
                               <AvatarImage
-                                src={member.avatarUrl || "/placeholder.svg"}
+                                src={import.meta.env.VITE_API_BASE_URL + member.avatarUrl || "/placeholder.svg"}
                                 alt={`${member.firstName} ${member.lastName}`}
                               />
                               <AvatarFallback>
