@@ -14,6 +14,7 @@ import Community from "./pages/community/Community.tsx";
 import CreateCommunity from "./pages/community/CreateCommunity.tsx";
 import CreateItem from "./pages/community/item/CreateItem.tsx";
 import Item from "./pages/community/item/Item.tsx";
+import ManageCommunity from "./pages/community/ManageCommunity.tsx";
 import Conversation from "./pages/conversations/Conversation.tsx";
 import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
@@ -35,12 +36,19 @@ function App() {
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
 
-            {/* Protected routes */}
-            <Route
+            {/* Protected routes */}            <Route
               path="communities/:id"
               element={
                 <ProtectedRoute>
                   <Community />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="communities/:id/manage"
+              element={
+                <ProtectedRoute>
+                  <ManageCommunity />
                 </ProtectedRoute>
               }
             />
