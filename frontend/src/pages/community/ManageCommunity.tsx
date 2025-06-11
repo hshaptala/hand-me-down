@@ -58,6 +58,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import type { Community } from "@/models/community";
 import type { Member } from "@/models/member";
+import type { User } from "@/models/user";
 import {
   fetchCommunity,
   updateCommunity,
@@ -73,7 +74,7 @@ import {
   fetchRoles,
   transferOwnership,
 } from "@/service/member.service";
-import { fetchUserBySupabaseId } from "@/service/user.service";
+import { fetchUserBySupabaseId, fetchUser } from "@/service/user.service";
 
 type TabType = "general" | "users" | "bans";
 
@@ -85,6 +86,7 @@ export default function ManageCommunity() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [bannedMembers, setBannedMembers] = useState<Member[]>([]);
+  const [memberUsers, setMemberUsers] = useState<Record<number, User>>({});
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(
     null,
   );
@@ -128,6 +130,25 @@ export default function ManageCommunity() {
         });
         const membersData = await fetchMembers(Number(id));
         setMembers(membersData);
+
+        // Fetch user data for each member to get statistics
+        const userDataMap: Record<number, User> = {};
+        await Promise.all(
+          membersData.map(async (member) => {
+            try {
+              // The member.id is actually the user ID due to backend normalization
+              const userData = await fetchUser(member.id);
+              userDataMap[member.id] = userData;
+            } catch (error) {
+              console.error(
+                `Error fetching user data for member ${member.id}:`,
+                error,
+              );
+            }
+          }),
+        );
+        setMemberUsers(userDataMap);
+
         if (user) {
           try {
             const backendUser = await fetchUserBySupabaseId(user.id);
@@ -600,10 +621,11 @@ export default function ManageCommunity() {
                       />
                     </div>
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      {" "}
                       <SelectTrigger className="w-[180px]">
                         <Filter className="mr-2 h-4 w-4" />
                         <SelectValue placeholder="Filter" />
-                      </SelectTrigger>{" "}
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Roles</SelectItem>
                         {roles.map((role) => (
@@ -657,9 +679,10 @@ export default function ManageCommunity() {
                                   handleRoleChange(member.id, newRole)
                                 }
                               >
+                                {" "}
                                 <SelectTrigger className="w-32">
                                   <SelectValue />
-                                </SelectTrigger>{" "}
+                                </SelectTrigger>
                                 <SelectContent>
                                   {getAvailableRoles().map((role) => (
                                     <SelectItem key={role} value={role}>
@@ -674,30 +697,44 @@ export default function ManageCommunity() {
                                 {member.role
                                   ? member.role.charAt(0).toUpperCase() +
                                     member.role.slice(1)
-                                  : "Unknown"}
+                                  : "Unknown"}{" "}
                               </Badge>
                             )}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
-                              <span>4.5</span>
+                              <span>
+                                {memberUsers[member.id]?.rating?.toFixed(1) ||
+                                  "--"}
+                              </span>{" "}
                               <span className="text-yellow-500">⭐</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
-                              <span>4</span>
+                              <span>
+                                {memberUsers[member.id]?.itemsGivenCount || 0}
+                              </span>{" "}
                               <span className="text-green-600">⬆</span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
-                              <span>4</span>
+                              <span>
+                                {memberUsers[member.id]?.itemsReceivedCount ||
+                                  0}
+                              </span>{" "}
                               <span className="text-blue-600">⬇</span>
                             </div>
                           </TableCell>
                           <TableCell>0 times</TableCell>
-                          <TableCell>20/06/2024</TableCell>
+                          <TableCell>
+                            {memberUsers[member.id]?.joinedAt
+                              ? new Date(
+                                  memberUsers[member.id].joinedAt,
+                                ).toLocaleDateString()
+                              : "--"}
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {member.role && canBanMember(member.role) && (
