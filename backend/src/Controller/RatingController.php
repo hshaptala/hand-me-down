@@ -138,7 +138,7 @@ final class RatingController extends AbstractController
     // LIST A USER'S RATINGS
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path: "/api/users/{id}/ratings", methods: ["GET"])]
+    #[Route(path: "/users/{id}/ratings", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name: "Bearer")]
     #[OA\Get(
@@ -185,7 +185,7 @@ final class RatingController extends AbstractController
     // GET a specific one
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path: "/api/ratings/{id}", methods: ["GET"])]
+    #[Route(path: "/ratings/{id}", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name: "Bearer")]
     #[OA\Get(
@@ -217,7 +217,7 @@ final class RatingController extends AbstractController
     // GET one from user ids
 
     #[View(serializerGroups: ["rating_basic"])]
-    #[Route(path: "/api/ratings", methods: ["GET"])]
+    #[Route(path: "/ratings", methods: ["GET"])]
     #[IsGranted("ROLE_USER")]
     #[Security(name: "Bearer")]
     #[OA\Get(
