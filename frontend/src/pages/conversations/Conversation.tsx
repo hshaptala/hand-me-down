@@ -7,6 +7,7 @@ import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
 import ItemActionDialog from "@/components/item/ItemActionDialog";
 import Container from "@/components/layout/Container";
+import { RatingModal } from "@/components/rating/RatingModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,11 @@ function ConversationContent({ id }: { id: string }) {
     isOpen: boolean;
     action: "reserve" | "cancel" | "confirm" | null;
   }>({ isOpen: false, action: null });
+  const [ratingModalState, setRatingModalState] = useState<{
+    isOpen: boolean;
+    userId: number | null;
+    userName: string | null;
+  }>({ isOpen: false, userId: null, userName: null });
 
   useEffect(() => {
     setCurrentConversation(id);
@@ -99,10 +105,31 @@ function ConversationContent({ id }: { id: string }) {
 
     const handleDialogClose = () => {
       setDialogState({ isOpen: false, action: null });
-    };
-    const handleDialogSuccess = async () => {
+    };    const handleDialogSuccess = async () => {
       await refreshItemData();
+      
+      // If this was a confirm action, open the rating modal
+      if (dialogState.action === "confirm" && otherParticipant) {
+        try {
+          // Fetch the backend user data to get the numeric ID
+          const { fetchUserBySupabaseId } = await import("@/service/user.service");
+          const backendUser = await fetchUserBySupabaseId(otherParticipant.id);
+          
+          setRatingModalState({
+            isOpen: true,
+            userId: backendUser.id,
+            userName: otherParticipant.name,
+          });
+        } catch (error) {
+          console.error("Error fetching user for rating:", error);
+        }
+      }
+      
       handleDialogClose();
+    };
+
+    const handleRatingModalClose = () => {
+      setRatingModalState({ isOpen: false, userId: null, userName: null });
     };
 
     return (
@@ -163,8 +190,7 @@ function ConversationContent({ id }: { id: string }) {
               Item Reserved - Awaiting Confirmation
             </Button>
           </div>
-        )}
-        {/* Dialog for all actions */}
+        )}        {/* Dialog for all actions */}
         {dialogState.action && (
           <ItemActionDialog
             isOpen={dialogState.isOpen}
@@ -173,6 +199,15 @@ function ConversationContent({ id }: { id: string }) {
             itemId={Number(conversation.item.id)}
             itemTitle={conversation.item.title}
             onSuccess={handleDialogSuccess}
+          />
+        )}
+        {/* Rating Modal - For confirming users after exchange */}
+        {ratingModalState.isOpen && ratingModalState.userId && ratingModalState.userName && (
+          <RatingModal
+            isOpen={ratingModalState.isOpen}
+            onClose={handleRatingModalClose}
+            userId={ratingModalState.userId}
+            userName={ratingModalState.userName}
           />
         )}
       </>
