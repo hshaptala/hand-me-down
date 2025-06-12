@@ -143,16 +143,34 @@ export default function UserProfile() {
     if (!avatarUploadRef || !avatarUploadRef.current) return;
     avatarUploadRef.current.click();
   };
-
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Get file
     const files = e.target.files;
     if (!files) return;
     const file = files[0];
 
-    // Send it to the api
-    await uploadAvatar(file);
-    if (user !== null) fetchAvatar(user.id);
+    try {
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarUrl(previewUrl);
+
+      // Send it to the api
+      await uploadAvatar(file);
+
+      // Clean up the preview URL
+      URL.revokeObjectURL(previewUrl);
+
+      if (user !== null) {
+        setTimeout(() => {
+          fetchAvatar(user.id);
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      // Revert to previous avatar on error
+      if (user !== null) {
+        fetchAvatar(user.id);
+      }
+    }
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
