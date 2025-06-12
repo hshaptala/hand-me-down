@@ -152,7 +152,6 @@ export default function CreateItem() {
                   placeholder="Describe your item, including its condition and any other relevant details"
                   value={formData.description}
                   onChange={handleChange}
-                  required
                   rows={4}
                 />
               </div>
