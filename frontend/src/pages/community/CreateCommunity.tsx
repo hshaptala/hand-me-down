@@ -2,7 +2,7 @@ import type React from "react";
 import { useState } from "react";
 
 import { MapPin, Upload } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createCommunity } from "@/service/community.service";
 
 export default function CreateCommunity() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -80,13 +81,11 @@ export default function CreateCommunity() {
     if (!formData.image) {
       toast.error("Please select a community image.");
       return;
-    }
-
-    setLoading(true);
+    }    setLoading(true);
     setError(null);
     setSuccess(false);
     try {
-      await createCommunity({
+      const newCommunity = await createCommunity({
         name: formData.name,
         location: formData.location,
         description: formData.description,
@@ -95,6 +94,8 @@ export default function CreateCommunity() {
         image: formData.image,
       });
       setSuccess(true);
+      toast.success(`Community "${newCommunity.name}" created successfully!`);
+      navigate(`/communities/${newCommunity.id}`);
     } catch (error) {
       toast.error(error + "");
     } finally {
