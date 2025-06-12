@@ -257,6 +257,7 @@ export default function Communities() {
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
               />
             </div>
             <Select
@@ -307,7 +308,7 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>{" "}
+                    </CardHeader>
                     <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
@@ -338,7 +339,8 @@ export default function Communities() {
                             View Community
                           </Link>
                         </Button>
-                      ) : (                        <Button
+                      ) : (
+                        <Button
                           className={`w-full ${
                             community.visibility === "Private"
                               ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
@@ -366,7 +368,6 @@ export default function Communities() {
           </TabsContent>
           <TabsContent value="joined" className="mt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {" "}
               {joinedCommunities.length > 0 ? (
                 joinedCommunities.map((community) => (
                   <Card key={community.id} className="flex h-full flex-col">
@@ -398,7 +399,7 @@ export default function Communities() {
                           )}
                         </Badge>
                       </div>
-                    </CardHeader>{" "}
+                    </CardHeader>
                     <CardContent className="flex-1 p-6">
                       <CardTitle>{community.name}</CardTitle>
                       <div className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
@@ -439,7 +440,7 @@ export default function Communities() {
                 </div>
               )}
             </div>
-          </TabsContent>{" "}
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -465,6 +466,7 @@ export default function Communities() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="col-span-3"
                 placeholder="Enter community password"
+                autoComplete="new-password"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleJoinPrivateCommunity();
@@ -484,8 +486,10 @@ export default function Communities() {
               }}
             >
               Cancel
-            </Button>            <Button
+            </Button>
+            <Button
               type="button"
+              className="bg-[#2E7D32] hover:bg-[#1B5E20]"
               onClick={handleJoinPrivateCommunity}
               disabled={joinLoading !== null || !password.trim()}
             >
