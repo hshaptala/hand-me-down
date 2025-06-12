@@ -109,8 +109,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         console.error("Error fetching conversations:", conversationsError);
         setLoading(false);
         return;
-      }
-      const enhancedConversations = await Promise.all(
+      }      const enhancedConversations = await Promise.all(
         conversationsData.map(async (conv) => {
           const { data: participantsData } = await supabase
             .from("conversation_participants")
@@ -137,6 +136,16 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
               }
             }),
           );
+
+          // Fetch the last message for this conversation
+          const { data: lastMessageData } = await supabase
+            .from("messages")
+            .select("content, created_at, sender_id")
+            .eq("conversation_id", conv.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
           let itemData:
             | {
                 id: string;
@@ -172,7 +181,9 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           return {
             ...conv,
             participants,
+            lastMessage: lastMessageData || undefined,
             item: itemData,
+            unreadCount: 0, // You might want to calculate this properly
           };
         }),
       );
@@ -378,9 +389,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             } catch (error) {
               console.error("Error fetching user for message:", error);
             }
-          }
-
-          const newMessage: MessageWithUser = {
+          }          const newMessage: MessageWithUser = {
             ...messageData,
             user: {
               id: messageData.sender_id,
@@ -390,6 +399,24 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           };
 
           setMessages((prev) => [...prev, newMessage]);
+          
+          // Update the last message in conversations
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.id === messageData.conversation_id
+                ? {
+                    ...conv,
+                    lastMessage: {
+                      content: messageData.content,
+                      created_at: messageData.created_at,
+                      sender_id: messageData.sender_id,
+                    },
+                    updated_at: messageData.created_at,
+                  }
+                : conv,
+            ),
+          );
+          
           if (payload.new.sender_id !== currentUser.id) {
             markMessageAsRead(payload.new.id);
           }
