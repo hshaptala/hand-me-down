@@ -61,7 +61,10 @@ export function ConversationList() {
                 <div className="flex items-start gap-4">
                   <Avatar>
                     <AvatarImage
-                      src={import.meta.env.VITE_API_BASE_URL + otherParticipant.avatar || "/placeholder.svg"}
+                      src={
+                        import.meta.env.VITE_API_BASE_URL +
+                          otherParticipant.avatar || "/placeholder.svg"
+                      }
                       alt={otherParticipant.name}
                     />
                     <AvatarFallback>
@@ -90,7 +93,10 @@ export function ConversationList() {
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 overflow-hidden rounded-md">
                           <img
-                            src={import.meta.env.VITE_API_BASE_URL + conversation.item.image || "/placeholder.svg"}
+                            src={
+                              import.meta.env.VITE_API_BASE_URL +
+                                conversation.item.image || "/placeholder.svg"
+                            }
                             alt={conversation.item.title}
                             className="h-full w-full object-cover"
                           />

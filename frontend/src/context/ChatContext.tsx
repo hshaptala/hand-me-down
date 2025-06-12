@@ -109,7 +109,8 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
         console.error("Error fetching conversations:", conversationsError);
         setLoading(false);
         return;
-      }      const enhancedConversations = await Promise.all(
+      }
+      const enhancedConversations = await Promise.all(
         conversationsData.map(async (conv) => {
           const { data: participantsData } = await supabase
             .from("conversation_participants")
@@ -389,7 +390,8 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
             } catch (error) {
               console.error("Error fetching user for message:", error);
             }
-          }          const newMessage: MessageWithUser = {
+          }
+          const newMessage: MessageWithUser = {
             ...messageData,
             user: {
               id: messageData.sender_id,
@@ -399,7 +401,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           };
 
           setMessages((prev) => [...prev, newMessage]);
-          
+
           // Update the last message in conversations
           setConversations((prev) =>
             prev.map((conv) =>
@@ -416,7 +418,7 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
                 : conv,
             ),
           );
-          
+
           if (payload.new.sender_id !== currentUser.id) {
             markMessageAsRead(payload.new.id);
           }
