@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
@@ -45,21 +44,12 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, agreeTerms: checked }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
-      return;
-    }
-
-    if (!formData.agreeTerms) {
-      toast.error("You must agree to the terms of service and privacy policy");
       return;
     }
 
@@ -199,28 +189,6 @@ export default function RegisterPage() {
                   </span>
                 </Button>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="terms"
-                checked={formData.agreeTerms}
-                onCheckedChange={handleCheckboxChange}
-                required
-                disabled={isLoading}
-              />
-              <Label
-                htmlFor="terms"
-                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                I agree to the{" "}
-                <Link to="/terms" className="text-[#2E7D32] hover:underline">
-                  terms of service
-                </Link>{" "}
-                and{" "}
-                <Link to="/privacy" className="text-[#2E7D32] hover:underline">
-                  privacy policy
-                </Link>
-              </Label>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col">
