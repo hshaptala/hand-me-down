@@ -353,23 +353,38 @@ export default function Community() {
                               : new Date().toLocaleDateString()}
                           </span>
                         </div>
-                      </CardContent>
-                      <CardFooter>
+                      </CardContent>{" "}                      <CardFooter>
                         <Button
                           className={`w-full ${
-                            item.status === "Open"
+                            donors[item.id] &&
+                            currentBackendUser &&
+                            donors[item.id].id === currentBackendUser.id
+                              ? "bg-muted hover:bg-muted/80 text-[#424242]"
+                              : item.status === "Open"
                               ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
                               : "bg-muted hover:bg-muted/80"
                           }`}
-                          disabled={item.status !== "Open"}
+                          disabled={
+                            item.status !== "Open" &&
+                            !(
+                              donors[item.id] &&
+                              currentBackendUser &&
+                              donors[item.id].id === currentBackendUser.id
+                            )
+                          }
                           asChild
                         >
                           <Link
                             to={`/communities/${community.id}/items/${item.id}`}
                           >
-                            {item.status === "Open"
-                              ? "Reserve Item"
-                              : "View Item"}
+                            {/* Show different button text based on ownership */}
+                            {donors[item.id] &&
+                            currentBackendUser &&
+                            donors[item.id].id === currentBackendUser.id
+                              ? "View Item"
+                              : item.status === "Open"
+                                ? "Reserve Item"
+                                : "View Item"}
                           </Link>
                         </Button>
                       </CardFooter>
