@@ -465,10 +465,50 @@ export default function ManageCommunity() {
             <p className="text-muted-foreground">{community.name}</p>
           </div>
         </div>
-
+        {/* Mobile Tab Navigation */}
+        <div className="block lg:hidden">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            {canAccessTab("general") && (
+              <Button
+                variant={activeTab === "general" ? "default" : "outline"}
+                className={`w-full ${
+                  activeTab === "general"
+                    ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
+                    : ""
+                }`}
+                onClick={() => setActiveTab("general")}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                General
+              </Button>
+            )}
+            <Button
+              variant={activeTab === "users" ? "default" : "outline"}
+              className={`w-full ${
+                activeTab === "users" ? "bg-[#2E7D32] hover:bg-[#1B5E20]" : ""
+              }`}
+              onClick={() => setActiveTab("users")}
+              disabled={!canAccessTab("users")}
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Users
+            </Button>
+            <Button
+              variant={activeTab === "bans" ? "default" : "outline"}
+              className={`w-full ${
+                activeTab === "bans" ? "bg-[#2E7D32] hover:bg-[#1B5E20]" : ""
+              }`}
+              onClick={() => setActiveTab("bans")}
+              disabled={!canAccessTab("bans")}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Bans
+            </Button>
+          </div>
+        </div>
         <div className="flex gap-6">
-          {/* Sidebar */}
-          <div className="w-64 space-y-2">
+          {/* Desktop Sidebar */}
+          <div className="hidden w-64 space-y-2 lg:block">
             {canAccessTab("general") && (
               <div className="space-y-1">
                 <h3 className="px-3 py-2 text-lg font-medium">Settings</h3>
@@ -505,7 +545,7 @@ export default function ManageCommunity() {
             </div>
           </div>
           {/* Main Content */}
-          <div className="flex-1">
+          <div className="flex-1 lg:flex-1">
             {activeTab === "general" && (
               <Card>
                 <CardHeader>
@@ -514,8 +554,9 @@ export default function ManageCommunity() {
                     Manage your community information and settings.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <CardContent className="space-y-6">
+                  {/* Name and Location */}
+                  <div className="space-y-4 sm:grid sm:grid-cols-1 sm:gap-4 sm:space-y-0 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="name">Community Name</Label>
                       <Input
@@ -539,6 +580,7 @@ export default function ManageCommunity() {
                     </div>
                   </div>
 
+                  {/* Description */}
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -551,10 +593,12 @@ export default function ManageCommunity() {
                         })
                       }
                       rows={3}
+                      className="resize-none"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* Visibility and Password */}
+                  <div className="space-y-4 sm:grid sm:grid-cols-1 sm:gap-4 sm:space-y-0 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="visibility">Visibility</Label>
                       <Select
@@ -592,6 +636,7 @@ export default function ManageCommunity() {
                     )}
                   </div>
 
+                  {/* Community Image */}
                   <div className="space-y-2">
                     <Label htmlFor="image">Community Image</Label>
                     <Input
@@ -602,33 +647,41 @@ export default function ManageCommunity() {
                         setImageFile(e.target.files?.[0] || null)
                       }
                     />
+                    {imageFile && (
+                      <p className="text-muted-foreground text-sm">
+                        Selected: {imageFile.name}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="flex justify-between pt-4">
-                    <div>
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="order-2 sm:order-1">
                       {isOwner() && (
                         <Button
                           variant="destructive"
                           onClick={() => setDeleteDialogOpen(true)}
+                          className="w-full sm:w-auto"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete Community
                         </Button>
                       )}
                     </div>
-                    <Button
-                      className="bg-[#2E7D32] hover:bg-[#1B5E20]"
-                      onClick={handleSaveCommunity}
-                      disabled={saving}
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      {saving ? "Saving..." : "Save Changes"}
-                    </Button>
+                    <div className="order-1 sm:order-2">
+                      <Button
+                        className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] sm:w-auto"
+                        onClick={handleSaveCommunity}
+                        disabled={saving}
+                      >
+                        <Save className="mr-2 h-4 w-4" />
+                        {saving ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             )}
-
             {activeTab === "users" && (
               <Card>
                 <CardHeader>
@@ -639,7 +692,7 @@ export default function ManageCommunity() {
                 </CardHeader>
                 <CardContent>
                   {/* Search and Filter */}
-                  <div className="mb-6 flex gap-4">
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row">
                     <div className="relative flex-1">
                       <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                       <Input
@@ -650,7 +703,7 @@ export default function ManageCommunity() {
                       />
                     </div>
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full sm:w-[180px]">
                         <Filter className="mr-2 h-4 w-4" />
                         <SelectValue placeholder="Filter" />
                       </SelectTrigger>
@@ -664,27 +717,147 @@ export default function ManageCommunity() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {/* Users Table */}
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Rating</TableHead>
-                        <TableHead>Given</TableHead>
-                        <TableHead>Received</TableHead>
-                        <TableHead>Reported</TableHead>
-                        <TableHead>Joined</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedMembers.map((member) => (
-                        <TableRow key={member.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
+                  {/* Desktop Table */}
+                  <div className="hidden lg:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Rating</TableHead>
+                          <TableHead>Given</TableHead>
+                          <TableHead>Received</TableHead>
+                          <TableHead>Reported</TableHead>
+                          <TableHead>Joined</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedMembers.map((member) => (
+                          <TableRow key={member.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage
+                                    src={
+                                      import.meta.env.VITE_API_BASE_URL +
+                                        member.avatarUrl || "/placeholder.svg"
+                                    }
+                                    alt={`${member.firstName} ${member.lastName}`}
+                                  />
+                                  <AvatarFallback>
+                                    {member.firstName[0]}
+                                    {member.lastName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>
+                                  {member.firstName} {member.lastName}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {member.role && canManageRole(member) ? (
+                                <Select
+                                  value={member.role || "member"}
+                                  onValueChange={(newRole) =>
+                                    handleRoleChange(member.id, newRole)
+                                  }
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getAvailableRoles().map((role) => (
+                                      <SelectItem key={role} value={role}>
+                                        {role.charAt(0).toUpperCase() +
+                                          role.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Badge variant="outline">
+                                  {member.role
+                                    ? member.role.charAt(0).toUpperCase() +
+                                      member.role.slice(1)
+                                    : "Unknown"}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <span>
+                                  {memberUsers[member.id]?.rating?.toFixed(1) ||
+                                    "--"}
+                                </span>
+                                <span className="text-yellow-500">⭐</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <span>
+                                  {memberUsers[member.id]?.itemsGivenCount || 0}
+                                </span>
+                                <span className="text-green-600">⬆</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <span>
+                                  {memberUsers[member.id]?.itemsReceivedCount ||
+                                    0}
+                                </span>
+                                <span className="text-blue-600">⬇</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>0 times</TableCell>
+                            <TableCell>
+                              {memberUsers[member.id]?.joinedAt
+                                ? new Date(
+                                    memberUsers[member.id].joinedAt,
+                                  ).toLocaleDateString()
+                                : "--"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {canBanMember(member) && (
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleBanMember(member.id)}
+                                  >
+                                    <Ban className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {isOwner() &&
+                                  currentBackendUser &&
+                                  member.id !== currentBackendUser.id && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedMemberForTransfer(member);
+                                        setTransferDialogOpen(true);
+                                      }}
+                                    >
+                                      Make Owner
+                                    </Button>
+                                  )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {/* Mobile Cards */}
+                  <div className="space-y-4 lg:hidden">
+                    {paginatedMembers.map((member) => (
+                      <Card key={member.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
                                 <AvatarImage
                                   src={
                                     import.meta.env.VITE_API_BASE_URL +
@@ -697,76 +870,45 @@ export default function ManageCommunity() {
                                   {member.lastName[0]}
                                 </AvatarFallback>
                               </Avatar>
-                              <span>
-                                {member.firstName} {member.lastName}
-                              </span>
+                              <div>
+                                <h4 className="font-medium">
+                                  {member.firstName} {member.lastName}
+                                </h4>
+                                <div className="mt-1">
+                                  {member.role && canManageRole(member) ? (
+                                    <Select
+                                      value={member.role || "member"}
+                                      onValueChange={(newRole) =>
+                                        handleRoleChange(member.id, newRole)
+                                      }
+                                    >
+                                      <SelectTrigger className="h-8 w-28 text-xs">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getAvailableRoles().map((role) => (
+                                          <SelectItem key={role} value={role}>
+                                            {role.charAt(0).toUpperCase() +
+                                              role.slice(1)}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  ) : (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {member.role
+                                        ? member.role.charAt(0).toUpperCase() +
+                                          member.role.slice(1)
+                                        : "Unknown"}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            {member.role && canManageRole(member) ? (
-                              <Select
-                                value={member.role || "member"}
-                                onValueChange={(newRole) =>
-                                  handleRoleChange(member.id, newRole)
-                                }
-                              >
-                                <SelectTrigger className="w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {getAvailableRoles().map((role) => (
-                                    <SelectItem key={role} value={role}>
-                                      {role.charAt(0).toUpperCase() +
-                                        role.slice(1)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Badge variant="outline">
-                                {member.role
-                                  ? member.role.charAt(0).toUpperCase() +
-                                    member.role.slice(1)
-                                  : "Unknown"}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <span>
-                                {memberUsers[member.id]?.rating?.toFixed(1) ||
-                                  "--"}
-                              </span>
-                              <span className="text-yellow-500">⭐</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <span>
-                                {memberUsers[member.id]?.itemsGivenCount || 0}
-                              </span>
-                              <span className="text-green-600">⬆</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <span>
-                                {memberUsers[member.id]?.itemsReceivedCount ||
-                                  0}
-                              </span>
-                              <span className="text-blue-600">⬇</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>0 times</TableCell>
-                          <TableCell>
-                            {memberUsers[member.id]?.joinedAt
-                              ? new Date(
-                                  memberUsers[member.id].joinedAt,
-                                ).toLocaleDateString()
-                              : "--"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-2">
                               {canBanMember(member) && (
                                 <Button
                                   variant="destructive"
@@ -791,15 +933,55 @@ export default function ManageCommunity() {
                                   </Button>
                                 )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">
+                                Rating:
+                              </span>
+                              <span className="flex items-center gap-1">
+                                {memberUsers[member.id]?.rating?.toFixed(1) ||
+                                  "--"}
+                                <span className="text-yellow-500">⭐</span>
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Given:
+                              </span>
+                              <span className="flex items-center gap-1">
+                                {memberUsers[member.id]?.itemsGivenCount || 0}
+                                <span className="text-green-600">⬆</span>
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Received:
+                              </span>
+                              <span className="flex items-center gap-1">
+                                {memberUsers[member.id]?.itemsReceivedCount ||
+                                  0}
+                                <span className="text-blue-600">⬇</span>
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Joined:
+                              </span>
+                              {memberUsers[member.id]?.joinedAt
+                                ? new Date(
+                                    memberUsers[member.id].joinedAt,
+                                  ).toLocaleDateString()
+                                : "--"}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="mt-4 flex items-center justify-between">
+                    <div className="mt-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
                       <div className="text-muted-foreground text-sm">
                         Rows per page: {itemsPerPage}
                       </div>
@@ -835,7 +1017,6 @@ export default function ManageCommunity() {
                 </CardContent>
               </Card>
             )}
-
             {activeTab === "bans" && (
               <Card>
                 <CardHeader>
@@ -851,59 +1032,126 @@ export default function ManageCommunity() {
                       <p className="text-muted-foreground">No banned users</p>
                     </div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Ban Count</TableHead>
-                          <TableHead>Last Banned</TableHead>
-                          <TableHead>Banned By</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                    <>
+                      {/* Desktop Table */}
+                      <div className="hidden lg:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>User</TableHead>
+                              <TableHead>Ban Count</TableHead>
+                              <TableHead>Last Banned</TableHead>
+                              <TableHead>Banned By</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {bannedMembers.map((member) => (
+                              <TableRow key={member.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage
+                                        src={
+                                          member.avatarUrl || "/placeholder.svg"
+                                        }
+                                        alt={`${member.firstName} ${member.lastName}`}
+                                      />
+                                      <AvatarFallback>
+                                        {member.firstName[0]}
+                                        {member.lastName[0]}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span>
+                                      {member.firstName} {member.lastName}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{member.banCount || 0}</TableCell>
+                                <TableCell>
+                                  {member.lastBannedAt
+                                    ? new Date(
+                                        member.lastBannedAt,
+                                      ).toLocaleDateString()
+                                    : "Unknown"}
+                                </TableCell>
+                                <TableCell>{member.lastBannedBy}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUnbanMember(member.id)}
+                                  >
+                                    <UserX className="mr-2 h-4 w-4" />
+                                    Unban
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Mobile Cards */}
+                      <div className="space-y-4 lg:hidden">
                         {bannedMembers.map((member) => (
-                          <TableRow key={member.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage
-                                    src={member.avatarUrl || "/placeholder.svg"}
-                                    alt={`${member.firstName} ${member.lastName}`}
-                                  />
-                                  <AvatarFallback>
-                                    {member.firstName[0]}
-                                    {member.lastName[0]}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span>
-                                  {member.firstName} {member.lastName}
-                                </span>
+                          <Card key={member.id}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage
+                                      src={
+                                        member.avatarUrl || "/placeholder.svg"
+                                      }
+                                      alt={`${member.firstName} ${member.lastName}`}
+                                    />
+                                    <AvatarFallback>
+                                      {member.firstName[0]}
+                                      {member.lastName[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <h4 className="font-medium">
+                                      {member.firstName} {member.lastName}
+                                    </h4>
+                                    <div className="text-muted-foreground mt-1 text-sm">
+                                      Banned {member.banCount || 0} time(s)
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUnbanMember(member.id)}
+                                >
+                                  <UserX className="mr-2 h-4 w-4" />
+                                  Unban
+                                </Button>
                               </div>
-                            </TableCell>
-                            <TableCell>{member.banCount || 0}</TableCell>
-                            <TableCell>
-                              {member.lastBannedAt
-                                ? new Date(
-                                    member.lastBannedAt,
-                                  ).toLocaleDateString()
-                                : "Unknown"}
-                            </TableCell>
-                            <TableCell>{member.lastBannedBy}</TableCell>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUnbanMember(member.id)}
-                              >
-                                <UserX className="mr-2 h-4 w-4" />
-                                Unban
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Last Banned:
+                                  </span>
+                                  {member.lastBannedAt
+                                    ? new Date(
+                                        member.lastBannedAt,
+                                      ).toLocaleDateString()
+                                    : "Unknown"}
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Banned By:
+                                  </span>
+                                  {member.lastBannedBy || "Unknown"}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>

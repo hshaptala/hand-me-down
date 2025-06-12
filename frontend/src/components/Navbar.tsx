@@ -23,7 +23,6 @@ export default function Navbar() {
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
       <Container className="flex h-16 items-center justify-between">
-        {" "}
         <Link to="/" className="flex items-center gap-2">
           <img src="/simple.svg" alt="Logo" className="h-12 w-12" />
           <span className="font-logo text-2xl font-normal text-[#2E7D32]">
@@ -160,7 +159,7 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Items
-                </Link>{" "}
+                </Link>
                 <Button
                   variant="ghost"
                   className="h-auto justify-start p-2 font-normal"
