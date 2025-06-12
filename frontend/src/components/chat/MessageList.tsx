@@ -15,18 +15,19 @@ export function MessageList() {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
-
   // Check if anyone is typing
-  const someoneIsTyping = Object.values(isTyping).some(Boolean);  if (!messages.length && !someoneIsTyping) {
+  const someoneIsTyping = Object.values(isTyping).some(Boolean);
+  if (!messages.length && !someoneIsTyping) {
     return (
-      <div className="flex h-[400px] items-center justify-center">
+      <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">
           No messages yet. Start the conversation!
         </p>
       </div>
     );
-  }  return (
-    <div ref={containerRef} className="h-[400px] space-y-4 overflow-y-auto p-4">
+  }
+  return (
+    <div ref={containerRef} className="h-full space-y-4 overflow-y-auto p-4">
       {messages.map((message) => {
         const isSelf = message.sender_id === currentUser?.id;
         return (
@@ -82,7 +83,8 @@ export function MessageList() {
               <span className="text-muted-foreground text-xs">
                 Someone is typing...
               </span>
-            </div>          </div>
+            </div>{" "}
+          </div>
         </div>
       )}
 
