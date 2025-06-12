@@ -4,6 +4,7 @@ export type Item = {
   description?: string;
   donor: number;
   receiver?: number;
+  community: number;
   imageUrl: string;
   keywords: string[];
   status: string;

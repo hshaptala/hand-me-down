@@ -25,3 +25,14 @@ export async function fetchUserBySupabaseId(
     60000,
   );
 }
+
+export async function uploadAvatar(avatar: File) {
+  const formData = new FormData();
+  if (avatar) formData.append("avatar", avatar);
+
+  await api.post("/api/users", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+}

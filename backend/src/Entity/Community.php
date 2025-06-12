@@ -20,7 +20,7 @@ class Community
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['community_basic'])]
+    #[Groups(['community_basic','item_basic'])]
     private ?int $id = null;
 
     #[Groups(['community_basic','community_new'])]

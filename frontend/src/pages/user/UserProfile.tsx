@@ -1,21 +1,12 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-import {
-  Gift,
-  MapPin,
-  Settings,
-  User,
-  Upload,
-  Bell,
-  Shield,
-  LogOut,
-} from "lucide-react";
+import { Gift, Settings, User, Upload, Bell, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,11 +19,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import supabase from "@/lib/supabase";
+import type { Community } from "@/models/community";
+import * as UserAPIModels from "@/models/user";
+import { fetchUserCommunities } from "@/service/community.service";
+import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -48,6 +42,9 @@ export default function UserProfile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { user, signOut } = useAuth();
+  const avatarUploadRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
   // Load user data
   useEffect(() => {
@@ -60,6 +57,8 @@ export default function UserProfile() {
         bio: metadata.bio || "",
         location: metadata.location || "",
       });
+      fetchAvatar(user.id);
+      fetchCommunities(user.id);
     }
   }, [user]);
 
@@ -100,6 +99,36 @@ export default function UserProfile() {
     }
   };
 
+  const fetchCommunities = async (userId: string) => {
+    const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
+    if (u) {
+      const c: Community[] = await fetchUserCommunities(u.id);
+      setUserCommunities(c);
+    }
+  };
+
+  const fetchAvatar = async (userId: string) => {
+    const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
+    setAvatarUrl(u.avatarUrl ? u.avatarUrl + "?" + new Date().getTime() : null);
+  };
+
+  const openAvatarSelector = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!avatarUploadRef || !avatarUploadRef.current) return;
+    avatarUploadRef.current.click();
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Get file
+    const files = e.target.files;
+    if (!files) return;
+    const file = files[0];
+
+    // Send it to the api
+    await uploadAvatar(file);
+    if (user !== null) fetchAvatar(user.id);
+  };
+
   return (
     <Container className="py-10">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -111,25 +140,30 @@ export default function UserProfile() {
                 <div className="relative">
                   <Avatar className="h-24 w-24">
                     <AvatarImage
-                      src="/placeholder.svg?height=96&width=96"
+                      src={
+                        avatarUrl !== null
+                          ? import.meta.env.VITE_API_BASE_URL + avatarUrl
+                          : "/placeholder.svg?height=96&width=96"
+                      }
                       alt={formData.firstName}
                     />
-                    <AvatarFallback>
-                      {formData.firstName && formData.lastName
-                        ? `${formData.firstName[0]}${formData.lastName[0]}`
-                        : "U"}
-                    </AvatarFallback>
                   </Avatar>
-                  <Button
-                    size="sm"
-                    className="absolute right-0 bottom-0 h-8 w-8 rounded-full bg-[#2E7D32] p-0"
-                    onClick={() =>
-                      alert("Upload photo functionality would go here")
-                    }
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span className="sr-only">Upload photo</span>
-                  </Button>
+                  <form>
+                    <Button
+                      size="sm"
+                      className="absolute right-0 bottom-0 h-8 w-8 rounded-full bg-[#2E7D32] p-0"
+                      onClick={openAvatarSelector}
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="sr-only">Upload photo</span>
+                    </Button>
+                    <input
+                      ref={avatarUploadRef}
+                      type="file"
+                      hidden
+                      onChange={handleAvatarUpload}
+                    />
+                  </form>
                 </div>
                 <div className="space-y-1 text-center">
                   <h2 className="text-2xl font-bold">{`${formData.firstName} ${formData.lastName}`}</h2>
@@ -160,7 +194,23 @@ export default function UserProfile() {
               <div className="space-y-1">
                 <h3 className="mb-3 text-sm font-medium">My Communities</h3>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">No communities yet</Badge>
+                  {userCommunities.length === 0 ? (
+                    <Badge variant="secondary">No communities yet</Badge>
+                  ) : (
+                    userCommunities.map((community)=>(
+                      <Link to={`/communities/${community.id}`} key={community.id}>
+                        <Avatar className="h-9 w-9" title={community.name}>
+                          <AvatarImage
+                            src={
+                              import.meta.env.VITE_API_BASE_URL +
+                              community.imageUrl
+                            }
+                            alt={community.name}
+                          />
+                        </Avatar>
+                      </Link>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -181,22 +231,8 @@ export default function UserProfile() {
                   <Gift className="h-4 w-4" />
                   <span>My Items</span>
                 </Link>
-                <Link
-                  to="/my-communities"
-                  className="flex items-center gap-2 text-sm transition-colors hover:text-[#2E7D32]"
-                >
-                  <MapPin className="h-4 w-4" />
-                  <span>My Communities</span>
-                </Link>
-                <Link
-                  to="/settings"
-                  className="flex items-center gap-2 text-sm transition-colors hover:text-[#2E7D32]"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
                 <button
-                  className="flex w-full items-center cursor-pointer gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
+                  className="flex w-full cursor-pointer items-center gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
                   onClick={signOut}
                 >
                   <LogOut className="h-4 w-4" />
@@ -214,14 +250,10 @@ export default function UserProfile() {
             onValueChange={setActiveTab}
             value={activeTab}
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profile</span>
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="flex items-center gap-2">
-                <Gift className="h-4 w-4" />
-                <span className="hidden sm:inline">Activity</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -337,29 +369,6 @@ export default function UserProfile() {
               </Card>
             </TabsContent>
 
-            {/* Activity Tab */}
-            <TabsContent value="activity">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Your recent donations and received items
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center py-10">
-                    <div className="text-center">
-                      <p className="text-muted-foreground">No activity yet</p>
-                      <p className="text-muted-foreground mt-2 text-sm">
-                        Start donating or receiving items to see your activity
-                        here
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             {/* Settings Tab */}
             <TabsContent value="settings">
               <Card className="mb-6">
@@ -394,118 +403,6 @@ export default function UserProfile() {
                     <Button className="bg-[#2E7D32] hover:bg-[#1B5E20]">
                       Update Password
                     </Button>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">
-                      Notification Preferences
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-messages">New Messages</Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications when you get new messages
-                          </p>
-                        </div>
-                        <Switch id="notify-messages" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-items">
-                            Item Reservations
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications when your items are reserved
-                          </p>
-                        </div>
-                        <Switch id="notify-items" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="notify-communities">
-                            Community Updates
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Receive notifications about new items in your
-                            communities
-                          </p>
-                        </div>
-                        <Switch id="notify-communities" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Privacy & Security</CardTitle>
-                  <CardDescription>
-                    Manage your privacy and security settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Profile Visibility</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="profile-visibility">
-                            Public Profile
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Allow others to see your profile information
-                          </p>
-                        </div>
-                        <Switch id="profile-visibility" defaultChecked />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="activity-visibility">
-                            Activity History
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Show your donation and receiving history to others
-                          </p>
-                        </div>
-                        <Switch id="activity-visibility" defaultChecked />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Shield className="text-muted-foreground h-5 w-5" />
-                      <h3 className="text-lg font-medium">Account Security</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="two-factor">
-                            Two-Factor Authentication
-                          </Label>
-                          <p className="text-muted-foreground text-sm">
-                            Add an extra layer of security to your account
-                          </p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          Enable
-                        </Button>
-                      </div>
-                      <div className="pt-2">
-                        <Button
-                          variant="destructive"
-                          className="w-full sm:w-auto"
-                        >
-                          Delete Account
-                        </Button>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

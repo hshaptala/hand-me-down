@@ -20,6 +20,7 @@ import Conversation from "./pages/conversations/Conversation.tsx";
 import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
 import MemberProfile from "./pages/user/MemberProfile.tsx";
+import UserItemsPage from "./pages/user/UserItems.tsx";
 import Profile from "./pages/user/UserProfile.tsx";
 
 function App() {
@@ -36,8 +37,8 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
-
-            {/* Protected routes */}            <Route
+            {/* Protected routes */}{" "}
+            <Route
               path="communities/:id"
               element={
                 <ProtectedRoute>
@@ -76,7 +77,8 @@ function App() {
                   <Item />
                 </ProtectedRoute>
               }
-            />            <Route
+            />{" "}
+            <Route
               path="communities/:id/items/create"
               element={
                 <ProtectedRoute>
@@ -113,6 +115,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MemberProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my-items"
+              element={
+                <ProtectedRoute>
+                  <UserItemsPage />
                 </ProtectedRoute>
               }
             />

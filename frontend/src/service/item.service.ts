@@ -42,18 +42,18 @@ export async function createItem(
   return res.data;
 }
 
-export async function fetchUserDonations(userId: number): Promise<Item[]> {
-  const res = await api.get(`/api/users/${userId}/items/donations`);
+export async function fetchUserDonations(): Promise<Item[]> {
+  const res = await api.get(`/api/users/items/donations`);
   return res.data;
 }
 
-export async function fetchUserReceipts(userId: number): Promise<Item[]> {
-  const res = await api.get(`/api/users/${userId}/items/receipts`);
+export async function fetchUserReceipts(): Promise<Item[]> {
+  const res = await api.get(`/api/users/items/receipts`);
   return res.data;
 }
 
-export async function fetchUserReservations(userId: number): Promise<Item[]> {
-  const res = await api.get(`/api/users/${userId}/items/reservations`);
+export async function fetchUserReservations(): Promise<Item[]> {
+  const res = await api.get(`/api/users/items/reservations`);
   return res.data;
 }
 

@@ -72,6 +72,12 @@ export default function Navbar() {
                       >
                         Conversations
                       </Link>
+                      <Link
+                        to="/my-items"
+                        className="hover:bg-muted block rounded-md p-2"
+                      >
+                        My Items
+                      </Link>
                       <hr />
                       <Button
                         variant="ghost"
@@ -125,13 +131,6 @@ export default function Navbar() {
               Communities
             </Link>
             <Link
-              to="/map"
-              className="hover:bg-muted rounded-md p-2 text-sm font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Map
-            </Link>
-            <Link
               to="/about"
               className="hover:bg-muted rounded-md p-2 text-sm font-medium"
               onClick={() => setIsMenuOpen(false)}
@@ -154,13 +153,6 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Conversations
-                </Link>
-                <Link
-                  to="/my-communities"
-                  className="hover:bg-muted rounded-md p-2 text-sm font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  My Communities
                 </Link>
                 <Link
                   to="/my-items"

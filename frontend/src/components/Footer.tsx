@@ -35,18 +35,26 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  to="/map"
+                  to="/profile"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Map
+                  Profile
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/how-it-works"
+                  to="/conversations"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  How It Works
+                  Messages
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/my-items"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Items
                 </Link>
               </li>
             </ul>
@@ -56,26 +64,18 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
+                  to="/"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/about"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/privacy"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Privacy Policy
                 </Link>
               </li>
             </ul>

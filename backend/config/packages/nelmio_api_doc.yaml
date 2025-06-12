@@ -25,6 +25,9 @@ nelmio_api_doc:
                         receiver:
                             type: integer
                             description: user id
+                        community:
+                            type: integer
+                            description: community id
                         status:
                             type: string
                             description: "[Open, Reserved, Over]"
@@ -32,6 +35,8 @@ nelmio_api_doc:
                             type: array
                             items:
                                 type: string
+                        postedAt:
+                            type: string
                         imageUrl: 
                             type: string
                             description: /images/items/1.png

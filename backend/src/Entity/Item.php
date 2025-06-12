@@ -26,6 +26,7 @@ class Item
     private ?string $description = null;
 
     #[ORM\ManyToOne(inversedBy: 'items')]
+    #[Groups(['item_basic'])]
     private ?Community $community = null;
 
     #[ORM\ManyToOne(inversedBy: 'donations')]
@@ -46,6 +47,7 @@ class Item
     private array $keywords = [];
 
     #[ORM\Column]
+    #[Groups(['item_basic'])]
     private ?\DateTimeImmutable $postedAt = null;
 
     #[ORM\Column(type: Types::BLOB)]

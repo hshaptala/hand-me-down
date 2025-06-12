@@ -20,6 +20,7 @@ class ItemUsersNormalizer implements NormalizerInterface
 
         // Donor
         $data['donor'] = $data['donor']['id'];
+        $data['community'] = $data['community']['id'];
 
         // Receiver
         if (isset($data['receiver']) && isset($data['receiver']['id'])) {
