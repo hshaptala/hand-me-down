@@ -197,8 +197,8 @@ export default function UserProfile() {
                   {userCommunities.length === 0 ? (
                     <Badge variant="secondary">No communities yet</Badge>
                   ) : (
-                    userCommunities.map((community) => (
-                      <Link to={`/communities/${community.id}`}>
+                    userCommunities.map((community)=>(
+                      <Link to={`/communities/${community.id}`} key={community.id}>
                         <Avatar className="h-9 w-9" title={community.name}>
                           <AvatarImage
                             src={

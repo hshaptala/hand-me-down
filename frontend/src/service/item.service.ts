@@ -77,3 +77,33 @@ export async function confirmReceiveItem(
   const res = await api.post(`/api/items/${itemId}/confirm`);
   return res.data;
 }
+
+export async function updateItem(
+  itemId: number,
+  data: {
+    title: string;
+    description: string;
+    keywords: string[];
+    image?: File;
+  },
+): Promise<Item> {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("description", data.description);
+  formData.append("keywords", data.keywords.join(","));
+  if (data.image) {
+    formData.append("image", data.image);
+  }
+
+  const res = await api.post(`/api/items/${itemId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
+}
+
+export async function deleteItem(itemId: number): Promise<void> {
+  await api.delete(`/api/items/${itemId}`);
+}

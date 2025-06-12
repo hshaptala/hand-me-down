@@ -200,7 +200,7 @@ export default function RegisterPage() {
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
-              Already have an account?{" "}
+              Already have an account?
               <Link to="/login" className="text-[#2E7D32] hover:underline">
                 Log in
               </Link>

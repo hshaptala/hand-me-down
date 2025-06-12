@@ -137,6 +137,16 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
               }
             }),
           );
+
+          // Fetch the last message for this conversation
+          const { data: lastMessageData } = await supabase
+            .from("messages")
+            .select("content, created_at, sender_id")
+            .eq("conversation_id", conv.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
           let itemData:
             | {
                 id: string;
@@ -172,7 +182,9 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           return {
             ...conv,
             participants,
+            lastMessage: lastMessageData || undefined,
             item: itemData,
+            unreadCount: 0, // You might want to calculate this properly
           };
         }),
       );
@@ -379,7 +391,6 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
               console.error("Error fetching user for message:", error);
             }
           }
-
           const newMessage: MessageWithUser = {
             ...messageData,
             user: {
@@ -390,6 +401,24 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
           };
 
           setMessages((prev) => [...prev, newMessage]);
+
+          // Update the last message in conversations
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.id === messageData.conversation_id
+                ? {
+                    ...conv,
+                    lastMessage: {
+                      content: messageData.content,
+                      created_at: messageData.created_at,
+                      sender_id: messageData.sender_id,
+                    },
+                    updated_at: messageData.created_at,
+                  }
+                : conv,
+            ),
+          );
+
           if (payload.new.sender_id !== currentUser.id) {
             markMessageAsRead(payload.new.id);
           }
@@ -445,9 +474,9 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     if (error) {
       console.error("Error sending message:", error);
     }
-
     await setUserTyping(false);
   };
+
   // Create a new conversation
   const createConversation = async (
     participantIds: string[],
@@ -461,6 +490,45 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       participantIds.push(currentUser.id);
     }
 
+    // Check if a conversation already exists for the same participants and item
+    if (itemId) {
+      // First, get conversations for the specific item
+      const { data: existingConversations, error: existingError } =
+        await supabase
+          .from("conversations")
+          .select(
+            `
+          id,
+          conversation_participants!inner(user_id)
+        `,
+          )
+          .eq("item_id", parseInt(itemId));
+
+      if (existingError) {
+        console.error("Error checking existing conversations:", existingError);
+      } else if (existingConversations) {
+        // Check if any existing conversation has exactly the same participants
+        for (const conv of existingConversations) {
+          const convParticipantIds = conv.conversation_participants.map(
+            (p) => p.user_id,
+          );
+          const sortedConvParticipants = [...convParticipantIds].sort();
+          const sortedNewParticipants = [...participantIds].sort();
+
+          if (
+            sortedConvParticipants.length === sortedNewParticipants.length &&
+            sortedConvParticipants.every(
+              (id, index) => id === sortedNewParticipants[index],
+            )
+          ) {
+            // Conversation already exists, return its ID
+            return conv.id;
+          }
+        }
+      }
+    }
+
+    // If no existing conversation found, create a new one
     const { data: conversation, error: conversationError } = await supabase
       .from("conversations")
       .insert({ item_id: itemId })
