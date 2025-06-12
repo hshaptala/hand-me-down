@@ -25,35 +25,45 @@ const renderStars = (rating: number): React.JSX.Element[] => {
   const stars: React.JSX.Element[] = [];
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 !== 0;
-  
+
   // Add full stars
   for (let i = 0; i < fullStars; i++) {
     stars.push(
-      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />,
     );
   }
-  
+
   // Add half star if needed
   if (hasHalfStar) {
     stars.push(
       <div key="half" className="relative">
         <Star className="h-4 w-4 text-gray-300" />
-        <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{ width: "50%" }}
+        >
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
         </div>
-      </div>
+      </div>,
     );
   }
-  
+
   // Add empty stars to make 5 total
   const emptyStars = 5 - Math.ceil(rating);
   for (let i = 0; i < emptyStars; i++) {
-    stars.push(
-      <Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />
-    );
+    stars.push(<Star key={`empty-${i}`} className="h-4 w-4 text-gray-300" />);
   }
-  
+
   return stars;
+};
+
+const getRatingColor = (rating: number): string => {
+  if (rating >= 4.5) return "text-green-600";
+  if (rating >= 4.0) return "text-lime-600";
+  if (rating >= 3.5) return "text-yellow-600";
+  if (rating >= 3.0) return "text-orange-600";
+  if (rating >= 2.0) return "text-red-500";
+  return "text-red-600";
 };
 
 export default function MemberProfile() {
@@ -159,7 +169,7 @@ export default function MemberProfile() {
   return (
     <Container className="py-10">
       <div className="mx-auto max-w-6xl">
-        {" "}
+        
         {/* Header with back button */}
         <div className="mb-6 flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild className="h-8 w-8">
@@ -192,13 +202,14 @@ export default function MemberProfile() {
                   <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-bold">
                       {profileUser.firstName} {profileUser.lastName}
-                    </h2>                    <p className="text-muted-foreground text-sm">
+                    </h2>
+                    <p className="text-muted-foreground text-sm">
                       Member since
                       {" " +
                         new Date(profileUser.joinedAt).toLocaleDateString()}
                     </p>
                   </div>
-                  
+
                   {/* Stats */}
                   <div className="w-full space-y-3">
                     <div className="grid grid-cols-2 gap-4">
@@ -217,13 +228,19 @@ export default function MemberProfile() {
                         <div className="text-muted-foreground text-sm">
                           Items Received
                         </div>
-                      </div>                    </div>
+                      </div>
+                    </div>
                     <div className="text-center">
                       <div className="mb-1 flex items-center justify-center gap-1">
-                        {profileUser.rating !== null && renderStars(profileUser.rating)}
+                        {profileUser.rating !== null &&
+                          renderStars(profileUser.rating)}
                       </div>
-                      <div className="text-lg font-bold text-orange-600">
-                        {profileUser.rating !== null ? profileUser.rating.toFixed(1) : "--"}
+                      <div
+                        className={`text-lg font-bold ${profileUser.rating !== null ? getRatingColor(profileUser.rating) : "text-gray-400"}`}
+                      >
+                        {profileUser.rating !== null
+                          ? profileUser.rating.toFixed(1)
+                          : "--"}
                       </div>
                       <div className="text-muted-foreground text-sm">
                         User Rating
@@ -233,7 +250,7 @@ export default function MemberProfile() {
                 </div>
               </CardContent>
             </Card>
-          </div>{" "}
+          </div>
           {/* Communities Section */}
           <div className="lg:w-2/3">
             <Card>
