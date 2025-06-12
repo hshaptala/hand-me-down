@@ -218,7 +218,7 @@ export default function Community() {
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4" />
               <span>{community.location}</span>
-            </div>{" "}
+            </div>
           </div>
         </div>
         {canManageCommunity() && (
@@ -353,7 +353,8 @@ export default function Community() {
                               : new Date().toLocaleDateString()}
                           </span>
                         </div>
-                      </CardContent>{" "}                      <CardFooter>
+                      </CardContent>{" "}
+                      <CardFooter>
                         <Button
                           className={`w-full ${
                             donors[item.id] &&
@@ -361,8 +362,8 @@ export default function Community() {
                             donors[item.id].id === currentBackendUser.id
                               ? "bg-muted hover:bg-muted/80 text-[#424242]"
                               : item.status === "Open"
-                              ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
-                              : "bg-muted hover:bg-muted/80"
+                                ? "bg-[#2E7D32] hover:bg-[#1B5E20]"
+                                : "bg-muted hover:bg-muted/80"
                           }`}
                           disabled={
                             item.status !== "Open" &&
@@ -413,7 +414,10 @@ export default function Community() {
                           <div className="flex items-center gap-4">
                             <Avatar>
                               <AvatarImage
-                                src={member.avatarUrl || "/placeholder.svg"}
+                                src={
+                                  import.meta.env.VITE_API_BASE_URL +
+                                    member.avatarUrl || "/placeholder.svg"
+                                }
                                 alt={`${member.firstName} ${member.lastName}`}
                               />
                               <AvatarFallback>

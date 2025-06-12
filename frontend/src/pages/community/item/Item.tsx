@@ -82,7 +82,6 @@ export default function Item() {
   return (
     <ChatProvider>
       <Container className="py-10">
-        {" "}
         <div className="flex flex-col space-y-6">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" asChild className="h-8 w-8">
@@ -164,7 +163,7 @@ export default function Item() {
                   </div>
                 </CardContent>
               </Card>
-            </div>{" "}
+            </div>
             {/* Contact Donor or Edit Item section */}
             <div>
               <Card>
