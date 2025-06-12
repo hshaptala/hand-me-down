@@ -22,3 +22,29 @@ export async function leaveRating({
   const response = await api.post(`/api/ratings?${params.toString()}`);
   return response.data;
 }
+
+export async function getRatingBetweenUsers({
+  fromId,
+  toId,
+}: {
+  fromId: number;
+  toId: number;
+}): Promise<Rating | null> {
+  try {
+    const params = new URLSearchParams({
+      fromId: fromId.toString(),
+      toId: toId.toString(),
+    });
+
+    const response = await api.get(`/api/ratings?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    if (error && typeof error === "object" && "response" in error) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
+        return null;
+      }
+    }
+    throw error;
+  }
+}
