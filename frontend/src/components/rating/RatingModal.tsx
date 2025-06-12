@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactElement } from "react";
 
 import { Star } from "lucide-react";
 import { toast } from "sonner";
@@ -91,9 +92,8 @@ export function RatingModal({
       onClose();
     }
   };
-
   const renderStars = () => {
-    const stars = [];
+    const stars: ReactElement[] = [];
     for (let i = 1; i <= 5; i++) {
       const isFilled = i <= (hoveredRating || rating);
       stars.push(
