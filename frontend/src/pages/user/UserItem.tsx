@@ -76,13 +76,13 @@ export default function UserItem({item, community}: UserItemsSectionParameters) 
         </CardContent>
         <CardFooter>
             <Button
-            className={`w-full bg-[#2E7D32] hover:bg-[#1B5E20]`}
+            className="bg-muted hover:bg-muted/80 w-full text-[#424242]"
             asChild
             >
             <Link
                 to={`/communities/${item.community}/items/${item.id}`}
             >
-                Consult
+                View Item
             </Link>
             </Button>
         </CardFooter>
