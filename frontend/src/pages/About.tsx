@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 
 export default function About() {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Hero Section */}
+    <div className="flex min-h-screen flex-col">      {/* Hero Section */}
       <section className="dark:from-background dark:to-background w-full bg-white py-12 md:py-24 lg:py-32">
-        <Container className="px-4 md:px-6">
+        <Container>
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl">
@@ -22,11 +21,9 @@ export default function About() {
             </div>
           </div>
         </Container>
-      </section>
-
-      {/* Our Story Section */}
+      </section>      {/* Our Story Section */}
       <section className="dark:bg-background w-full bg-white py-12 md:py-24">
-        <Container className="px-4 md:px-6">
+        <Container>
           <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-12">
             <div className="space-y-4">
               <h2 className="text-3xl font-bold tracking-tighter">Our Story</h2>
@@ -50,17 +47,15 @@ export default function About() {
                 alt="Hand Me Down Team"
                 className="aspect-video overflow-hidden rounded-xl object-cover object-center"
                 height="400"
-                src="/placeholder.svg?height=400&width=600"
+                src="/sdg.jpg?height=400&width=600"
                 width="600"
               />
             </div>
           </div>
         </Container>
-      </section>
-
-      {/* Our Values Section */}
+      </section>      {/* Our Values Section */}
       <section className="dark:bg-muted w-full bg-[#F5F5F5] py-12 md:py-24">
-        <Container className="px-4 md:px-6">
+        <Container>
           <div className="mb-12 flex flex-col items-center space-y-4 text-center">
             <h2 className="text-3xl font-bold tracking-tighter">Our Values</h2>
             <p className="text-muted-foreground max-w-[900px] md:text-lg">
@@ -110,11 +105,9 @@ export default function About() {
             </div>
           </div>
         </Container>
-      </section>
-
-      {/* How It Works Section */}
+      </section>      {/* How It Works Section */}
       <section className="dark:bg-background w-full bg-white py-12 md:py-24">
-        <Container className="px-4 md:px-6">
+        <Container>
           <div className="mb-12 flex flex-col items-center space-y-4 text-center">
             <h2 className="text-3xl font-bold tracking-tighter">
               How Hand Me Down Works
@@ -188,17 +181,15 @@ export default function About() {
                 alt="Hand Me Down Process"
                 className="aspect-video overflow-hidden rounded-xl object-cover object-center"
                 height="400"
-                src="/placeholder.svg?height=400&width=600"
+                src="/how-it-works.png?height=400&width=600"
                 width="600"
               />
             </div>
           </div>
         </Container>
-      </section>
-
-      {/* CTA Section */}
+      </section>      {/* CTA Section */}
       <section className="w-full bg-[#2E7D32] py-12 text-white md:py-24">
-        <Container className="container px-4 md:px-6">
+        <Container>
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter">
