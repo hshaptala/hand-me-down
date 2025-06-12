@@ -308,13 +308,17 @@ final class ItemController extends AbstractController
         Item $item,
         #[CurrentUser()] User $user,
         EntityManagerInterface $em
-    ) {
-        // Make sure user is in the community
+    ) {        // Make sure user is in the community
         $this->denyAccessUnlessGranted(
             CommunityVoter::VIEW,
             $item->getCommunity(),
             message:"You do not have permission to access this item."
         );
+
+        // Check permission
+        if ($item->getDonor() !== $user) {
+            return new JsonResponse("You do not have permission to delete this item.", 403);
+        }
 
         // Check Item status
         if ($item->getStatus() !== ItemStatusEnum::OPEN) {

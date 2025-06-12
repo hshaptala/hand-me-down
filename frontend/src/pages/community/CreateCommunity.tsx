@@ -157,7 +157,7 @@ export default function CreateCommunity() {
                     required
                   />
                 </div>
-              </div>{" "}
+              </div>
               <div className="space-y-2">
                 <Label>Community Image *</Label>
                 <div
@@ -198,7 +198,7 @@ export default function CreateCommunity() {
                         Drag and drop an image here, or click to browse
                       </p>
                     </>
-                  )}{" "}
+                  )}
                   <input
                     type="file"
                     accept="image/*"

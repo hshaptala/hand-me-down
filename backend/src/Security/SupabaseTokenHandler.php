@@ -16,7 +16,7 @@ class SupabaseTokenHandler implements AccessTokenHandlerInterface
     private string $supabaseSecret;
     public function __construct(private UserRepository $repository, private EntityManagerInterface $entityManager)
     {
-        $this->supabaseSecret = 'V/up3/PietyVgYJXbfMrYOOpHPvRR2fX9e3fr+DmupbYAdNGFQtwpbfOon0QHt0/B1HEmtIEHEAC06aF7xiytg==';
+        $this->supabaseSecret = $_ENV['JWT_SECRET'];
     }
 
     public function getUserBadgeFrom(string $accessToken): UserBadge

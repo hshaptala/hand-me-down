@@ -55,7 +55,7 @@ export function MessageInput() {
       <Button
         type="submit"
         size="icon"
-        className="bg-primary hover:bg-primary/90"
+        className="bg-[#2E7D32] hover:bg-[#1B5E20]"
       >
         <Send className="h-4 w-4" />
         <span className="sr-only">Send message</span>
