@@ -19,7 +19,7 @@ class CommunityOwnerNormalizer implements NormalizerInterface
         $data = $this->normalizer->normalize($data, $format, $context);
 
         // Owner id
-        if(isset($data['owner'])) $data['owner'] = $data['owner']['id'];
+        if (isset($data['owner'])) $data['owner'] = $data['owner']['id'];
 
         return $data;
     }

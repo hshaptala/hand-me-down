@@ -1,14 +1,7 @@
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
 
-import {
-  Gift,
-  Settings,
-  User,
-  Upload,
-  Bell,
-  LogOut,
-} from "lucide-react";
+import { Gift, Settings, User, Upload, Bell, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
@@ -30,10 +23,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import supabase from "@/lib/supabase";
-import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
-import * as UserAPIModels from "@/models/user";
 import type { Community } from "@/models/community";
+import * as UserAPIModels from "@/models/user";
 import { fetchUserCommunities } from "@/service/community.service";
+import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -49,13 +42,12 @@ export default function UserProfile() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { user, signOut } = useAuth();
-  const avatarUploadRef = useRef<HTMLInputElement>(null) ;
+  const avatarUploadRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
   // Load user data
   useEffect(() => {
-
     if (user) {
       const metadata = user.user_metadata || {};
       setFormData({
@@ -107,36 +99,36 @@ export default function UserProfile() {
     }
   };
 
-  const fetchCommunities = async(userId: string)=>{
+  const fetchCommunities = async (userId: string) => {
     const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
-    if (u){
+    if (u) {
       const c: Community[] = await fetchUserCommunities(u.id);
       setUserCommunities(c);
     }
-  }
+  };
 
-  const fetchAvatar = async(userId: string)=>{
+  const fetchAvatar = async (userId: string) => {
     const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
     setAvatarUrl(u.avatarUrl ? u.avatarUrl + "?" + new Date().getTime() : null);
-  }
+  };
 
   const openAvatarSelector = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!avatarUploadRef || !avatarUploadRef.current) return;
     avatarUploadRef.current.click();
-  }
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Get file
     const files = e.target.files;
     if (!files) return;
     const file = files[0];
-    
+
     // Send it to the api
     await uploadAvatar(file);
     if (user !== null) fetchAvatar(user.id);
-  }
-  
+  };
+
   return (
     <Container className="py-10">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -148,7 +140,11 @@ export default function UserProfile() {
                 <div className="relative">
                   <Avatar className="h-24 w-24">
                     <AvatarImage
-                      src={avatarUrl !== null ? import.meta.env.VITE_API_BASE_URL + avatarUrl : "/placeholder.svg?height=96&width=96"}
+                      src={
+                        avatarUrl !== null
+                          ? import.meta.env.VITE_API_BASE_URL + avatarUrl
+                          : "/placeholder.svg?height=96&width=96"
+                      }
                       alt={formData.firstName}
                     />
                   </Avatar>
@@ -161,7 +157,12 @@ export default function UserProfile() {
                       <Upload className="h-4 w-4" />
                       <span className="sr-only">Upload photo</span>
                     </Button>
-                    <input ref={avatarUploadRef} type='file' hidden onChange={handleAvatarUpload}/>
+                    <input
+                      ref={avatarUploadRef}
+                      type="file"
+                      hidden
+                      onChange={handleAvatarUpload}
+                    />
                   </form>
                 </div>
                 <div className="space-y-1 text-center">
@@ -196,14 +197,15 @@ export default function UserProfile() {
                   {userCommunities.length === 0 ? (
                     <Badge variant="secondary">No communities yet</Badge>
                   ) : (
-                    userCommunities.map((community)=>(
+                    userCommunities.map((community) => (
                       <Link to={`/communities/${community.id}`}>
                         <Avatar className="h-9 w-9" title={community.name}>
                           <AvatarImage
-                          src={import.meta.env.VITE_API_BASE_URL +
-                                  community.imageUrl
-                              }
-                          alt={community.name}
+                            src={
+                              import.meta.env.VITE_API_BASE_URL +
+                              community.imageUrl
+                            }
+                            alt={community.name}
                           />
                         </Avatar>
                       </Link>
@@ -230,7 +232,7 @@ export default function UserProfile() {
                   <span>My Items</span>
                 </Link>
                 <button
-                  className="flex w-full items-center cursor-pointer gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
+                  className="flex w-full cursor-pointer items-center gap-2 text-left text-sm text-red-500 transition-colors hover:text-red-600"
                   onClick={signOut}
                 >
                   <LogOut className="h-4 w-4" />

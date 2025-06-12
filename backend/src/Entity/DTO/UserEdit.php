@@ -40,9 +40,10 @@ class UserEdit
         // IF only a new password is given
         if (strlen($this->newPassword) > 0) {
             // Check current password is correct
-            if(  $this->currentPassword === null 
-              || strlen($this->currentPassword) === 0
-              || !$this->userPasswordHasher->isPasswordValid($this->toUpdate, $this->currentPassword)
+            if (
+                $this->currentPassword === null
+                || strlen($this->currentPassword) === 0
+                || !$this->userPasswordHasher->isPasswordValid($this->toUpdate, $this->currentPassword)
             ) {
                 $context->buildViolation('Password invalid.')
                     ->atPath('password')
@@ -51,8 +52,9 @@ class UserEdit
             }
 
             // Check both passwords are the same
-            if(  $this->confirmPassword === null 
-              || $this->confirmPassword !== $this->newPassword
+            if (
+                $this->confirmPassword === null
+                || $this->confirmPassword !== $this->newPassword
             ) {
                 $context->buildViolation('Password invalid.')
                     ->atPath('password')
