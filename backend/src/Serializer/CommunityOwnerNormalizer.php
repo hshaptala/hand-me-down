@@ -11,15 +11,16 @@ class CommunityOwnerNormalizer implements NormalizerInterface
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
         private readonly NormalizerInterface $normalizer,
-    ) {
-    }
+    ) {}
 
     public function normalize(mixed $data, ?string $format = null, array $context = []): array
     {
         $data = $this->normalizer->normalize($data, $format, $context);
 
         // Owner id
-        if (isset($data['owner'])) $data['owner'] = $data['owner']['id'];
+        if (isset($data['owner'])) {
+            $data['owner'] = $data['owner']['id'];
+        }
 
         return $data;
     }

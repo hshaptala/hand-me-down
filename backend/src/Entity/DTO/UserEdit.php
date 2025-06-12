@@ -62,7 +62,7 @@ class UserEdit
                 ;
             }
 
-            // Check password  
+            // Check password
             if (strlen($this->newPassword) < 8) {
                 $context->buildViolation('Password must be at least 8 characters.')
                     ->atPath('password')
