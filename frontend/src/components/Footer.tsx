@@ -64,7 +64,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  to="/home"
+                  to="/"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Home
