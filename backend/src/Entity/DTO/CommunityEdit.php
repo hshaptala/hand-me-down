@@ -36,53 +36,69 @@ class CommunityEdit
     public ?string $image = null;
 
 
+    private Community $toUpdate;
+
+    public function __construct(Community $community){
+        $this->toUpdate = $community;
+    }
+
+
     #[Assert\Callback]
     public function validatePasswordRequirement(ExecutionContextInterface $context): void
     {
-        if (strtolower($this->visibility) === 'private') {
+        if (
+            VisibilityEnum::tryFrom($this->visibility) === VisibilityEnum::PRIVATE &&
+            (
+                VisibilityEnum::tryFrom($this->visibility) !== $this->toUpdate->getVisibility()
+                ||
+                ($this->password !== null && strlen($this->password) > 0)
+            )
+        ) {
             if (empty($this->password)) {
                 $context->buildViolation('Password is required when community is private.')
                     ->atPath('password')
-                    ->addViolation();
+                    ->addViolation()
+                ;
             } elseif (strlen($this->password) < 8) {
                 $context->buildViolation('Password must be at least 8 characters.')
                     ->atPath('password')
-                    ->addViolation();
+                    ->addViolation()
+                ;
             }
         }
     }
 
 
-    public function update(Community $community, PasswordHasherInterface $passwordHasher)
+    public function update(PasswordHasherInterface $passwordHasher)
     {
-        $community
-            ->setName($this->name !== null && strlen($this->name) > 0 ? $this->name : $community->getName())
-            ->setDescription($this->description !== null && strlen($this->description) > 0 ? $this->description : $community->getDescription())
-            ->setVisibility($this->visibility !== null && strlen($this->visibility) > 0 ? VisibilityEnum::tryFrom($this->visibility) : $community->getVisibility())
-            ->setLocation($this->location !== null && strlen($this->location) > 0 ? $this->location : $community->getLocation())
+        $this->toUpdate
+            ->setName($this->name !== null && strlen($this->name) > 0 ? $this->name : $this->toUpdate->getName())
+            ->setDescription($this->description !== null && strlen($this->description) > 0 ? $this->description : $this->toUpdate->getDescription())
+            ->setVisibility($this->visibility !== null && strlen($this->visibility) > 0 ? VisibilityEnum::tryFrom($this->visibility) : $this->toUpdate->getVisibility())
+            ->setLocation($this->location !== null && strlen($this->location) > 0 ? $this->location : $this->toUpdate->getLocation())
         ;
 
         // If it is a private communtiy
-        if ($community->getVisibility() === VisibilityEnum::PRIVATE) {
+        if ($this->toUpdate->getVisibility() === VisibilityEnum::PRIVATE) {
             // If a password was given: change it
             if ($this->password !== null && strlen($this->password) > 0) {
-                $community->setPassword($passwordHasher->hash($this->password));
+                $this->toUpdate->setPassword($passwordHasher->hash($this->password));
             }
             // If the community still has no password: throw error
-            if ($community->getPassword() === null || strlen($community->getPassword()) == 0) {
+            if ($this->toUpdate->getPassword() === null || strlen($this->toUpdate->getPassword()) == 0) {
                 throw new UnprocessableEntityHttpException('A private community needs a password');
             }
         }
     }
 
-    public function updateImage(Request $request, Community $community)
+    public function updateImage(Request $request)
     {
         // Read image content
         $file = $request->files->get('image');
         if ($file !== null) { // Make sure an image was sent
             $stream = fopen($file->getPathname(), 'rb');
             // Set image
-            $community->setImage(stream_get_contents($stream));
+            $this->toUpdate->setImage(stream_get_contents($stream));
             fclose($stream);
         }
     }

@@ -331,7 +331,7 @@ final class CommunityController extends AbstractController
         ValidatorInterface $validator
     ) {
         // Manually populate DTO
-        $dto = new CommunityEdit();
+        $dto = new CommunityEdit($community);
         $dto->name = $request->request->get('name');
         $dto->location = $request->request->get('location');
         $dto->description = $request->request->get('description');
@@ -367,8 +367,8 @@ final class CommunityController extends AbstractController
         $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
 
         // Edit
-        $dto->update($community, $passwordHasher);
-        $dto->updateImage($request, $community);
+        $dto->update( $passwordHasher);
+        $dto->updateImage($request);
 
         // Save
         $em->persist($community);
