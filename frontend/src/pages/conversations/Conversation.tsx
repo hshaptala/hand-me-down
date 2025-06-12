@@ -26,6 +26,9 @@ function ConversationContent({ id }: { id: string }) {
   const { setCurrentConversation, conversations, loading, currentUser } =
     useChat();
   const [itemData, setItemData] = useState<Item | null>(null);
+  const [currentBackendUser, setCurrentBackendUser] = useState<{
+    id: number;
+  } | null>(null);
   const [dialogState, setDialogState] = useState<{
     isOpen: boolean;
     action: "reserve" | "cancel" | "confirm" | null;
@@ -38,6 +41,26 @@ function ConversationContent({ id }: { id: string }) {
       setCurrentConversation(null);
     };
   }, [id, setCurrentConversation]);
+
+  // Fetch backend user ID when currentUser changes
+  useEffect(() => {
+    const fetchBackendUser = async () => {
+      if (!currentUser) return;
+
+      try {
+        const { fetchUserBySupabaseId } = await import(
+          "@/service/user.service"
+        );
+        const backendUser = await fetchUserBySupabaseId(currentUser.id);
+        setCurrentBackendUser({ id: backendUser.id });
+      } catch (error) {
+        console.error("Error fetching backend user:", error);
+        setCurrentBackendUser(null);
+      }
+    };
+
+    fetchBackendUser();
+  }, [currentUser]);
 
   const conversation = conversations.find((c) => c.id === id);
   const refreshItemData = useCallback(async () => {
@@ -56,14 +79,23 @@ function ConversationContent({ id }: { id: string }) {
     }
   }, [conversation?.item, refreshItemData]);
   const renderActionButtons = () => {
-    if (!conversation?.item || !currentUser) return null;
+    if (!conversation?.item || !currentUser || !currentBackendUser) return null;
 
     const currentStatus = itemData?.status || conversation.item.status;
+    const isItemOwner = itemData?.donor === currentBackendUser.id;
 
     const otherParticipant = conversation.participants.find(
       (p) => p.id !== currentUser.id,
     );
     const hasOtherParticipant = !!otherParticipant;
+
+    if (
+      isItemOwner &&
+      currentStatus !== "Reserved" &&
+      currentStatus !== "Exchanged"
+    ) {
+      return null;
+    }
 
     const handleDialogClose = () => {
       setDialogState({ isOpen: false, action: null });
@@ -75,8 +107,8 @@ function ConversationContent({ id }: { id: string }) {
 
     return (
       <>
-        {/* Reserve Button */}
-        {currentStatus === "Open" && hasOtherParticipant && (
+        {/* Reserve Button - Only for recipients (non-owners) */}
+        {currentStatus === "Open" && hasOtherParticipant && !isItemOwner && (
           <div className="w-full">
             <Button
               className="w-full bg-[#2E7D32] hover:bg-[#1B5E20]"
@@ -88,7 +120,7 @@ function ConversationContent({ id }: { id: string }) {
             </Button>
           </div>
         )}
-        {/* Cancel Reservation Button */}
+        {/* Cancel Reservation Button - For both donors and recipients when item is reserved */}
         {currentStatus === "Reserved" && (
           <div className="w-full">
             <Button
@@ -100,8 +132,8 @@ function ConversationContent({ id }: { id: string }) {
             </Button>
           </div>
         )}
-        {/* Confirm Exchange Button */}
-        {currentStatus === "Reserved" && (
+        {/* Confirm Exchange Button - Only for recipients (non-owners) */}
+        {currentStatus === "Reserved" && !isItemOwner && (
           <div className="w-full">
             <Button
               variant="outline"
@@ -114,13 +146,21 @@ function ConversationContent({ id }: { id: string }) {
               Confirm Exchange
             </Button>
           </div>
-        )}
+        )}{" "}
         {/* Status indicator for completed exchanges */}
         {currentStatus === "Exchanged" && (
           <div className="w-full">
             <Button disabled className="w-full" variant="outline">
               <Check className="mr-2 h-4 w-4" />
               Exchange Completed
+            </Button>
+          </div>
+        )}
+        {/* Status indicator for donors when item is reserved */}
+        {currentStatus === "Reserved" && isItemOwner && (
+          <div className="w-full">
+            <Button disabled className="w-full" variant="outline">
+              Item Reserved - Awaiting Confirmation
             </Button>
           </div>
         )}
@@ -269,7 +309,7 @@ function ConversationContent({ id }: { id: string }) {
                           </Badge>
                         ))}
                       </div>
-                    )}
+                    )}{" "}
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
