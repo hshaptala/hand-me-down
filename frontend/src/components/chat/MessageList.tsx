@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import { formatDistanceToNow } from "date-fns";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -5,20 +7,26 @@ import { useChat } from "@/context/ChatContext";
 
 export function MessageList() {
   const { messages, currentUser, isTyping } = useChat();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
   // Check if anyone is typing
-  const someoneIsTyping = Object.values(isTyping).some(Boolean);
-  if (!messages.length && !someoneIsTyping) {
+  const someoneIsTyping = Object.values(isTyping).some(Boolean);  if (!messages.length && !someoneIsTyping) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
+      <div className="flex h-[400px] items-center justify-center">
         <p className="text-muted-foreground">
           No messages yet. Start the conversation!
         </p>
       </div>
     );
-  }
-  return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4 min-h-0">
+  }  return (
+    <div ref={containerRef} className="h-[400px] space-y-4 overflow-y-auto p-4">
       {messages.map((message) => {
         const isSelf = message.sender_id === currentUser?.id;
         return (
@@ -74,10 +82,11 @@ export function MessageList() {
               <span className="text-muted-foreground text-xs">
                 Someone is typing...
               </span>
-            </div>
-          </div>
+            </div>          </div>
         </div>
       )}
+
+      <div ref={messagesEndRef} />
     </div>
   );
 }
