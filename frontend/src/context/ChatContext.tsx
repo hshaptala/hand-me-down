@@ -474,9 +474,9 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
     if (error) {
       console.error("Error sending message:", error);
     }
-
     await setUserTyping(false);
   };
+
   // Create a new conversation
   const createConversation = async (
     participantIds: string[],
@@ -490,6 +490,45 @@ export const ChatProvider = ({ children }: ChatProviderProps) => {
       participantIds.push(currentUser.id);
     }
 
+    // Check if a conversation already exists for the same participants and item
+    if (itemId) {
+      // First, get conversations for the specific item
+      const { data: existingConversations, error: existingError } =
+        await supabase
+          .from("conversations")
+          .select(
+            `
+          id,
+          conversation_participants!inner(user_id)
+        `,
+          )
+          .eq("item_id", parseInt(itemId));
+
+      if (existingError) {
+        console.error("Error checking existing conversations:", existingError);
+      } else if (existingConversations) {
+        // Check if any existing conversation has exactly the same participants
+        for (const conv of existingConversations) {
+          const convParticipantIds = conv.conversation_participants.map(
+            (p) => p.user_id,
+          );
+          const sortedConvParticipants = [...convParticipantIds].sort();
+          const sortedNewParticipants = [...participantIds].sort();
+
+          if (
+            sortedConvParticipants.length === sortedNewParticipants.length &&
+            sortedConvParticipants.every(
+              (id, index) => id === sortedNewParticipants[index],
+            )
+          ) {
+            // Conversation already exists, return its ID
+            return conv.id;
+          }
+        }
+      }
+    }
+
+    // If no existing conversation found, create a new one
     const { data: conversation, error: conversationError } = await supabase
       .from("conversations")
       .insert({ item_id: itemId })

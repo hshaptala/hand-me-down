@@ -116,7 +116,7 @@ export function StartConversation({
             className="w-full bg-[#FFC107] text-[#242424] hover:bg-[#FFA000] sm:w-auto"
             disabled={isLoading}
           >
-            {isLoading ? "Starting Conversation..." : "I Understand, Continue"}
+            {isLoading ? "Opening Conversation..." : "I Understand, Continue"}
           </Button>
         </DialogFooter>
       </DialogContent>
