@@ -3,12 +3,10 @@ import { useState, useEffect, useRef } from "react";
 
 import {
   Gift,
-  MapPin,
   Settings,
   User,
   Upload,
   Bell,
-  Shield,
   LogOut,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -34,6 +32,8 @@ import { useAuth } from "@/context/AuthContext";
 import supabase from "@/lib/supabase";
 import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
 import * as UserAPIModels from "@/models/user";
+import type { Community } from "@/models/community";
+import { fetchUserCommunities } from "@/service/community.service";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -51,6 +51,7 @@ export default function UserProfile() {
   const { user, signOut } = useAuth();
   const avatarUploadRef = useRef<HTMLInputElement>(null) ;
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
   // Load user data
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function UserProfile() {
         location: metadata.location || "",
       });
       fetchAvatar(user.id);
+      fetchCommunities(user.id);
     }
   }, [user]);
 
@@ -104,6 +106,14 @@ export default function UserProfile() {
       setIsLoading(false);
     }
   };
+
+  const fetchCommunities = async(userId: string)=>{
+    const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
+    if (u){
+      const c: Community[] = await fetchUserCommunities(u.id);
+      setUserCommunities(c);
+    }
+  }
 
   const fetchAvatar = async(userId: string)=>{
     const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
@@ -183,7 +193,22 @@ export default function UserProfile() {
               <div className="space-y-1">
                 <h3 className="mb-3 text-sm font-medium">My Communities</h3>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">No communities yet</Badge>
+                  {userCommunities.length === 0 ? (
+                    <Badge variant="secondary">No communities yet</Badge>
+                  ) : (
+                    userCommunities.map((community)=>(
+                      <Link to={`/communities/${community.id}`}>
+                        <Avatar className="h-9 w-9" title={community.name}>
+                          <AvatarImage
+                          src={import.meta.env.VITE_API_BASE_URL +
+                                  community.imageUrl
+                              }
+                          alt={community.name}
+                          />
+                        </Avatar>
+                      </Link>
+                    ))
+                  )}
                 </div>
               </div>
 

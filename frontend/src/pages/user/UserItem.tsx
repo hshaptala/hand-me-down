@@ -60,7 +60,7 @@ export default function UserItem({item, community}: UserItemsSectionParameters) 
                         community.imageUrl
                     : "/placeholder.svg"
                 }
-                alt="Donor"
+                alt="Community"
                 />
             </Avatar>
             <span className="text-muted-foreground text-sm">
