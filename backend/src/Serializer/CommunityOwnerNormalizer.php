@@ -11,7 +11,8 @@ class CommunityOwnerNormalizer implements NormalizerInterface
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
         private readonly NormalizerInterface $normalizer,
-    ) {}
+    ) {
+    }
 
     public function normalize(mixed $data, ?string $format = null, array $context = []): array
     {
