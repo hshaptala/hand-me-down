@@ -248,14 +248,10 @@ export default function UserProfile() {
             onValueChange={setActiveTab}
             value={activeTab}
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">Profile</span>
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="flex items-center gap-2">
-                <Gift className="h-4 w-4" />
-                <span className="hidden sm:inline">Activity</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
@@ -365,29 +361,6 @@ export default function UserProfile() {
                         disabled={!isEditing || isLoading}
                         className={!isEditing ? "opacity-70" : ""}
                       />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Activity Tab */}
-            <TabsContent value="activity">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Your recent donations and received items
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center py-10">
-                    <div className="text-center">
-                      <p className="text-muted-foreground">No activity yet</p>
-                      <p className="text-muted-foreground mt-2 text-sm">
-                        Start donating or receiving items to see your activity
-                        here
-                      </p>
                     </div>
                   </div>
                 </CardContent>
