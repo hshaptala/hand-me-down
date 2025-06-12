@@ -19,6 +19,7 @@ import ConversationsPage from "./pages/conversations/Conversations.tsx";
 import Home from "./pages/Home.tsx";
 import MemberProfile from "./pages/user/MemberProfile.tsx";
 import Profile from "./pages/user/UserProfile.tsx";
+import UserItemsPage from "./pages/user/UserItems.tsx";
 
 function App() {
   return (
@@ -97,6 +98,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MemberProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="my-items"
+              element={
+                <ProtectedRoute>
+                  <UserItemsPage />
                 </ProtectedRoute>
               }
             />
