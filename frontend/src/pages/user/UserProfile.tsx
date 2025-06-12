@@ -46,6 +46,16 @@ export default function UserProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
 
+  // Password change state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
   // Load user data
   useEffect(() => {
     if (user) {
@@ -129,6 +139,72 @@ export default function UserProfile() {
     if (user !== null) fetchAvatar(user.id);
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSavePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    // Validation
+    if (!passwordData.currentPassword) {
+      setPasswordError("Current password is required");
+      return;
+    }
+
+    if (!passwordData.newPassword) {
+      setPasswordError("New password is required");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match");
+      return;
+    }
+
+    setPasswordLoading(true);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || "",
+        password: passwordData.currentPassword,
+      });
+
+      if (signInError) {
+        throw new Error("Current password is incorrect");
+      }
+
+      // Update password
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      });
+
+      if (error) throw error;
+
+      setPasswordSuccess("Password updated successfully");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error: unknown) {
+      console.error("Error updating password:", error);
+      setPasswordError(
+        (error as Error)?.message ||
+          "Failed to update password. Please try again.",
+      );
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   return (
     <Container className="py-10">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -192,13 +268,16 @@ export default function UserProfile() {
               <Separator className="my-6" />
 
               <div className="space-y-1">
-                <h3 className="mb-3 text-sm font-medium">My Communities</h3>
+                <h3 className="mb-3 text-sm font-medium">My Communities</h3>{" "}
                 <div className="flex flex-wrap gap-2">
                   {userCommunities.length === 0 ? (
                     <Badge variant="secondary">No communities yet</Badge>
                   ) : (
-                    userCommunities.map((community)=>(
-                      <Link to={`/communities/${community.id}`} key={community.id}>
+                    userCommunities.map((community) => (
+                      <Link
+                        to={`/communities/${community.id}`}
+                        key={community.id}
+                      >
                         <Avatar className="h-9 w-9" title={community.name}>
                           <AvatarImage
                             src={
@@ -386,22 +465,62 @@ export default function UserProfile() {
                         <Label htmlFor="current-password">
                           Current Password
                         </Label>
-                        <Input id="current-password" type="password" />
+                        <Input
+                          id="current-password"
+                          type="password"
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          disabled={passwordLoading}
+                        />
                       </div>
                       <div></div>
                       <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" />
+                        <Input
+                          id="new-password"
+                          type="password"
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          disabled={passwordLoading}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">
                           Confirm New Password
                         </Label>
-                        <Input id="confirm-password" type="password" />
+                        <Input
+                          id="confirm-password"
+                          type="password"
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          disabled={passwordLoading}
+                        />
                       </div>
                     </div>
-                    <Button className="bg-[#2E7D32] hover:bg-[#1B5E20]">
-                      Update Password
+                    {passwordError && (
+                      <Alert variant="destructive">
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>{passwordError}</AlertDescription>
+                      </Alert>
+                    )}
+                    {passwordSuccess && (
+                      <Alert
+                        variant="default"
+                        className="border-[#2E7D32] bg-[#E8F5E9] text-[#2E7D32]"
+                      >
+                        <AlertTitle>Success</AlertTitle>
+                        <AlertDescription>{passwordSuccess}</AlertDescription>
+                      </Alert>
+                    )}
+                    <Button
+                      className="bg-[#2E7D32] hover:bg-[#1B5E20]"
+                      onClick={handleSavePassword}
+                      disabled={passwordLoading}
+                    >
+                      {passwordLoading ? "Updating..." : "Update Password"}
                     </Button>
                   </div>
                 </CardContent>
