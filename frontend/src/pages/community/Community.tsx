@@ -8,8 +8,10 @@ import {
   MapPin,
   Filter,
   Settings,
+  LogOut,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import Container from "@/components/layout/Container";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -23,6 +25,15 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { MemberCardSkeleton, ItemCardSkeleton } from "@/components/ui/loading";
 import {
@@ -39,7 +50,7 @@ import type { Community } from "@/models/community";
 import type { Item } from "@/models/item";
 import type { Member } from "@/models/member";
 import type { User } from "@/models/user";
-import { fetchCommunity } from "@/service/community.service";
+import { fetchCommunity, leaveCommunity } from "@/service/community.service";
 import { fetchItems } from "@/service/item.service";
 import { fetchMembers, fetchMember } from "@/service/member.service";
 import { fetchUser, fetchUserBySupabaseId } from "@/service/user.service";
@@ -47,6 +58,7 @@ import { fetchUser, fetchUserBySupabaseId } from "@/service/user.service";
 export default function Community() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [community, setCommunity] = useState<Community | null>(null);
@@ -63,6 +75,8 @@ export default function Community() {
   const [itemsLoading, setItemsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const categories = getAllCategories();
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -162,6 +176,23 @@ export default function Community() {
     return owner || role === "administrator" || role === "moderator";
   };
 
+  const handleLeaveCommunity = async () => {
+    if (!id || !community) return;
+
+    setIsLeaving(true);
+    try {
+      await leaveCommunity(Number(id));
+      toast.success(`You have left ${community.name}`);
+      navigate("/communities");
+    } catch (error) {
+      console.error("Error leaving community:", error);
+      toast.error("Failed to leave community. Please try again.");
+    } finally {
+      setIsLeaving(false);
+      setLeaveDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -219,20 +250,59 @@ export default function Community() {
               <MapPin className="h-4 w-4" />
               <span>{community.location}</span>
             </div>
-          </div>
-        </div>
+          </div>        </div>
+        {/* Action buttons container */}
+        <div className="absolute top-6 right-6 flex gap-3">
+          {!isOwner() && currentUserMember && (
+            <Dialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/10 text-white hover:bg-white/20"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Leave Community
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Leave Community</DialogTitle>
+                  <DialogDescription>
+                  Are you sure you want to leave {community.name}? You will need
+                  to request to join again if you change your mind.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setLeaveDialogOpen(false)}
+                  disabled={isLeaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleLeaveCommunity}
+                  disabled={isLeaving}
+                >
+                  {isLeaving ? "Leaving..." : "Leave Community"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
         {canManageCommunity() && (
           <Button
             variant="outline"
-            className="absolute top-6 right-6 border-white/20 bg-white/10 text-white hover:bg-white/20"
+            className="border-white/20 bg-white/10 text-white hover:bg-white/20"
             asChild
           >
             <Link to={`/communities/${community.id}/manage`}>
               <Settings className="mr-2 h-4 w-4" />
               Manage Community
             </Link>
-          </Button>
-        )}
+          </Button>        )}
+        </div>
       </div>
 
       {/* Community Content */}
@@ -476,13 +546,63 @@ export default function Community() {
                         {community.visibility}
                       </Badge>
                     </p>
-                  </div>
+                  </div>{" "}
                   <div>
                     <h3 className="text-lg font-medium">Members</h3>
                     <p className="text-muted-foreground mt-2">
                       {members.length} members
                     </p>
                   </div>
+                  {!isOwner() && currentUserMember && (
+                    <div>
+                      <h3 className="text-lg font-medium text-red-600">
+                        Danger Zone
+                      </h3>
+                      <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <p className="mb-3 text-sm text-red-700">
+                          Once you leave this community, you will need to
+                          request to join again.
+                        </p>
+                        <Dialog
+                          open={leaveDialogOpen}
+                          onOpenChange={setLeaveDialogOpen}
+                        >
+                          <DialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <LogOut className="mr-2 h-4 w-4" />
+                              Leave Community
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Leave Community</DialogTitle>
+                              <DialogDescription>
+                                Are you sure you want to leave {community.name}?
+                                You will need to request to join again if you
+                                change your mind.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setLeaveDialogOpen(false)}
+                                disabled={isLeaving}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={handleLeaveCommunity}
+                                disabled={isLeaving}
+                              >
+                                {isLeaving ? "Leaving..." : "Leave Community"}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

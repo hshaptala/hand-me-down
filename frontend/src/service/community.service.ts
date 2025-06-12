@@ -39,10 +39,11 @@ export async function joinCommunity(
 }
 
 export async function leaveCommunity(id: number): Promise<void> {
-  await api.post(`/api/communities/${id}/leave`);
-  requestCache.clearRequest("user-communities");
-  requestCache.clearRequest("fetch-communities");
+  await api.delete(`/api/communities/${id}/leave`);
+  
   requestCache.clearRequest(`fetch-community-${id}`);
+  requestCache.clearRequest("fetch-communities");
+  requestCache.clearRequest("user-communities");
 }
 
 export async function userCommunities(): Promise<Community[]> {
