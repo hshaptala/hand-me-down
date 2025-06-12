@@ -463,7 +463,7 @@ function ConversationContent({ id }: { id: string }) {
                       {!ratings.currentUserRating &&
                         !ratings.otherUserRating && (
                           <p className="text-muted-foreground text-xs italic">
-                            No ratings have been left for this exchange yet.
+                            No ratings have been left for this exchange.
                           </p>
                         )}
                     </div>
