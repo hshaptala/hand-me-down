@@ -14,6 +14,7 @@ export function ConversationList() {
     currentConversation,
     isTyping,
     loading,
+    currentUser,
   } = useChat();
 
   if (loading) {
@@ -41,7 +42,7 @@ export function ConversationList() {
       {conversations.map((conversation) => {
         // Get the other participant (assuming 1-on-1 conversations)
         const otherParticipant =
-          conversation.participants.find((p) => p.id !== "currentUserId") ||
+          conversation.participants.find((p) => p.id !== currentUser?.id) ||
           conversation.participants[0];
 
         // Check if the other participant is typing
