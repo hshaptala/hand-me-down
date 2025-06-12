@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 
 import { Search, Book, Plus, Users, Lock, MapPin, Filter } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import Container from "@/components/layout/Container";
@@ -43,12 +43,13 @@ import {
 
 export default function Communities() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [visibilityFilter, setvisibilityFilter] = useState("all");
   const [communities, setCommunities] = useState<Community[]>([]);
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinLoading, setJoinLoading] = useState<number | null>(null); // Track which community is being joined
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(
     null,
@@ -75,7 +76,6 @@ export default function Communities() {
 
     loadData();
   }, [user]);
-
   const handleJoinCommunity = useCallback(
     async (community: Community) => {
       if (!user) {
@@ -94,22 +94,22 @@ export default function Communities() {
         return;
       }
 
-      setJoinLoading(true);
+      setJoinLoading(community.id);
       try {
         await joinCommunity(community.id);
         const updatedJoinedCommunities = await userCommunities();
         setJoinedCommunities(updatedJoinedCommunities);
         toast.success(`Successfully joined ${community.name}!`);
+        navigate(`/communities/${community.id}`);
       } catch (error) {
         console.error("Error joining community:", error);
         toast.error("Failed to join community. Please try again.");
       } finally {
-        setJoinLoading(false);
+        setJoinLoading(null);
       }
     },
-    [user],
+    [user, navigate],
   );
-
   const handleJoinPrivateCommunity = useCallback(async () => {
     if (!selectedCommunity || !password.trim()) {
       toast.error("Please enter a password");
@@ -121,7 +121,7 @@ export default function Communities() {
       return;
     }
 
-    setJoinLoading(true);
+    setJoinLoading(selectedCommunity.id);
     try {
       await joinCommunity(selectedCommunity.id, password);
       const updatedJoinedCommunities = await userCommunities();
@@ -129,6 +129,7 @@ export default function Communities() {
       toast.success(`Successfully joined ${selectedCommunity.name}!`);
       setShowPasswordDialog(false);
       setPassword("");
+      navigate(`/communities/${selectedCommunity.id}`);
       setSelectedCommunity(null);
     } catch (error) {
       console.error("Error joining private community:", error);
@@ -136,9 +137,9 @@ export default function Communities() {
         "Failed to join community. Please check your password and try again.",
       );
     } finally {
-      setJoinLoading(false);
+      setJoinLoading(null);
     }
-  }, [selectedCommunity, password]);
+  }, [selectedCommunity, password, navigate]);
   const isJoined = useCallback(
     (communityId: number | undefined) => {
       if (!communityId) return false;
@@ -337,17 +338,16 @@ export default function Communities() {
                             View Community
                           </Link>
                         </Button>
-                      ) : (
-                        <Button
+                      ) : (                        <Button
                           className={`w-full ${
                             community.visibility === "Private"
                               ? "bg-[#FFC107] text-[#242424] hover:bg-[#FFA000]"
                               : "bg-[#2E7D32] hover:bg-[#1B5E20]"
                           }`}
                           onClick={() => handleJoinCommunity(community)}
-                          disabled={joinLoading}
+                          disabled={joinLoading === community.id}
                         >
-                          {joinLoading
+                          {joinLoading === community.id
                             ? "Joining..."
                             : community.visibility === "Private"
                               ? "Request to Join"
@@ -484,13 +484,12 @@ export default function Communities() {
               }}
             >
               Cancel
-            </Button>
-            <Button
+            </Button>            <Button
               type="button"
               onClick={handleJoinPrivateCommunity}
-              disabled={joinLoading || !password.trim()}
+              disabled={joinLoading !== null || !password.trim()}
             >
-              {joinLoading ? "Joining..." : "Join Community"}
+              {joinLoading !== null ? "Joining..." : "Join Community"}
             </Button>
           </DialogFooter>
         </DialogContent>
