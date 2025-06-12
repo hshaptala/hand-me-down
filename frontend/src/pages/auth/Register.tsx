@@ -212,11 +212,11 @@ export default function RegisterPage() {
                 htmlFor="terms"
                 className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                I agree to the{" "}
+                I agree to the
                 <Link to="/terms" className="text-[#2E7D32] hover:underline">
                   terms of service
-                </Link>{" "}
-                and{" "}
+                </Link>
+                and
                 <Link to="/privacy" className="text-[#2E7D32] hover:underline">
                   privacy policy
                 </Link>
@@ -232,7 +232,7 @@ export default function RegisterPage() {
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
             <p className="text-muted-foreground mt-4 text-center text-sm">
-              Already have an account?{" "}
+              Already have an account?
               <Link to="/login" className="text-[#2E7D32] hover:underline">
                 Log in
               </Link>

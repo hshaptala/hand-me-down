@@ -333,7 +333,7 @@ export default function EditItem() {
                   Leave empty to keep the current image
                 </p>
               </div>
-            </CardContent>{" "}
+            </CardContent>
             <CardFooter className="flex justify-between">
               <Button
                 variant="outline"

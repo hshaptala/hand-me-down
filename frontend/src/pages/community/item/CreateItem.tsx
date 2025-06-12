@@ -155,7 +155,7 @@ export default function CreateItem() {
                   required
                   rows={4}
                 />
-              </div>{" "}
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
@@ -174,7 +174,7 @@ export default function CreateItem() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>{" "}
+              </div>
               <div className="space-y-2">
                 <Label>Item Image *</Label>
                 <div
@@ -241,7 +241,7 @@ export default function CreateItem() {
                   you're offering
                 </p>
               </div>
-            </CardContent>{" "}
+            </CardContent>
             <CardFooter className="flex justify-between">
               <Button
                 variant="outline"

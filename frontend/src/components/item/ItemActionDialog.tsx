@@ -157,6 +157,7 @@ export default function ItemActionDialog({
             Cancel
           </Button>
           <Button
+          className="bg-[#2E7D32] hover:bg-[#1B5E20]"
             type="button"
             variant={config.buttonVariant}
             onClick={handleAction}
