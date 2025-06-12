@@ -38,7 +38,8 @@ class CommunityEdit
 
     private Community $toUpdate;
 
-    public function __construct(Community $community){
+    public function __construct(Community $community)
+    {
         $this->toUpdate = $community;
     }
 
