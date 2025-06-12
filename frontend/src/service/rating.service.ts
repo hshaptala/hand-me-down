@@ -48,3 +48,11 @@ export async function getRatingBetweenUsers({
     throw error;
   }
 }
+
+export async function getUserRatings(userId: number): Promise<{
+  given: Rating[];
+  received: Rating[];
+}> {
+  const response = await api.get(`/api/users/${userId}/ratings`);
+  return response.data;
+}
