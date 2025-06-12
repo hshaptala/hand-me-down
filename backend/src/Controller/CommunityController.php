@@ -352,7 +352,7 @@ final class CommunityController extends AbstractController
         }
 
         // Check name uniqness
-        if ($community->getName() !== $dto->name){
+        if ($community->getName() !== $dto->name) {
             $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
             if ($existing) {
                 return $this->json([
@@ -367,7 +367,7 @@ final class CommunityController extends AbstractController
         $passwordHasher = $hasherFactory->getPasswordHasher(Community::class);
 
         // Edit
-        $dto->update( $passwordHasher);
+        $dto->update($passwordHasher);
         $dto->updateImage($request);
 
         // Save
