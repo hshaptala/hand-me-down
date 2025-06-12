@@ -188,13 +188,18 @@ function ConversationContent({ id }: { id: string }) {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">          {/* Chat Messages */}
-          <Card className="lg:col-span-2 flex flex-col h-[calc(100vh-200px)]">
-            <CardHeader className="border-b flex-shrink-0">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {" "}
+          {/* Chat Messages */}
+          <Card className="flex h-[calc(100vh-200px)] flex-col lg:col-span-2">
+            <CardHeader className="flex-shrink-0 border-b">
               <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarImage
-                    src={otherParticipant.avatar || "/placeholder.svg"}
+                    src={
+                      import.meta.env.VITE_API_BASE_URL +
+                        otherParticipant.avatar || "/placeholder.svg"
+                    }
                     alt={otherParticipant.name}
                   />
                   <AvatarFallback>
@@ -212,10 +217,10 @@ function ConversationContent({ id }: { id: string }) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col">
+            <CardContent className="flex flex-1 flex-col p-0">
               <MessageList />
             </CardContent>
-            <CardFooter className="p-0 flex-shrink-0">
+            <CardFooter className="flex-shrink-0 p-0">
               <MessageInput />
             </CardFooter>
           </Card>

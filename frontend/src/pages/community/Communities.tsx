@@ -241,12 +241,6 @@ export default function Communities() {
               Create Community
             </Link>
           </Button>
-          {/*<Link to="/map">
-            <Button variant="outline">
-              <MapPin className="mr-2 h-4 w-4" />
-              View Map
-            </Button>
-          </Link>*/}
         </div>
 
         <Tabs defaultValue="all">
