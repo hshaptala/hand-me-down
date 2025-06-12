@@ -417,7 +417,7 @@ export default function Communities() {
                           <span>{community.memberCount || 0} members</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Plus className="h-3 w-3" />
+                          <Book className="h-3 w-3" />
                           <span>{community.itemCount || 0} items</span>
                         </div>
                       </div>
