@@ -26,7 +26,11 @@ import supabase from "@/lib/supabase";
 import type { Community } from "@/models/community";
 import * as UserAPIModels from "@/models/user";
 import { fetchUserCommunities } from "@/service/community.service";
-import { fetchUserBySupabaseId, uploadAvatar } from "@/service/user.service";
+import {
+  fetchUser,
+  fetchUserBySupabaseId,
+  uploadAvatar,
+} from "@/service/user.service";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -45,6 +49,13 @@ export default function UserProfile() {
   const avatarUploadRef = useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [userStats, setUserStats] = useState<{
+    itemsGivenCount: number;
+    itemsReceivedCount: number;
+  }>({
+    itemsGivenCount: 0,
+    itemsReceivedCount: 0,
+  });
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -108,12 +119,17 @@ export default function UserProfile() {
       setIsLoading(false);
     }
   };
-
   const fetchCommunities = async (userId: string) => {
     const u: UserAPIModels.User = await fetchUserBySupabaseId(userId);
     if (u) {
       const c: Community[] = await fetchUserCommunities(u.id);
       setUserCommunities(c);
+
+      const userWithStats = await fetchUser(u.id);
+      setUserStats({
+        itemsGivenCount: userWithStats.itemsGivenCount,
+        itemsReceivedCount: userWithStats.itemsReceivedCount,
+      });
     }
   };
 
@@ -252,14 +268,18 @@ export default function UserProfile() {
                       user?.created_at || Date.now(),
                     ).toLocaleDateString()}
                   </p>
-                </div>
+                </div>{" "}
                 <div className="flex gap-4 text-center">
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {userStats.itemsGivenCount}
+                    </p>
                     <p className="text-muted-foreground text-xs">Donated</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {userStats.itemsReceivedCount}
+                    </p>
                     <p className="text-muted-foreground text-xs">Received</p>
                   </div>
                 </div>
