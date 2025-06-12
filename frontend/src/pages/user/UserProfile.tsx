@@ -197,7 +197,7 @@ export default function UserProfile() {
                     <Badge variant="secondary">No communities yet</Badge>
                   ) : (
                     userCommunities.map((community)=>(
-                      <Link to={`/communities/${community.id}`}>
+                      <Link to={`/communities/${community.id}`} key={community.id}>
                         <Avatar className="h-9 w-9" title={community.name}>
                           <AvatarImage
                           src={import.meta.env.VITE_API_BASE_URL +
