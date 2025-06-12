@@ -96,18 +96,6 @@ final class RatingController extends AbstractController
             return new JsonResponse("User not found.", 404);
         }
 
-        // Rate two times the same person
-        $ratingRepository = $em->getRepository(Rating::class);
-        $previousRating = $ratingRepository->findOneBy(
-            [
-                "userRating" => $from,
-                "userRated" => $to
-            ]
-        );
-        if ($previousRating !== null) {
-            return new JsonResponse("You have already left a rating for this user.", 409);
-        }
-
         // Leave a rating to someone you've not exchanged with
         $itemRepository = $em->getRepository(Item::class);
         $items = array_merge(
