@@ -2,7 +2,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 
 import { Eye, EyeOff } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (user) {
-      const redirectTo = location.state?.from?.pathname || "/";
-      navigate(redirectTo, { replace: true });
+      navigate("/", { replace: true });
     }
-  }, [user, navigate, location.state]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
