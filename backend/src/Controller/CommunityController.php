@@ -352,13 +352,15 @@ final class CommunityController extends AbstractController
         }
 
         // Check name uniqness
-        $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
-        if ($existing) {
-            return $this->json([
-                'errors' => [
-                    'name' => 'A community with this name already exists.',
-                ]
-            ], 422);
+        if ($community->getName() !== $dto->name){
+            $existing = $em->getRepository(Community::class)->findOneBy(['name' => $dto->name]);
+            if ($existing) {
+                return $this->json([
+                    'errors' => [
+                        'name' => 'A community with this name already exists.',
+                    ]
+                ], 422);
+            }
         }
 
         // Get password hasher
