@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 
-import { Users, ArrowLeft, MapPin, Lock, Star } from "lucide-react";
+import {
+  Users,
+  ArrowLeft,
+  MapPin,
+  Lock,
+  Star,
+  MessageSquare,
+} from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
 import Container from "@/components/layout/Container";
@@ -16,8 +23,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Community } from "@/models/community";
+import type { Rating } from "@/models/rating";
 import type { User as UserType } from "@/models/user";
 import { fetchUserCommunities } from "@/service/community.service";
+import { getUserRatings } from "@/service/rating.service";
 import { fetchUser } from "@/service/user.service";
 
 // Helper function to render star rating
@@ -74,6 +83,7 @@ export default function MemberProfile() {
   const navigate = useNavigate();
   const [profileUser, setProfileUser] = useState<UserType | null>(null);
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [receivedRatings, setReceivedRatings] = useState<Rating[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,10 +102,15 @@ export default function MemberProfile() {
         // Fetch user profile
         const userData = await fetchUser(Number(userId));
         setProfileUser(userData);
-        const [communitiesData] = await Promise.all([
+
+        // Fetch communities and ratings in parallel
+        const [communitiesData, ratingsData] = await Promise.all([
           fetchUserCommunities(Number(userId)),
+          getUserRatings(Number(userId)),
         ]);
+
         setUserCommunities(communitiesData);
+        setReceivedRatings(ratingsData.received);
       } catch (err) {
         console.error("Error loading profile data:", err);
         if (err instanceof Error && err.message.includes("403")) {
@@ -169,7 +184,6 @@ export default function MemberProfile() {
   return (
     <Container className="py-10">
       <div className="mx-auto max-w-6xl">
-        
         {/* Header with back button */}
         <div className="mb-6 flex items-center gap-2">
           <Button variant="ghost" size="icon" asChild className="h-8 w-8">
@@ -182,7 +196,7 @@ export default function MemberProfile() {
         </div>
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Profile Sidebar */}
-          <div className="lg:w-1/3">
+          <div className="space-y-6 lg:w-1/3">
             <Card>
               <CardContent className="p-6">
                 <div className="flex flex-col items-center space-y-4">
@@ -248,6 +262,62 @@ export default function MemberProfile() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            {/* Reviews/Ratings Section */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <MessageSquare className="h-4 w-4" />
+                  Reviews
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  Reviews received by {profileUser.firstName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                {receivedRatings.length === 0 ? (
+                  <div className="py-6 text-center">
+                    <MessageSquare className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
+                    <h3 className="mb-1 text-base font-medium">
+                      No reviews yet
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {profileUser.firstName} hasn't received any reviews yet.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-80 space-y-3 overflow-y-auto">
+                    {receivedRatings.map((rating) => (
+                      <Card key={rating.id} className="bg-muted/40">
+                        <CardContent className="p-3">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1">
+                                {renderStars(rating.grade)}
+                                <span
+                                  className={`ml-1 text-sm font-bold ${getRatingColor(rating.grade)}`}
+                                >
+                                  {rating.grade.toFixed(1)}
+                                </span>
+                              </div>
+                              <span className="text-muted-foreground text-xs">
+                                {new Date(
+                                  rating.createdAt,
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {rating.message && (
+                              <p className="text-muted-foreground line-clamp-2 text-xs">
+                                {rating.message}
+                              </p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

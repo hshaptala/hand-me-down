@@ -7,6 +7,7 @@ import { MessageInput } from "@/components/chat/MessageInput";
 import { MessageList } from "@/components/chat/MessageList";
 import ItemActionDialog from "@/components/item/ItemActionDialog";
 import Container from "@/components/layout/Container";
+import { RatingDisplay } from "@/components/rating/RatingDisplay";
 import { RatingModal } from "@/components/rating/RatingModal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,9 @@ import {
 } from "@/components/ui/card";
 import { ChatProvider, useChat } from "@/context/ChatContext";
 import type { Item } from "@/models/item";
+import type { Rating } from "@/models/rating";
 import { fetchItem } from "@/service/item.service";
+import { getRatingBetweenUsers } from "@/service/rating.service";
 
 function ConversationContent({ id }: { id: string }) {
   const { setCurrentConversation, conversations, loading, currentUser } =
@@ -39,6 +42,10 @@ function ConversationContent({ id }: { id: string }) {
     userId: number | null;
     userName: string | null;
   }>({ isOpen: false, userId: null, userName: null });
+  const [ratings, setRatings] = useState<{
+    currentUserRating: Rating | null;
+    otherUserRating: Rating | null;
+  }>({ currentUserRating: null, otherUserRating: null });
 
   useEffect(() => {
     setCurrentConversation(id);
@@ -67,8 +74,8 @@ function ConversationContent({ id }: { id: string }) {
 
     fetchBackendUser();
   }, [currentUser]);
-
   const conversation = conversations.find((c) => c.id === id);
+
   const refreshItemData = useCallback(async () => {
     if (!conversation?.item) return;
 
@@ -79,17 +86,67 @@ function ConversationContent({ id }: { id: string }) {
       console.error("Error refreshing item data:", error);
     }
   }, [conversation?.item]);
+
+  const fetchRatings = useCallback(async () => {
+    if (!conversation?.item || !currentBackendUser || !currentUser) return;
+
+    const otherParticipant = conversation.participants.find(
+      (p) => p.id !== currentUser.id,
+    );
+    if (!otherParticipant) return;
+
+    try {
+      const { fetchUserBySupabaseId } = await import("@/service/user.service");
+      const otherBackendUser = await fetchUserBySupabaseId(otherParticipant.id);
+
+      // Fetch rating from current user to other user
+      const currentUserRating = await getRatingBetweenUsers({
+        fromId: currentBackendUser.id,
+        toId: otherBackendUser.id,
+      });
+
+      // Fetch rating from other user to current user
+      const otherUserRating = await getRatingBetweenUsers({
+        fromId: otherBackendUser.id,
+        toId: currentBackendUser.id,
+      });
+
+      setRatings({
+        currentUserRating,
+        otherUserRating,
+      });
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      setRatings({ currentUserRating: null, otherUserRating: null });
+    }
+  }, [
+    conversation?.item,
+    conversation?.participants,
+    currentBackendUser,
+    currentUser,
+  ]);
   useEffect(() => {
     if (conversation?.item) {
       refreshItemData();
     }
   }, [conversation?.item, refreshItemData]);
+
+  // Fetch ratings when item is exchanged (status is "Over")
+  useEffect(() => {
+    if (conversation?.item && currentBackendUser) {
+      const currentStatus = itemData?.status || conversation.item.status;
+      if (currentStatus === "Over") {
+        fetchRatings();
+      }
+    }
+  }, [conversation?.item, currentBackendUser, itemData?.status, fetchRatings]);
   const renderActionButtons = () => {
     if (!conversation?.item || !currentUser || !currentBackendUser) return null;
 
     const currentStatus = itemData?.status || conversation.item.status;
     const isItemOwner = itemData?.donor === currentBackendUser.id;
 
+    // Get other participant within function scope
     const otherParticipant = conversation.participants.find(
       (p) => p.id !== currentUser.id,
     );
@@ -98,23 +155,27 @@ function ConversationContent({ id }: { id: string }) {
     if (
       isItemOwner &&
       currentStatus !== "Reserved" &&
-      currentStatus !== "Exchanged"
+      currentStatus !== "Over"
     ) {
       return null;
     }
 
     const handleDialogClose = () => {
       setDialogState({ isOpen: false, action: null });
-    };    const handleDialogSuccess = async () => {
+    };
+
+    const handleDialogSuccess = async () => {
       await refreshItemData();
-      
+
       // If this was a confirm action, open the rating modal
       if (dialogState.action === "confirm" && otherParticipant) {
         try {
           // Fetch the backend user data to get the numeric ID
-          const { fetchUserBySupabaseId } = await import("@/service/user.service");
+          const { fetchUserBySupabaseId } = await import(
+            "@/service/user.service"
+          );
           const backendUser = await fetchUserBySupabaseId(otherParticipant.id);
-          
+
           setRatingModalState({
             isOpen: true,
             userId: backendUser.id,
@@ -124,12 +185,23 @@ function ConversationContent({ id }: { id: string }) {
           console.error("Error fetching user for rating:", error);
         }
       }
-      
+
+      // Refresh ratings if item is now exchanged
+      const updatedStatus = itemData?.status;
+      if (updatedStatus === "Over") {
+        await fetchRatings();
+      }
+
       handleDialogClose();
     };
 
     const handleRatingModalClose = () => {
       setRatingModalState({ isOpen: false, userId: null, userName: null });
+    };
+
+    const handleRatingSuccess = async () => {
+      // Refresh ratings after successful rating submission
+      await fetchRatings();
     };
 
     return (
@@ -175,7 +247,7 @@ function ConversationContent({ id }: { id: string }) {
           </div>
         )}{" "}
         {/* Status indicator for completed exchanges */}
-        {currentStatus === "Exchanged" && (
+        {currentStatus === "Over" && (
           <div className="w-full">
             <Button disabled className="w-full" variant="outline">
               <Check className="mr-2 h-4 w-4" />
@@ -190,7 +262,8 @@ function ConversationContent({ id }: { id: string }) {
               Item Reserved - Awaiting Confirmation
             </Button>
           </div>
-        )}        {/* Dialog for all actions */}
+        )}{" "}
+        {/* Dialog for all actions */}
         {dialogState.action && (
           <ItemActionDialog
             isOpen={dialogState.isOpen}
@@ -202,14 +275,17 @@ function ConversationContent({ id }: { id: string }) {
           />
         )}
         {/* Rating Modal - For confirming users after exchange */}
-        {ratingModalState.isOpen && ratingModalState.userId && ratingModalState.userName && (
-          <RatingModal
-            isOpen={ratingModalState.isOpen}
-            onClose={handleRatingModalClose}
-            userId={ratingModalState.userId}
-            userName={ratingModalState.userName}
-          />
-        )}
+        {ratingModalState.isOpen &&
+          ratingModalState.userId &&
+          ratingModalState.userName && (
+            <RatingModal
+              isOpen={ratingModalState.isOpen}
+              onClose={handleRatingModalClose}
+              userId={ratingModalState.userId}
+              userName={ratingModalState.userName}
+              onSuccess={handleRatingSuccess}
+            />
+          )}
       </>
     );
   };
@@ -330,7 +406,7 @@ function ConversationContent({ id }: { id: string }) {
                     <p className="text-muted-foreground mt-2 text-sm">
                       {conversation.item.description}
                     </p>
-                  )}
+                  )}{" "}
                   {conversation.item.keywords &&
                     conversation.item.keywords.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -345,6 +421,53 @@ function ConversationContent({ id }: { id: string }) {
                         ))}
                       </div>
                     )}{" "}
+                  {/* Ratings Section - Only show if item is exchanged */}
+                  {(itemData?.status || conversation.item.status) ===
+                    "Over" && (
+                    <div className="mt-4 space-y-3">
+                      <h4 className="text-sm font-medium">Exchange Ratings</h4>
+
+                      {/* Other user's rating of current user */}
+                      {ratings.otherUserRating && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs">
+                            {otherParticipant?.name} rated you:
+                          </p>
+                          <RatingDisplay
+                            rating={ratings.otherUserRating.grade}
+                            message={ratings.otherUserRating.message}
+                            userName={otherParticipant?.name || "User"}
+                            showUserName={false}
+                            className="ml-2"
+                          />
+                        </div>
+                      )}
+
+                      {/* Current user's rating of other user */}
+                      {ratings.currentUserRating && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs">
+                            You rated {otherParticipant?.name}:
+                          </p>
+                          <RatingDisplay
+                            rating={ratings.currentUserRating.grade}
+                            message={ratings.currentUserRating.message}
+                            userName="You"
+                            showUserName={false}
+                            className="ml-2"
+                          />
+                        </div>
+                      )}
+
+                      {/* Show message if no ratings exist */}
+                      {!ratings.currentUserRating &&
+                        !ratings.otherUserRating && (
+                          <p className="text-muted-foreground text-xs italic">
+                            No ratings have been left for this exchange.
+                          </p>
+                        )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
               <CardFooter className="flex-col items-start gap-4">
